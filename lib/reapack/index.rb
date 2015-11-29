@@ -9,16 +9,43 @@ class ReaPack::Index
     'eel' => :script,
   }.freeze
 
-  attr_reader :path
+  RULES = {
+    :author => MetaHeader::REQUIRED,
+    :version => /\A(?:[^\d]*\d+[^\d]*){1,4}\z/,
+    :changelog => MetaHeader::OPTIONAL,
+  }.freeze
+
+  SOURCE_HOSTS = {
+    /\Agit@github\.com:([^\/]+)\/(.+)\.git\z/ =>
+      'https://github.com/\1/\2/raw/master/$path',
+    /\Ahttps:\/\/github\.com\/([^\/]+)\/(.+)\.git\z/ =>
+      'https://github.com/\1/\2/raw/master/$path',
+  }.freeze
+
+  attr_reader :path, :source_pattern
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
     FILE_TYPES[ext]
   end
 
+  def self.source_for(url)
+    SOURCE_HOSTS.each_pair {|regex, pattern|
+      return url.gsub regex, pattern if url =~ regex
+    }
+
+    nil
+  end
+
+  def self.validate_file(path)
+    mh = MetaHeader.from_file path
+    mh.validate RULES
+  end
+
   def initialize(path)
     @path = path
     @changes = {}
+    @dirty = false
 
     if File.exists? path
       @doc = File.open(path) {|f| Nokogiri::XML(f) }
@@ -35,16 +62,44 @@ class ReaPack::Index
 
     mh = MetaHeader.new contents
 
-    pkg[:type] = type
-    pkg[:author] = mh[:author]
+    if errors = mh.validate(RULES)
+      raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
+    end
 
-    ver = version_node pkg, mh[:version]
+    if pkg[:type] != type
+      pkg[:type] = type
+      @dirty = true
+    end
+
+    if pkg[:author] != mh[:author]
+      pkg[:author] = mh[:author]
+      @dirty = true
+    end
+
+    ver = add_version pkg, mh[:version]
+    add_changelog ver, mh[:changelog]
+
+    if !@source_pattern
+      raise RuntimeError, "source pattern is unset "\
+        "and the package doesn't specify it's source"
+    end
+
+    add_source ver, :all, @source_pattern.sub('$path', path)
+
+    log_change 'script' if modified?
   end
   
   def delete(path)
     type, cat, pkg = find path
     return unless pkg
     puts 'delete request!'
+  end
+
+  def source_pattern=(pattern)
+    return if pattern.nil?
+    raise ArgumentError, '$path not in pattern' unless pattern.include? '$path'
+
+    @source_pattern = pattern
   end
 
   def version
@@ -69,6 +124,13 @@ class ReaPack::Index
 
   def write!
     write @path
+
+    @dirty = false
+    @changes.clear
+  end
+
+  def modified?
+    @dirty
   end
 
   def changelog
@@ -84,6 +146,8 @@ class ReaPack::Index
 
 private
   def log_change(type, plural = nil)
+    @dirty = true
+
     @changes[type] ||= [0, plural || type + 's']
     @changes[type][0] += 1
   end
@@ -95,13 +159,13 @@ private
     cat_name = File.dirname path
     pkg_name = File.basename path
 
-    cat = category_node cat_name
-    pkg = package_node cat, pkg_name
+    cat = add_category cat_name
+    pkg = add_package cat, pkg_name
 
     [type, cat, pkg]
   end
 
-  def category_node(name)
+  def add_category(name)
     cat_node = @doc.root.element_children.select {|node|
       node.name == 'category' && node[:name] == name
     }.first
@@ -117,7 +181,7 @@ private
     cat_node
   end
 
-  def package_node(cat, name)
+  def add_package(cat, name)
     pkg_node = cat.element_children.select {|node|
       node.name == 'reapack' && node[:name] == name
     }.first
@@ -133,7 +197,7 @@ private
     pkg_node
   end
 
-  def version_node(pkg, name)
+  def add_version(pkg, name)
     ver_node = pkg.element_children.select {|node|
       node.name == 'version' && node[:name] == name
     }.first
@@ -147,5 +211,38 @@ private
     end
 
     ver_node
+  end
+
+  def add_changelog(ver, log)
+    cl_node = ver.element_children.select {|node|
+      node.name == 'changelog'
+    }.first
+
+    cdata = nil
+
+    if log.to_s.empty?
+      cl_node.remove if cl_node
+    elsif cl_node.nil?
+      cl_node = Nokogiri::XML::Node.new 'changelog', @doc
+      cl_node.parent = ver
+      @dirty = true
+    elsif cdata = cl_node.children.first
+      @dirty = true if cdata.content != log
+      cdata.remove
+    end
+
+    cdata = Nokogiri::XML::CDATA.new @doc, log
+    cdata.parent = cl_node
+
+    cl_node
+  end
+
+  def add_source(ver, platform, url)
+    node = Nokogiri::XML::Node.new 'source', @doc
+    node[:platform] = platform
+    node.content = url
+    node.parent = ver
+
+    @dirty = true
   end
 end

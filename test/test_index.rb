@@ -43,10 +43,21 @@ class TestIndex < MiniTest::Test
     assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.eel')
   end
 
+  def test_source_for
+    assert_nil ReaPack::Index.source_for('http://google.com')
+
+    assert_equal 'https://github.com/User/Repo/raw/master/$path',
+      ReaPack::Index.source_for('git@github.com:User/Repo.git')
+
+    assert_equal 'https://github.com/User/Repo/raw/master/$path',
+      ReaPack::Index.source_for('https://github.com/User/Repo.git')
+  end
+
   def test_scan_unknown_type
     db = ReaPack::Index.new @dummy_path
 
     db.scan 'src/main.cpp', String.new
+    refute db.modified?
     assert_nil db.changelog
   end
 
@@ -54,6 +65,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @dummy_path
     assert_nil db.changelog
 
+    db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @author cfillion
       @version 1.0
@@ -62,9 +74,14 @@ class TestIndex < MiniTest::Test
         Line 2
     IN
 
-    assert_equal '1 new category, 1 new package, 1 new version', db.changelog
+    assert db.modified?
+    assert_equal '1 new category, 1 new package, 1 new version, ' \
+      '1 script', db.changelog
 
     db.write!
+
+    refute db.modified?
+    assert_nil db.changelog
 
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     assert_equal File.read(path), File.read(db.path)

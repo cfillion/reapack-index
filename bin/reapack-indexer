@@ -7,28 +7,35 @@ require 'reapack/index'
 require 'git'
 require 'io/console'
 
-def confirm(question, &block)
+def prompt(question, &block)
   print "#{question} [y/N]"
-
   answer = STDIN.getch
-  yes = answer.downcase == 'y'
-
-  block[] if block_given? && yes
-
   puts
+
+  yes = answer.downcase == 'y'
+  block[] if block_given? && yes
 
   yes
 end
 
+def scan(db, path, contents)
+  db.scan path, contents
+rescue RuntimeError => e
+  warn "Warning: #{e.message}"
+  abort unless prompt "Continue?"
+end
+
 git = Git.open ARGV.first || Dir.pwd
 db = ReaPack::Index.new File.join(git.dir.to_s, 'index.xml')
+db.source_pattern = ReaPack::Index.source_for git.remote.url
 
 if git.current_branch != 'master'
-  exit unless confirm("Current branch #{git.current_branch} is not" \
+  abort unless prompt("Current branch #{git.current_branch} is not" \
     " the master branch. Continue?")
 end
 
 commits = nil
+
 if db.commit
   commits = git.log(999999).between db.commit
 else
@@ -38,6 +45,7 @@ end
 commits.reverse_each {|commit|
   puts "Processing #{commit.message.lines.first.chomp} (#{commit.sha[0..6]})..."
 
+  db.commit = commit.sha
   parent = commit.parent
 
   # initial commit
@@ -46,7 +54,7 @@ commits.reverse_each {|commit|
       next unless ReaPack::Index.type_of path
 
       puts "-> indexing new file #{path}"
-      db.scan path, blob.contents
+      scan db, path, blob.contents
     }
     next
   end
@@ -59,7 +67,25 @@ commits.reverse_each {|commit|
     if diff.type == 'deleted'
       db.delete diff.path
     else
-      db.scan diff.path, diff.blob.contents
+      scan db, diff.path, diff.blob.contents
     end
   }
 }
+
+puts
+
+if db.modified?
+  changelog = db.changelog
+  puts changelog
+
+  prompt 'Write changes and commit the new database?' do
+    db.write!
+
+    # git.add 'index.xml'
+    # git.commit changelog
+
+    puts 'done'
+  end
+else
+  puts 'The database was not modified!'
+end
