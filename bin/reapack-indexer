@@ -5,31 +5,61 @@ Signal.trap('INT') { abort }
 require 'reapack/index'
 
 require 'git'
-require 'pp'
+require 'io/console'
+
+def confirm(question, &block)
+  print "#{question} [y/N]"
+
+  answer = STDIN.getch
+  yes = answer.downcase == 'y'
+
+  block[] if block_given? && yes
+
+  puts
+
+  yes
+end
 
 git = Git.open ARGV.first || Dir.pwd
 db = ReaPack::Index.new File.join(git.dir.to_s, 'index.xml')
 
-commits = nil
-if db.commit
-  commits = git.log.between db.commit
-else
-  commits = git.log
+if git.current_branch != 'master'
+  exit unless confirm("Current branch #{git.current_branch} is not" \
+    " the master branch. Continue?")
 end
 
-FILE_TYPES = {
-  'lua' => :script,
-  'eel' => :script,
-}.freeze
+commits = nil
+if db.commit
+  commits = git.log(999999).between db.commit
+else
+  commits = git.log 999999
+end
 
 commits.reverse_each {|commit|
-  commit.diff_parent.each {|diff|
-    ext = File.extname(diff.path)[1..-1]
-    # next unless FILE_TYPES.has_key? ext
+  puts "Processing #{commit.message.lines.first.chomp} (#{commit.sha[0..6]})..."
 
-    puts diff.path
-    blob = diff.blob(:src)
-    puts blob.contents if blob
+  parent = commit.parent
+
+  # initial commit
+  unless parent
+    commit.gtree.files.each_pair {|path, blob|
+      next unless ReaPack::Index.type_of path
+
+      puts "-> indexing new file #{path}"
+      db.scan path, blob.contents
+    }
+    next
+  end
+
+  Git::Diff.new(git, commit.parent.sha, commit.sha).each {|diff|
+    next unless ReaPack::Index.type_of diff.path
+
+    puts "-> indexing #{diff.type} file #{diff.path}"
+
+    if diff.type == 'deleted'
+      db.delete diff.path
+    else
+      db.scan diff.path, diff.blob.contents
+    end
   }
-  puts '*'*80
 }

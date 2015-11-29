@@ -1,6 +1,14 @@
 require File.expand_path '../helper', __FILE__
 
 class TestIndex < MiniTest::Test
+  def setup
+    @dummy_path = File.expand_path '../db/new_database.xml', __FILE__
+  end
+
+  def teardown
+    File.delete @dummy_path if File.exists? @dummy_path
+  end
+
   def test_version_and_commit
     db = ReaPack::Index.new \
       File.expand_path '../db/database.xml', __FILE__
@@ -26,5 +34,39 @@ class TestIndex < MiniTest::Test
 
     assert_equal 1, db.version
     assert_nil db.commit
+  end
+
+  def test_type_of
+    assert_nil ReaPack::Index.type_of('src/main.cpp')
+
+    assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.lua')
+    assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.eel')
+  end
+
+  def test_scan_unknown_type
+    db = ReaPack::Index.new @dummy_path
+
+    db.scan 'src/main.cpp', String.new
+    assert_nil db.changelog
+  end
+
+  def test_scan_script
+    db = ReaPack::Index.new @dummy_path
+    assert_nil db.changelog
+
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @author cfillion
+      @version 1.0
+      @changelog
+        Line 1
+        Line 2
+    IN
+
+    assert_equal '1 new category, 1 new package, 1 new version', db.changelog
+
+    db.write!
+
+    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    assert_equal File.read(path), File.read(db.path)
   end
 end
