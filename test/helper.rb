@@ -5,5 +5,5 @@ if ENV['CI']
   Coveralls.wear!
 end
 
-require 'reapack/indexer'
+require 'reapack/index'
 require 'minitest/autorun'

@@ -2,13 +2,13 @@
 lib = File.expand_path '../lib', __FILE__
 $LOAD_PATH.unshift lib unless $LOAD_PATH.include? lib
 
-require 'reapack/indexer/version'
+require 'reapack/index/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "reapack-indexer"
-  spec.version       = ReaPack::Indexer::VERSION
+  spec.name          = "reapack-index"
+  spec.version       = ReaPack::Index::VERSION
   spec.authors       = ["cfillion"]
-  spec.email         = ["reapack-indexer@cfillion.tk"]
+  spec.email         = ["reapack-index@cfillion.tk"]
   spec.summary       = %q{Package indexer for ReaPack-based repositories}
   spec.homepage      = "https://github.com/cfillion/reapack-indexer"
   spec.license       = "LGPL-3.0+"

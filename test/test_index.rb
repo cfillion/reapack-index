@@ -1,9 +1,8 @@
 require File.expand_path '../helper', __FILE__
 
-class TestDatabase < MiniTest::Test
-
+class TestIndex < MiniTest::Test
   def test_version_and_commit
-    db = ReaPack::Indexer::Database.new \
+    db = ReaPack::Index.new \
       File.expand_path '../db/database.xml', __FILE__
 
     assert_equal 1, db.version
@@ -11,7 +10,7 @@ class TestDatabase < MiniTest::Test
   end
 
   def test_save
-    db = ReaPack::Indexer::Database.new \
+    db = ReaPack::Index.new \
       File.expand_path '../db/database.xml', __FILE__
 
     path = File.expand_path '../db/database.xml.new', __FILE__
@@ -22,7 +21,7 @@ class TestDatabase < MiniTest::Test
   end
 
   def test_new
-    db = ReaPack::Indexer::Database.new \
+    db = ReaPack::Index.new \
       File.expand_path '../db/does_not_exists.xml', __FILE__
 
     assert_equal 1, db.version

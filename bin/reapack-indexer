@@ -2,13 +2,13 @@
 
 Signal.trap('INT') { abort }
 
-require 'reapack/indexer'
+require 'reapack/index'
 
 require 'git'
 require 'pp'
 
 git = Git.open ARGV.first || Dir.pwd
-db = ReaPack::Indexer::Database.new File.join(git.dir.to_s, 'index.xml')
+db = ReaPack::Index.new File.join(git.dir.to_s, 'index.xml')
 
 commits = nil
 if db.commit
@@ -17,6 +17,19 @@ else
   commits = git.log
 end
 
-commits.each {|commit|
-  pp commit
+FILE_TYPES = {
+  'lua' => :script,
+  'eel' => :script,
+}.freeze
+
+commits.reverse_each {|commit|
+  commit.diff_parent.each {|diff|
+    ext = File.extname(diff.path)[1..-1]
+    # next unless FILE_TYPES.has_key? ext
+
+    puts diff.path
+    blob = diff.blob(:src)
+    puts blob.contents if blob
+  }
+  puts '*'*80
 }

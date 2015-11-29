@@ -1,4 +1,8 @@
-class ReaPack::Indexer::Database
+require 'reapack/index/version'
+
+require 'nokogiri'
+
+class ReaPack::Index
   attr_reader :path
 
   def initialize path
