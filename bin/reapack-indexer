@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+Signal.trap('INT') { abort }
+
+require 'reapack/indexer'
+
+require 'git'
+require 'pp'
+
+git = Git.open ARGV.first || Dir.pwd
+db = ReaPack::Indexer::Database.new File.join(git.dir.to_s, 'index.xml')
+
+commits = nil
+if db.commit
+  commits = git.log.between db.commit
+else
+  commits = git.log
+end
+
+commits.each {|commit|
+  pp commit
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6">
+  <category name="Category Name">
+    <reapack name="Hello World.lua" author="cfillion" type="script">
+      <version name="1.0">
+        <source platform="all">https://google.com/</source>
+        <changelog>Fixed a division by zero error.</changelog>
+      </version>
+    </reapack>
+  </category>
+</index>
