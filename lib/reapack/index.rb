@@ -64,7 +64,7 @@ class ReaPack::Index
   end
 
   def scan(path, contents)
-    type, cat, pkg = find path
+    type = self.class.type_of path
     return unless type
 
     mh = MetaHeader.new contents
@@ -72,6 +72,8 @@ class ReaPack::Index
     if errors = mh.validate(HEADER_RULES)
       raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
+
+    cat, pkg = find path
 
     if pkg[:type].to_s != type.to_s
       pkg[:type] = type
@@ -91,7 +93,7 @@ class ReaPack::Index
   end
   
   def delete(path)
-    type, cat, pkg = find path
+    cat, pkg = find path, false
     return unless pkg
 
     pkg.remove
@@ -157,27 +159,24 @@ private
     @changes[type][0] += 1
   end
 
-  def find(path)
-    type = self.class.type_of path
-    return unless type
-
+  def find(path, create = true)
     cat_name = File.dirname path
     cat_name = 'Other' if cat_name == '.'
 
     pkg_name = File.basename path
 
-    cat = add_category cat_name
-    pkg = add_package cat, pkg_name
+    cat = add_category cat_name, create
+    pkg = cat ? add_package(cat, pkg_name, create) : nil
 
-    [type, cat, pkg]
+    [cat, pkg]
   end
 
-  def add_category(name)
+  def add_category(name, create = true)
     cat_node = @doc.root.element_children.select {|node|
       node.name == 'category' && node[:name] == name
     }.first
 
-    unless cat_node
+    if cat_node.nil? && create
       log_change 'new category', 'new categories'
 
       cat_node = Nokogiri::XML::Node.new 'category', @doc
@@ -188,12 +187,12 @@ private
     cat_node
   end
 
-  def add_package(cat, name)
+  def add_package(cat, name, create = true)
     pkg_node = cat.element_children.select {|node|
       node.name == 'reapack' && node[:name] == name
     }.first
 
-    unless pkg_node
+    if pkg_node.nil? && create
       log_change 'new package'
 
       pkg_node = Nokogiri::XML::Node.new 'reapack', @doc

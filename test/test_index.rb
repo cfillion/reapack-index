@@ -4,6 +4,7 @@ class TestIndex < MiniTest::Test
   def setup
     @real_path = File.expand_path '../db/database.xml', __FILE__
     @dummy_path = File.expand_path '../db/new_database.xml', __FILE__
+    @commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
   end
 
   def teardown
@@ -14,7 +15,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @real_path
 
     assert_equal 1, db.version
-    assert_equal '399f5609cff3e6fd92b5542d444fbf86da0443c6', db.commit
+    assert_equal @commit, db.commit
   end
 
   def test_save
@@ -53,7 +54,7 @@ class TestIndex < MiniTest::Test
 
   def test_scan_unknown_type
     db = ReaPack::Index.new @dummy_path
-    db.commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
+    db.commit = @commit
 
     db.scan 'src/main.cpp', String.new
     db.write!
@@ -162,12 +163,18 @@ class TestIndex < MiniTest::Test
 
   def test_validate_during_scan
     db = ReaPack::Index.new @dummy_path
+    db.commit = @commit
 
     error = assert_raises do
       db.scan 'Cat/test.lua', 'hello'
     end
 
+    db.write!
+
     assert_match /\AInvalid metadata in Cat\/test\.lua:/, error.message
+
+    path = File.expand_path '../db/empty.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_no_default_source_pattern
@@ -198,7 +205,7 @@ class TestIndex < MiniTest::Test
   def test_delete_not_found
     db = ReaPack::Index.new @real_path
 
-    db.delete 'src/main.cpp'
+    db.delete 'Cat/test.lua'
     refute db.modified?
   end
 
