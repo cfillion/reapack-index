@@ -241,8 +241,8 @@ private
 
   def add_sources(ver, mh, path)
     if !@source_pattern
-      raise RuntimeError, "source pattern is unset "\
-        "and the package doesn't specify it's source"
+      raise RuntimeError, "Source pattern is unset "\
+        "and the package doesn't specify its source"
     end
 
     old_sources = []

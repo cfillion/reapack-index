@@ -140,4 +140,32 @@ class TestIndex < MiniTest::Test
 
     assert db.modified?
   end
+
+  def test_validate_standalone
+    refute_empty ReaPack::Index.validate_file \
+      File.expand_path '../db/database.xml', __FILE__
+  end
+
+  def test_validate_during_scan
+    db = ReaPack::Index.new @dummy_path
+
+    error = assert_raises do
+      db.scan 'Cat/test.lua', 'hello'
+    end
+
+    assert_match /\AInvalid metadata in Cat\/test\.lua:/, error.message
+  end
+
+  def test_no_default_source_pattern
+    db = ReaPack::Index.new @dummy_path
+
+    error = assert_raises do
+      db.scan 'Track/Instrument Track.lua', <<-IN
+        @author cfillion
+        @version 1.0
+      IN
+    end
+
+    assert_match /\ASource pattern is unset/, error.message
+  end
 end
