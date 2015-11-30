@@ -5,12 +5,30 @@
 [![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
 [![Coverage Status](https://coveralls.io/repos/cfillion/reapack-index/badge.svg?branch=master&service=github)](https://coveralls.io/github/cfillion/reapack-index?branch=master)
 
-# Metadata Documentation
+### Installation
+
+Ruby 2 need to be installed on your computer and ready to be used.
+Install the dependencies with these commands:
+
+```
+cd path-to-this-repository
+gem install bundler
+bundle install
+```
+
+### Usage
+
+```
+bundle exec bin/reascript-indexer <path-to-your-reascript-repository>
+```
+
+## Metadata Documentation
 
 This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
+See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
-### Required Keys
+#### Required Keys
 
 **@author**
 
@@ -25,7 +43,7 @@ database in ReaPack format.
 @version 1.2pre3
 ```
 
-### Optional Keys
+#### Optional Keys
 
 **@changelog**
 
