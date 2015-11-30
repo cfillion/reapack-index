@@ -86,4 +86,23 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     assert_equal File.read(path), File.read(db.path)
   end
+
+  def test_remove_changelog
+    db = ReaPack::Index.new \
+      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @author cfillion
+      @version 1.0
+    IN
+
+    assert db.modified?
+
+    db.write @dummy_path
+    assert db.modified? # still modified after write() since write!() is not called
+
+    path = File.expand_path '../db/no_changelog.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
 end

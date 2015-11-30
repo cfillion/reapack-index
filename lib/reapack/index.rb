@@ -9,7 +9,7 @@ class ReaPack::Index
     'eel' => :script,
   }.freeze
 
-  RULES = {
+  HEADER_RULES = {
     :author => MetaHeader::REQUIRED,
     :version => /\A(?:[^\d]*\d+[^\d]*){1,4}\z/,
     :changelog => MetaHeader::OPTIONAL,
@@ -39,7 +39,7 @@ class ReaPack::Index
 
   def self.validate_file(path)
     mh = MetaHeader.from_file path
-    mh.validate RULES
+    mh.validate HEADER_RULES
   end
 
   def initialize(path)
@@ -48,7 +48,11 @@ class ReaPack::Index
     @dirty = false
 
     if File.exists? path
-      @doc = File.open(path) {|f| Nokogiri::XML(f) }
+      @doc = Nokogiri::XML File.open(path) do |config|
+        # don't add extra blank lines
+        # (because they don't go away when removing nodes)
+        config.noblanks
+      end
     else
       @doc = Nokogiri::XML::Document.new
       @doc.root = Nokogiri::XML::Node.new 'index', @doc
@@ -62,7 +66,7 @@ class ReaPack::Index
 
     mh = MetaHeader.new contents
 
-    if errors = mh.validate(RULES)
+    if errors = mh.validate(HEADER_RULES)
       raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
 
@@ -83,6 +87,12 @@ class ReaPack::Index
       raise RuntimeError, "source pattern is unset "\
         "and the package doesn't specify it's source"
     end
+
+    # remove existing sources
+    ver.element_children.each {|node|
+      next unless node.name == 'source'
+      node.remove
+    }
 
     add_source ver, :all, @source_pattern.sub('$path', path)
 
@@ -222,6 +232,7 @@ private
 
     if log.to_s.empty?
       cl_node.remove if cl_node
+      return
     elsif cl_node.nil?
       cl_node = Nokogiri::XML::Node.new 'changelog', @doc
       cl_node.parent = ver
