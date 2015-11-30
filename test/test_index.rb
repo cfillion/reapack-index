@@ -201,4 +201,19 @@ class TestIndex < MiniTest::Test
     db.delete 'src/main.cpp'
     refute db.modified?
   end
+
+  def test_scan_no_category
+    db = ReaPack::Index.new @dummy_path
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'test.lua', <<-IN
+      @author cfillion
+      @version 1.0
+    IN
+
+    db.write!
+
+    path = File.expand_path '../db/default_category.xml', __FILE__
+    assert_equal File.read(path), File.read(db.path)
+  end
 end

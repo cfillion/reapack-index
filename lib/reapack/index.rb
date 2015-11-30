@@ -162,6 +162,8 @@ private
     return unless type
 
     cat_name = File.dirname path
+    cat_name = 'Other' if cat_name == '.'
+
     pkg_name = File.basename path
 
     cat = add_category cat_name
