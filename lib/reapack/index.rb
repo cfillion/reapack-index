@@ -1,7 +1,11 @@
 require 'reapack/index/version'
 
+require 'git'
+require 'io/console'
 require 'metaheader'
 require 'nokogiri'
+
+require 'reapack/index/indexer'
 
 class ReaPack::Index
   FILE_TYPES = {
