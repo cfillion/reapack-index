@@ -2,6 +2,7 @@ require File.expand_path '../helper', __FILE__
 
 class TestIndex < MiniTest::Test
   def setup
+    @real_path = File.expand_path '../db/database.xml', __FILE__
     @dummy_path = File.expand_path '../db/new_database.xml', __FILE__
   end
 
@@ -10,27 +11,24 @@ class TestIndex < MiniTest::Test
   end
 
   def test_version_and_commit
-    db = ReaPack::Index.new \
-      File.expand_path '../db/database.xml', __FILE__
+    db = ReaPack::Index.new @real_path
 
     assert_equal 1, db.version
     assert_equal '399f5609cff3e6fd92b5542d444fbf86da0443c6', db.commit
   end
 
   def test_save
-    db = ReaPack::Index.new \
-      File.expand_path '../db/database.xml', __FILE__
+    db = ReaPack::Index.new @real_path
 
-    path = File.expand_path '../db/database.xml.new', __FILE__
-    db.write path
-    assert_equal File.read(db.path), File.read(path)
-  ensure
-    File.delete path
+    db.write @dummy_path
+    assert_equal File.read(db.path), File.read(@dummy_path)
   end
 
   def test_new
     db = ReaPack::Index.new \
       File.expand_path '../db/does_not_exists.xml', __FILE__
+
+    assert db.modified?
 
     assert_equal 1, db.version
     assert_nil db.commit
@@ -55,10 +53,13 @@ class TestIndex < MiniTest::Test
 
   def test_scan_unknown_type
     db = ReaPack::Index.new @dummy_path
+    db.commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
 
     db.scan 'src/main.cpp', String.new
-    refute db.modified?
-    assert_nil db.changelog
+    db.write!
+
+    path = File.expand_path '../db/empty.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_new_script
@@ -76,7 +77,7 @@ class TestIndex < MiniTest::Test
 
     assert db.modified?
     assert_equal '1 new category, 1 new package, 1 new version, ' \
-      '1 script', db.changelog
+      '1 updated script', db.changelog
 
     db.write!
 
@@ -104,6 +105,20 @@ class TestIndex < MiniTest::Test
 
     path = File.expand_path '../db/no_changelog.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_change_changelog
+    db = ReaPack::Index.new \
+      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @author cfillion
+      @version 1.0
+      @changelog New Changelog!
+    IN
+
+    assert db.modified?
   end
 
   def test_scan_identical
@@ -142,8 +157,7 @@ class TestIndex < MiniTest::Test
   end
 
   def test_validate_standalone
-    refute_empty ReaPack::Index.validate_file \
-      File.expand_path '../db/database.xml', __FILE__
+    refute_empty ReaPack::Index.validate_file @real_path
   end
 
   def test_validate_during_scan
@@ -167,5 +181,24 @@ class TestIndex < MiniTest::Test
     end
 
     assert_match /\ASource pattern is unset/, error.message
+  end
+
+  def test_delete
+    db = ReaPack::Index.new @real_path
+
+    db.delete 'Category Name/Hello World.lua'
+    assert db.modified?
+
+    db.write @dummy_path
+
+    path = File.expand_path '../db/empty.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_delete_not_found
+    db = ReaPack::Index.new @real_path
+
+    db.delete 'src/main.cpp'
+    refute db.modified?
   end
 end

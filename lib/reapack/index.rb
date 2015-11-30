@@ -45,15 +45,18 @@ class ReaPack::Index
   def initialize(path)
     @path = path
     @changes = {}
-    @dirty = false
 
     if File.exists? path
+      @dirty = false
+
       @doc = Nokogiri::XML File.open(path) do |config|
         # don't add extra blank lines
         # (because they don't go away when removing nodes)
         config.noblanks
       end
     else
+      @dirty = true
+
       @doc = Nokogiri::XML::Document.new
       @doc.root = Nokogiri::XML::Node.new 'index', @doc
       self.version = 1
@@ -84,13 +87,17 @@ class ReaPack::Index
     add_changelog ver, mh[:changelog]
     add_sources ver, mh, path
 
-    log_change 'script' if modified?
+    log_change 'updated script' if modified?
   end
   
   def delete(path)
     type, cat, pkg = find path
     return unless pkg
-    puts 'delete request!'
+
+    pkg.remove
+    cat.remove if cat.element_children.empty?
+
+    log_change "removed #{pkg[:type]}"
   end
 
   def source_pattern=(pattern)
@@ -223,6 +230,7 @@ private
         cl_node.remove
         @dirty = true
       end
+
       return
     elsif cl_node.nil?
       cl_node = Nokogiri::XML::Node.new 'changelog', @doc
