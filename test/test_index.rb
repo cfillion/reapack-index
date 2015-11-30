@@ -61,7 +61,7 @@ class TestIndex < MiniTest::Test
     assert_nil db.changelog
   end
 
-  def test_scan_script
+  def test_scan_new_script
     db = ReaPack::Index.new @dummy_path
     assert_nil db.changelog
 
@@ -104,5 +104,40 @@ class TestIndex < MiniTest::Test
 
     path = File.expand_path '../db/no_changelog.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_scan_identical
+    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    db = ReaPack::Index.new path
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @author cfillion
+      @version 1.0
+      @changelog
+        Line 1
+        Line 2
+    IN
+
+    refute db.modified?
+
+    db.write @dummy_path
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_scan_change_source_pattern
+    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    db = ReaPack::Index.new path
+
+    db.source_pattern = 'http://duckduckgo.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @author cfillion
+      @version 1.0
+      @changelog
+        Line 1
+        Line 2
+    IN
+
+    assert db.modified?
   end
 end

@@ -70,7 +70,7 @@ class ReaPack::Index
       raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
 
-    if pkg[:type] != type
+    if pkg[:type].to_s != type.to_s
       pkg[:type] = type
       @dirty = true
     end
@@ -82,19 +82,7 @@ class ReaPack::Index
 
     ver = add_version pkg, mh[:version]
     add_changelog ver, mh[:changelog]
-
-    if !@source_pattern
-      raise RuntimeError, "source pattern is unset "\
-        "and the package doesn't specify it's source"
-    end
-
-    # remove existing sources
-    ver.element_children.each {|node|
-      next unless node.name == 'source'
-      node.remove
-    }
-
-    add_source ver, :all, @source_pattern.sub('$path', path)
+    add_sources ver, mh, path
 
     log_change 'script' if modified?
   end
@@ -231,7 +219,10 @@ private
     cdata = nil
 
     if log.to_s.empty?
-      cl_node.remove if cl_node
+      if cl_node
+        cl_node.remove
+        @dirty = true
+      end
       return
     elsif cl_node.nil?
       cl_node = Nokogiri::XML::Node.new 'changelog', @doc
@@ -248,12 +239,34 @@ private
     cl_node
   end
 
+  def add_sources(ver, mh, path)
+    if !@source_pattern
+      raise RuntimeError, "source pattern is unset "\
+        "and the package doesn't specify it's source"
+    end
+
+    old_sources = []
+    ver.element_children.each {|node|
+      next unless node.name == 'source'
+      old_sources << parse_source(node)
+      node.remove
+    }
+
+    source = add_source ver, :all, @source_pattern.sub('$path', path)
+    old_sources.delete parse_source(source)
+
+    @dirty = true unless old_sources.empty?
+  end
+
   def add_source(ver, platform, url)
     node = Nokogiri::XML::Node.new 'source', @doc
     node[:platform] = platform
     node.content = url
     node.parent = ver
+    node
+  end
 
-    @dirty = true
+  def parse_source(node)
+    [node[:platform].to_s, node.content]
   end
 end
