@@ -21,16 +21,16 @@ class ReaPack::Index::Indexer
     commits.reverse_each {|commit| process commit }
     puts
 
-    unless db.modified?
+    unless @db.modified?
       puts 'The database was not modified!'
       return
     end
 
-    changelog = db.changelog
+    changelog = @db.changelog
     puts changelog
 
     prompt 'Write changes and commit the new database?' do
-      db.write!
+      @db.write!
 
       # @git.add 'index.xml'
       # @git.commit changelog
