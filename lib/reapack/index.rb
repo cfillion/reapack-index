@@ -14,7 +14,7 @@ class ReaPack::Index
   }.freeze
 
   HEADER_RULES = {
-    :version => /\A(?:[^\d]*\d+[^\d]*){1,4}\z/,
+    :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
     :changelog => MetaHeader::OPTIONAL,
   }.freeze
 
