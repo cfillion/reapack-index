@@ -30,17 +30,13 @@ See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
 #### Required Keys
 
-**@author**
-
-```
-@author cfillion
-```
-
 **@version** (value must contain between one and four groups of digits)
 
 ```
 @version 1.0
 @version 1.2pre3
+
+Version: 0.2015.12.25
 ```
 
 #### Optional Keys
@@ -51,4 +47,7 @@ See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 @changelog
   Documented the metadata syntax
   Added support for deleted scripts
+
+Changelog:
+  Added an alternate syntax for metadata tags
 ```
