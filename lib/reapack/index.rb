@@ -21,9 +21,9 @@ class ReaPack::Index
 
   SOURCE_HOSTS = {
     /\Agit@github\.com:([^\/]+)\/(.+)\.git\z/ =>
-      'https://github.com/\1/\2/raw/master/$path',
+      'https://github.com/\1/\2/raw/$commit/$path',
     /\Ahttps:\/\/github\.com\/([^\/]+)\/(.+)\.git\z/ =>
-      'https://github.com/\1/\2/raw/master/$path',
+      'https://github.com/\1/\2/raw/$commit/$path',
   }.freeze
 
   attr_reader :path, :source_pattern
@@ -265,7 +265,10 @@ private
       node.remove
     }
 
-    source = add_source ver, :all, @source_pattern.sub('$path', path)
+    source = add_source ver, :all, @source_pattern
+      .sub('$path', path)
+      .sub('$commit', @commit || 'master')
+
     old_sources.delete parse_source(source)
 
     @dirty = true unless old_sources.empty?

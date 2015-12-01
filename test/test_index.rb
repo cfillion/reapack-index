@@ -45,10 +45,10 @@ class TestIndex < MiniTest::Test
   def test_source_for
     assert_nil ReaPack::Index.source_for('http://google.com')
 
-    assert_equal 'https://github.com/User/Repo/raw/master/$path',
+    assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
       ReaPack::Index.source_for('git@github.com:User/Repo.git')
 
-    assert_equal 'https://github.com/User/Repo/raw/master/$path',
+    assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
       ReaPack::Index.source_for('https://github.com/User/Repo.git')
   end
 

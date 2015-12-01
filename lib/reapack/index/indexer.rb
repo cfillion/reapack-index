@@ -55,7 +55,7 @@ private
     @db.scan path, contents
   rescue RuntimeError => e
     warn "Warning: #{e.message}"
-    abort unless prompt "Continue?"
+    abort unless prompt "Skip and continue?"
   end
 
   def process(commit)
