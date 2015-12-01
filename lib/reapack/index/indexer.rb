@@ -29,11 +29,11 @@ class ReaPack::Index::Indexer
     changelog = @db.changelog
     puts changelog
 
-    prompt 'Write changes and commit the new database?' do
-      @db.write!
+    @db.write!
 
-      # @git.add 'index.xml'
-      # @git.commit changelog
+    prompt 'Commit the new database?' do
+      @git.add @db.path
+      @git.commit "index: #{changelog}"
 
       puts 'done'
     end
