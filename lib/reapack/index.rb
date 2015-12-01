@@ -261,7 +261,7 @@ private
 
     source = add_source ver, :all, @source_pattern
       .sub('$path', path)
-      .sub('$commit', @commit || 'master')
+      .sub('$commit', commit || 'master')
 
     old_sources.delete parse_source(source)
 

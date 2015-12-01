@@ -141,7 +141,7 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     db = ReaPack::Index.new path
 
-    db.source_pattern = 'http://duckduckgo.com/$path'
+    db.source_pattern = 'https://duckduckgo.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog
@@ -150,6 +150,23 @@ class TestIndex < MiniTest::Test
     IN
 
     assert db.modified?
+  end
+
+  def test_scan_source_with_commit
+    path = File.expand_path @dummy_path, __FILE__
+    db = ReaPack::Index.new path
+
+    db.source_pattern = 'https://google.com/$commit/$path'
+    db.commit = 'commit-sha1'
+
+    db.scan 'Category Name/Hello World.lua', <<-IN
+      @version 1.0
+    IN
+
+    db.write!
+
+    path = File.expand_path '../db/source_commit.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_validate_standalone
