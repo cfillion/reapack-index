@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <index version="1">
   <category name="Track">
-    <reapack name="Instrument Track.lua" type="script" author="cfillion">
+    <reapack name="Instrument Track.lua" type="script">
       <version name="1.0">
         <changelog><![CDATA[Line 1
 Line 2]]></changelog>

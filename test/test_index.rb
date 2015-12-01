@@ -69,7 +69,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
-      @author cfillion
       @version 1.0
       @changelog
         Line 1
@@ -95,7 +94,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
-      @author cfillion
       @version 1.0
     IN
 
@@ -114,7 +112,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
-      @author cfillion
       @version 1.0
       @changelog New Changelog!
     IN
@@ -128,7 +125,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
-      @author cfillion
       @version 1.0
       @changelog
         Line 1
@@ -147,7 +143,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://duckduckgo.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
-      @author cfillion
       @version 1.0
       @changelog
         Line 1
@@ -182,7 +177,6 @@ class TestIndex < MiniTest::Test
 
     error = assert_raises do
       db.scan 'Track/Instrument Track.lua', <<-IN
-        @author cfillion
         @version 1.0
       IN
     end
@@ -214,7 +208,6 @@ class TestIndex < MiniTest::Test
 
     db.source_pattern = 'http://google.com/$path'
     db.scan 'test.lua', <<-IN
-      @author cfillion
       @version 1.0
     IN
 

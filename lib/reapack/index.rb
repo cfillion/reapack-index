@@ -14,7 +14,6 @@ class ReaPack::Index
   }.freeze
 
   HEADER_RULES = {
-    :author => MetaHeader::REQUIRED,
     :version => /\A(?:[^\d]*\d+[^\d]*){1,4}\z/,
     :changelog => MetaHeader::OPTIONAL,
   }.freeze
@@ -81,11 +80,6 @@ class ReaPack::Index
 
     if pkg[:type].to_s != type.to_s
       pkg[:type] = type
-      @dirty = true
-    end
-
-    if pkg[:author] != mh[:author]
-      pkg[:author] = mh[:author]
       @dirty = true
     end
 

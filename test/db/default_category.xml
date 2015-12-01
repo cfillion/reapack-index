@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <index version="1">
   <category name="Other">
-    <reapack name="test.lua" type="script" author="cfillion">
+    <reapack name="test.lua" type="script">
       <version name="1.0">
         <source platform="all">http://google.com/test.lua</source>
       </version>
