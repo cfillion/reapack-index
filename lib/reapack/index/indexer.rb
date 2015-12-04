@@ -9,7 +9,7 @@ class ReaPack::Index::Indexer
   def run
     if @git.current_branch != 'master'
       abort unless prompt("Current branch #{@git.current_branch} is not" \
-        " the master branch. Continue?")
+        " the master branch. Continue anyway?")
     end
 
     if @db.commit
@@ -55,7 +55,6 @@ private
     @db.scan path, contents
   rescue RuntimeError => e
     warn "Warning: #{e.message}"
-    abort unless prompt "Skip and continue?"
   end
 
   def process(commit)
