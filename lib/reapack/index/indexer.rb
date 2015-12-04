@@ -41,9 +41,9 @@ class ReaPack::Index::Indexer
 
 private
   def prompt(question, &block)
-    print "#{question} [y/N]"
+    print "#{question} [y/N] "
     answer = STDIN.getch
-    puts
+    puts answer
 
     yes = answer.downcase == 'y'
     block[] if block_given? && yes
