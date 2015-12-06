@@ -4,6 +4,7 @@ require 'git'
 require 'io/console'
 require 'metaheader'
 require 'nokogiri'
+require 'uri'
 
 require 'reapack/index/indexer'
 
@@ -271,7 +272,7 @@ private
   def add_source(ver, platform, url)
     node = Nokogiri::XML::Node.new 'source', @doc
     node[:platform] = platform
-    node.content = url
+    node.content = URI.escape url
     node.parent = ver
     node
   end
