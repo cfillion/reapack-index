@@ -7,6 +7,7 @@ require 'nokogiri'
 require 'uri'
 
 require 'reapack/index/indexer'
+require 'reapack/index/git-patch'
 
 class ReaPack::Index
   FILE_TYPES = {

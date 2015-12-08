@@ -75,7 +75,7 @@ private
       return
     end
 
-    Git::Diff.new(@git, commit.parent.sha, commit.sha).each {|diff|
+    ReaPack::Index::GitDiff.new(@git, commit.parent.sha, commit.sha).each {|diff|
       next unless ReaPack::Index.type_of diff.path
 
       puts "-> indexing #{diff.type} file #{diff.path}"
@@ -86,5 +86,7 @@ private
         scan diff.path, diff.blob.contents
       end
     }
+  rescue NoMethodError => e
+    warn "Error: #{e}"
   end
 end
