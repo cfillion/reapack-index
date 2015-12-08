@@ -144,5 +144,8 @@ private
         exit
       end
     end.parse!
+  rescue OptionParser::InvalidOption => e
+    Kernel.warn "reapack-indexer: #{e.message}"
+    exit
   end
 end
