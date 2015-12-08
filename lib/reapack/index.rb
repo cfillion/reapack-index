@@ -4,6 +4,7 @@ require 'git'
 require 'io/console'
 require 'metaheader'
 require 'nokogiri'
+require 'optparse'
 require 'uri'
 
 require 'reapack/index/indexer'
