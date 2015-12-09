@@ -50,7 +50,7 @@ private
   def prompt(question, &block)
     print "#{question} [y/N] "
     answer = STDIN.getch
-    log answer
+    puts answer
 
     yes = answer.downcase == 'y'
     block[] if block_given? && yes
