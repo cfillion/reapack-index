@@ -97,7 +97,7 @@ private
       log "-> indexing #{diff.type} file #{diff.path}"
 
       if diff.type == 'deleted'
-        @db.delete diff.path
+        @db.remove diff.path
       else
         scan diff.path, diff.blob.contents
       end

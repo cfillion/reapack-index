@@ -170,7 +170,12 @@ class TestIndex < MiniTest::Test
   end
 
   def test_validate_standalone
-    refute_empty ReaPack::Index.validate_file @real_path
+    refute_nil ReaPack::Index.validate_file @real_path
+  end
+
+  def test_validate_noindex
+    assert_nil ReaPack::Index.validate_file \
+      File.expand_path '../scripts/noindex.lua', __FILE__
   end
 
   def test_validate_during_scan
@@ -201,10 +206,10 @@ class TestIndex < MiniTest::Test
     assert_match /\ASource pattern is unset/, error.message
   end
 
-  def test_delete
+  def test_remove
     db = ReaPack::Index.new @real_path
 
-    db.delete 'Category Name/Hello World.lua'
+    db.remove 'Category Name/Hello World.lua'
     assert db.modified?
 
     db.write @dummy_path
@@ -213,10 +218,10 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
-  def test_delete_not_found
+  def test_remove_not_found
     db = ReaPack::Index.new @real_path
 
-    db.delete 'Cat/test.lua'
+    db.remove 'Cat/test.lua'
     refute db.modified?
   end
 
@@ -232,5 +237,23 @@ class TestIndex < MiniTest::Test
 
     path = File.expand_path '../db/default_category.xml', __FILE__
     assert_equal File.read(path), File.read(db.path)
+  end
+
+  def test_scan_noindex
+    db = ReaPack::Index.new \
+      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @noindex
+    IN
+
+    assert db.modified?
+
+    db.commit = @commit
+    db.write @dummy_path
+
+    path = File.expand_path '../db/empty.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 end

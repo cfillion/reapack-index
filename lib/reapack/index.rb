@@ -45,6 +45,8 @@ class ReaPack::Index
 
   def self.validate_file(path)
     mh = MetaHeader.from_file path
+    return if mh[:noindex]
+
     mh.validate HEADER_RULES
   end
 
@@ -75,6 +77,11 @@ class ReaPack::Index
 
     mh = MetaHeader.new contents
 
+    if mh[:noindex]
+      remove path
+      return
+    end
+
     if errors = mh.validate(HEADER_RULES)
       raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
@@ -93,7 +100,7 @@ class ReaPack::Index
     log_change 'updated script' if modified?
   end
   
-  def delete(path)
+  def remove(path)
     cat, pkg = find path, false
     return unless pkg
 

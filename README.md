@@ -51,3 +51,14 @@ Version: 0.2015.12.25
 Changelog:
   Added an alternate syntax for metadata tags
 ```
+
+**@noindex**
+
+Disable indexing for this file. Should be used on included files that cannot be
+used alone.
+
+```
+@noindex
+
+NoIndex: true
+```
