@@ -25,8 +25,10 @@ class ReaPack::Index::Indexer
     @total = commits.size
     commits.reverse_each {|commit| process commit }
 
-    update_progress unless @verbose
-    print "\n" if @total > 0
+    if @total > 0
+      update_progress unless @verbose
+      print "\n"
+    end
 
     unless @db.modified?
       puts 'The database was not modified!'
@@ -121,7 +123,7 @@ private
   def update_progress
     percent = (@done.to_f / @total) * 100
     print "\rIndexing commit %d of %d (%d%%)..." %
-      [@done, @total, percent]
+      [[@done + 1, @total].min, @total, percent]
   end
 
   def parse_options
