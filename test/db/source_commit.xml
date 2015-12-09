@@ -3,7 +3,7 @@
   <category name="Category Name">
     <reapack name="Hello World.lua" type="script">
       <version name="1.0">
-        <source platform="all">https://google.com/commit-sha1/Category Name/Hello World.lua</source>
+        <source platform="all">https://google.com/commit-sha1/Category%20Name/Hello%20World.lua</source>
       </version>
     </reapack>
   </category>

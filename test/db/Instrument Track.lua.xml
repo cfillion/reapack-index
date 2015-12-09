@@ -5,7 +5,7 @@
       <version name="1.0">
         <changelog><![CDATA[Line 1
 Line 2]]></changelog>
-        <source platform="all">http://google.com/Track/Instrument Track.lua</source>
+        <source platform="all">http://google.com/Track/Instrument%20Track.lua</source>
       </version>
     </reapack>
   </category>

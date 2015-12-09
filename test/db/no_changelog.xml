@@ -3,7 +3,7 @@
   <category name="Track">
     <reapack name="Instrument Track.lua" type="script">
       <version name="1.0">
-        <source platform="all">http://google.com/Track/Instrument Track.lua</source>
+        <source platform="all">http://google.com/Track/Instrument%20Track.lua</source>
       </version>
     </reapack>
   </category>
