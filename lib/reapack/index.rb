@@ -11,6 +11,8 @@ require 'reapack/index/indexer'
 require 'reapack/index/git-patch'
 
 class ReaPack::Index
+  Error = Class.new RuntimeError
+
   FILE_TYPES = {
     'lua' => :script,
     'eel' => :script,
@@ -83,7 +85,7 @@ class ReaPack::Index
     end
 
     if errors = mh.validate(HEADER_RULES)
-      raise RuntimeError, "Invalid metadata in #{path}:\n#{errors.inspect}"
+      raise Error, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
 
     cat, pkg = find path
@@ -258,7 +260,7 @@ private
 
   def add_sources(ver, mh, path)
     if !@source_pattern
-      raise RuntimeError, "Source pattern is unset "\
+      raise Error, "Source pattern is unset "\
         "and the package doesn't specify its source"
     end
 

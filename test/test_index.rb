@@ -182,7 +182,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @dummy_path
     db.commit = @commit
 
-    error = assert_raises do
+    error = assert_raises ReaPack::Index::Error do
       db.scan 'Cat/test.lua', 'hello'
     end
 
@@ -197,7 +197,7 @@ class TestIndex < MiniTest::Test
   def test_no_default_source_pattern
     db = ReaPack::Index.new @dummy_path
 
-    error = assert_raises do
+    error = assert_raises ReaPack::Index::Error do
       db.scan 'Track/Instrument Track.lua', <<-IN
         @version 1.0
       IN

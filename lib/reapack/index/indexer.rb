@@ -11,7 +11,12 @@ class ReaPack::Index::Indexer
   def run
     @done = 0
 
-    if @git.current_branch != 'master'
+    branch = @git.current_branch
+
+    if branch.nil?
+      Kernel.warn 'Current branch is empty, cannot continue.'
+      abort
+    elsif branch != 'master'
       abort unless prompt("Current branch #{@git.current_branch} is not" \
         " the master branch. Continue anyway?")
     end
@@ -62,7 +67,7 @@ private
 
   def scan(path, contents)
     @db.scan path, contents
-  rescue RuntimeError => e
+  rescue ReaPack::Index::Error => e
     warn "Warning: #{e.message}"
   end
 
