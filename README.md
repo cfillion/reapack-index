@@ -62,3 +62,16 @@ used alone.
 
 NoIndex: true
 ```
+
+**@provides**
+
+Add additional files to the package.
+
+```
+@provides unicode.dat
+
+Provides:
+  Images/background.png
+  Images/fader_small.png
+  Images/fader_big.png
+```

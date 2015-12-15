@@ -261,8 +261,10 @@ private
   def add_sources(ver, mh, path)
     if !@source_pattern
       raise Error, "Source pattern is unset "\
-        "and the package doesn't specify its source"
+        "and the package doesn't specify its source url"
     end
+
+    dep_root = File.dirname path
 
     old_sources = []
     ver.element_children.each {|node|
@@ -271,24 +273,40 @@ private
       node.remove
     }
 
-    source = add_source ver, :all, @source_pattern
-      .sub('$path', path)
-      .sub('$commit', commit || 'master')
-
+    source = add_local_source ver, nil, path
     old_sources.delete parse_source(source)
+
+    mh[:provides].to_s.lines {|line|
+      line.chomp!
+
+      dep_path = dep_root == '.' ? line : File.join(dep_root, line)
+      source = add_local_source ver, line, dep_path
+      old_sources.delete parse_source(source)
+    }
+
 
     @dirty = true unless old_sources.empty?
   end
 
-  def add_source(ver, platform, url)
+  def add_local_source(ver, file, path)
+    url = @source_pattern
+      .sub('$path', path)
+      .sub('$commit', commit || 'master')
+
+    add_source ver, :all, file, url
+  end
+
+  def add_source(ver, platform, file, url)
+
     node = Nokogiri::XML::Node.new 'source', @doc
     node[:platform] = platform
+    node[:file] = file unless file.nil?
     node.content = URI.escape url
     node.parent = ver
     node
   end
 
   def parse_source(node)
-    [node[:platform].to_s, node.content]
+    [node[:platform].to_s, node[:file].to_s, node.content]
   end
 end

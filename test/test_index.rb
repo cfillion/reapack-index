@@ -256,4 +256,41 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
+
+  def test_scan_dependencies
+    db = ReaPack::Index.new @dummy_path
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+      @provides
+        Resources/unicode.dat
+        test.png
+    IN
+
+    assert db.modified?
+
+    db.write!
+
+    path = File.expand_path '../db/dependencies.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_scan_dependencies_in_root
+    db = ReaPack::Index.new @dummy_path
+
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Instrument Track.lua', <<-IN
+      @version 1.0
+      @provides
+        test.png
+    IN
+
+    assert db.modified?
+
+    db.write!
+
+    path = File.expand_path '../db/dependencies_in_root.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
 end

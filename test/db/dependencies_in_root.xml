@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<index version="1">
+  <category name="Other">
+    <reapack name="Instrument Track.lua" type="script">
+      <version name="1.0">
+        <source platform="all">http://google.com/Instrument%20Track.lua</source>
+        <source platform="all" file="test.png">http://google.com/test.png</source>
+      </version>
+    </reapack>
+  </category>
+</index>
