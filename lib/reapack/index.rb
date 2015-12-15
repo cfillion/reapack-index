@@ -31,6 +31,7 @@ class ReaPack::Index
   }.freeze
 
   attr_reader :path, :source_pattern
+  attr_accessor :pwd
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
@@ -55,6 +56,7 @@ class ReaPack::Index
   def initialize(path)
     @path = path
     @changes = {}
+    @pwd = String.new
 
     if File.exists? path
       @dirty = false
@@ -289,6 +291,10 @@ private
   end
 
   def add_local_source(ver, file, path)
+    unless File.file? File.join(@pwd, path)
+      raise Error, "#{path}: No such file or directory"
+    end
+
     url = @source_pattern
       .sub('$path', path)
       .sub('$commit', commit || 'master')

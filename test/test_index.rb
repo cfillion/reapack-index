@@ -4,6 +4,8 @@ class TestIndex < MiniTest::Test
   def setup
     @real_path = File.expand_path '../db/database.xml', __FILE__
     @dummy_path = File.expand_path '../db/new_database.xml', __FILE__
+    @scripts_path = File.expand_path '../scripts/', __FILE__
+
     @commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
   end
 
@@ -67,6 +69,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @dummy_path
     assert_nil db.changelog
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -92,6 +95,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new \
       File.expand_path '../db/Instrument Track.lua.xml', __FILE__
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -110,6 +114,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new \
       File.expand_path '../db/Instrument Track.lua.xml', __FILE__
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -123,6 +128,7 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     db = ReaPack::Index.new path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -141,6 +147,7 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     db = ReaPack::Index.new path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'https://duckduckgo.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -156,6 +163,7 @@ class TestIndex < MiniTest::Test
     path = File.expand_path @dummy_path, __FILE__
     db = ReaPack::Index.new path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'https://google.com/$commit/$path'
     db.commit = 'commit-sha1'
 
@@ -228,6 +236,7 @@ class TestIndex < MiniTest::Test
   def test_scan_no_category
     db = ReaPack::Index.new @dummy_path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'test.lua', <<-IN
       @version 1.0
@@ -243,6 +252,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new \
       File.expand_path '../db/Instrument Track.lua.xml', __FILE__
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @noindex
@@ -260,6 +270,7 @@ class TestIndex < MiniTest::Test
   def test_scan_dependencies
     db = ReaPack::Index.new @dummy_path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
@@ -276,21 +287,22 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
-  def test_scan_dependencies_in_root
+  def test_scan_dependencies_from_root
     db = ReaPack::Index.new @dummy_path
 
+    db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
-    db.scan 'Instrument Track.lua', <<-IN
+    db.scan 'test.lua', <<-IN
       @version 1.0
       @provides
-        test.png
+        Track/test.png
     IN
 
     assert db.modified?
 
     db.write!
 
-    path = File.expand_path '../db/dependencies_in_root.xml', __FILE__
+    path = File.expand_path '../db/dependencies_from_root.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 end

@@ -3,6 +3,7 @@ class ReaPack::Index::Indexer
     @git = Git.open path
 
     @db = ReaPack::Index.new File.join(@git.dir.to_s, 'index.xml')
+    @db.pwd = path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
 
     parse_options
