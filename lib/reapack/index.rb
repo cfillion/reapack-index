@@ -30,6 +30,7 @@ class ReaPack::Index
       'https://github.com/\1/\2/raw/$commit/$path',
   }.freeze
 
+
   attr_reader :path, :source_pattern
   attr_accessor :pwd
 
@@ -57,6 +58,7 @@ class ReaPack::Index
     @path = path
     @changes = {}
     @pwd = String.new
+    @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }
 
     if File.exists? path
       @dirty = false
@@ -75,7 +77,7 @@ class ReaPack::Index
     end
   end
 
-  def scan(path, contents)
+  def scan(path, contents, &block)
     type = self.class.type_of path
     return unless type
 
@@ -92,6 +94,9 @@ class ReaPack::Index
 
     cat, pkg = find path
 
+    old_is_file = @is_file
+    @is_file = block if block_given?
+
     if pkg[:type].to_s != type.to_s
       pkg[:type] = type
       @dirty = true
@@ -102,6 +107,8 @@ class ReaPack::Index
     add_sources ver, mh, path
 
     log_change 'updated script' if modified?
+  ensure
+    @is_file = old_is_file
   end
   
   def remove(path)
@@ -286,12 +293,11 @@ private
       old_sources.delete parse_source(source)
     }
 
-
     @dirty = true unless old_sources.empty?
   end
 
   def add_local_source(ver, file, path)
-    unless File.file? File.join(@pwd, path)
+    unless @is_file[path]
       raise Error, "#{path}: No such file or directory"
     end
 

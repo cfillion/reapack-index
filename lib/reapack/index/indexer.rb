@@ -66,8 +66,8 @@ private
     yes
   end
 
-  def scan(path, contents)
-    @db.scan path, contents
+  def scan(path, contents, &block)
+    @db.scan path, contents, &block
   rescue ReaPack::Index::Error => e
     warn "Warning: #{e.message}"
   end
@@ -86,18 +86,21 @@ private
 
     # initial commit
     unless parent
-      commit.gtree.files.each_pair {|path, blob|
+      files = commit.gtree.files
+      files.each_pair {|path, blob|
         next unless ReaPack::Index.type_of path
 
         log "-> indexing new file #{path}"
-        scan path, blob.contents
+        scan path, blob.contents {|file|
+          files.include? file
+        }
       }
 
       return
     end
 
-    diff = ReaPack::Index::GitDiff.new(@git, commit.parent.sha, commit.sha).to_a
-    diff.each {|diff|
+    diffs = ReaPack::Index::GitDiff.new(@git, commit.parent.sha, commit.sha).to_a
+    diffs.each {|diff|
       next unless ReaPack::Index.type_of diff.path
 
       log "-> indexing #{diff.type} file #{diff.path}"
@@ -105,7 +108,9 @@ private
       if diff.type == 'deleted'
         @db.remove diff.path
       else
-        scan diff.path, diff.blob.contents
+        scan diff.path, diff.blob.contents {|file|
+          diffs.find {|diff| diff.path == file }
+        }
       end
     }
   rescue NoMethodError => e

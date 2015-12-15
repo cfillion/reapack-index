@@ -305,4 +305,20 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/dependencies_from_root.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
+
+  def test_missing_dependency
+    db = ReaPack::Index.new @dummy_path
+
+    db.pwd = @scripts_path
+    db.source_pattern = 'http://google.com/$path'
+    error = assert_raises ReaPack::Index::Error do
+      db.scan 'Track/Instrument Track.lua', <<-IN
+        @version 1.0
+        @provides
+          404.html
+      IN
+    end
+
+    assert_equal 'Track/404.html: No such file or directory', error.message
+  end
 end
