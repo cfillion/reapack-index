@@ -84,17 +84,18 @@ private
     @db.commit = commit.sha
     parent = commit.parent
 
+    files = commit.gtree.files
+
     # initial commit
     unless parent
-      files = commit.gtree.files
-      files.each_pair {|path, blob|
+      files.each_pair do |path, blob|
         next unless ReaPack::Index.type_of path
 
         log "-> indexing new file #{path}"
-        scan path, blob.contents {|file|
+        scan(path, blob.contents) {|file|
           files.include? file
         }
-      }
+      end
 
       return
     end
@@ -108,8 +109,8 @@ private
       if diff.type == 'deleted'
         @db.remove diff.path
       else
-        scan diff.path, diff.blob.contents {|file|
-          diffs.find {|diff| diff.path == file }
+        scan(diff.path, diff.blob.contents) {|file|
+          files.find {|array| array.first == file }
         }
       end
     }
