@@ -84,7 +84,7 @@ private
     @db.commit = commit.sha
     parent = commit.parent
 
-    files = commit.gtree.files
+    files = lsfiles commit.gtree
 
     # initial commit
     unless parent
@@ -109,8 +109,8 @@ private
       if diff.type == 'deleted'
         @db.remove diff.path
       else
-        scan(diff.path, diff.blob.contents) {|file|
-          files.find {|array| array.first == file }
+        scan(diff.path, diff.blob.contents) {|path|
+          files.find {|file| file == path }
         }
       end
     }
@@ -118,6 +118,19 @@ private
     warn "Error: #{e}"
   ensure
     @done += 1
+  end
+
+  def lsfiles(tree)
+    files = tree.files.keys
+    tree.trees.each {|array|
+      prefix = array.first
+      subfiles = lsfiles(array.last).map do |f|
+        File.join prefix, f
+      end
+
+      files.concat subfiles
+    }
+    files
   end
 
   def log(line)
