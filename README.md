@@ -28,7 +28,7 @@ This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
 See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
-#### Required Keys
+#### Required Tags
 
 **@version** (value must contain between one and four groups of digits)
 
@@ -39,7 +39,7 @@ See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 Version: 0.2015.12.25
 ```
 
-#### Optional Keys
+#### Optional Tags
 
 **@changelog**
 
