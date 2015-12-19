@@ -102,9 +102,10 @@ class ReaPack::Index
       @dirty = true
     end
 
-    ver = add_version pkg, mh[:version]
-    add_changelog ver, mh[:changelog]
-    add_sources ver, mh, path
+    if ver = add_version(pkg, mh[:version])
+      add_changelog ver, mh[:changelog]
+      add_sources ver, mh, path
+    end
 
     log_change 'updated script' if modified?
   ensure
@@ -227,13 +228,13 @@ private
       node.name == 'version' && node[:name] == name
     }.first
 
-    unless ver_node
-      log_change 'new version'
+    return if ver_node
 
-      ver_node = Nokogiri::XML::Node.new 'version', @doc
-      ver_node[:name] = name
-      ver_node.parent = pkg
-    end
+    log_change 'new version'
+
+    ver_node = Nokogiri::XML::Node.new 'version', @doc
+    ver_node[:name] = name
+    ver_node.parent = pkg
 
     ver_node
   end

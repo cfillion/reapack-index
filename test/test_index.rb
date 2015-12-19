@@ -91,25 +91,6 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(path), File.read(db.path)
   end
 
-  def test_remove_changelog
-    db = ReaPack::Index.new \
-      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
-
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-    IN
-
-    assert db.modified?
-
-    db.write @dummy_path
-    assert db.modified? # still modified after write() since write!() is not called
-
-    path = File.expand_path '../db/no_changelog.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
   def test_change_changelog
     db = ReaPack::Index.new \
       File.expand_path '../db/Instrument Track.lua.xml', __FILE__
@@ -121,7 +102,7 @@ class TestIndex < MiniTest::Test
       @changelog New Changelog!
     IN
 
-    assert db.modified?
+    refute db.modified?
   end
 
   def test_scan_identical
@@ -156,7 +137,7 @@ class TestIndex < MiniTest::Test
         Line 2
     IN
 
-    assert db.modified?
+    refute db.modified?
   end
 
   def test_scan_source_with_commit
@@ -320,5 +301,23 @@ class TestIndex < MiniTest::Test
     end
 
     assert_equal 'Track/404.html: No such file or directory', error.message
+  end
+
+  def test_do_not_bump_sources
+    db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
+
+    db.pwd = @scripts_path
+    db.source_pattern = 'https://google.com/$commit/$path'
+    db.commit = 'new-commit-hash'
+
+    db.scan 'Category Name/Hello World.lua', <<-IN
+      @version 1.0
+    IN
+
+    refute db.modified?
+    db.write @dummy_path
+
+    path = File.expand_path '../db/replaced_commit.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 end
