@@ -28,29 +28,10 @@ This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
 See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
-#### Required Tags
+#### Package Tags
 
-**@version** (value must contain between one and four groups of digits)
-
-```
-@version 1.0
-@version 1.2pre3
-
-Version: 0.2015.12.25
-```
-
-#### Optional Tags
-
-**@changelog**
-
-```
-@changelog
-  Documented the metadata syntax
-  Added support for deleted scripts
-
-Changelog:
-  Added an alternate syntax for metadata tags
-```
+These tags affects an entire package. Changes to any of those tags are
+applied immediately and may affect released versions.
 
 **@noindex**
 
@@ -61,6 +42,35 @@ used alone.
 @noindex
 
 NoIndex: true
+```
+
+**@version** [required]
+
+The current package version.
+Value must contain between one and four groups of digits.
+
+```
+@version 1.0
+@version 1.2pre3
+
+Version: 0.2015.12.25
+```
+
+#### Version Tags
+
+These tags are specific to a single package version.
+You may still edit them after a release by calling
+the indexer with the `--amend` option.
+
+**@changelog**
+
+```
+@changelog
+  Documented the metadata syntax
+  Added support for deleted scripts
+
+Changelog:
+  Added an alternate syntax for metadata tags
 ```
 
 **@provides**
