@@ -104,10 +104,46 @@ class TestIndex < MiniTest::Test
     refute db.modified?
   end
 
-  def test_scan_identical
+  def test_change_changelog_amend
+    db = ReaPack::Index.new \
+      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+
+    db.amend = true
+    db.pwd = @scripts_path
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+      @changelog New Changelog!
+    IN
+
+    assert db.modified?
+  end
+
+  def test_remove_changelog_amend
+    db = ReaPack::Index.new \
+      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+
+    db.amend = true
+    db.pwd = @scripts_path
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+    IN
+
+    assert db.modified?
+
+    db.write @dummy_path
+    assert db.modified? # still modified after write() since write!() is not called
+
+    path = File.expand_path '../db/no_changelog.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_scan_identical_amend
     path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
     db = ReaPack::Index.new path
 
+    db.amend = true
     db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'
     db.scan 'Track/Instrument Track.lua', <<-IN
@@ -317,6 +353,25 @@ class TestIndex < MiniTest::Test
     db.write @dummy_path
 
     path = File.expand_path '../db/replaced_commit.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_bump_sources_amend
+    db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
+
+    db.amend = true
+    db.pwd = @scripts_path
+    db.source_pattern = 'https://google.com/$commit/$path'
+    db.commit = 'new-commit-hash'
+
+    db.scan 'Category Name/Hello World.lua', <<-IN
+      @version 1.0
+    IN
+
+    assert db.modified?
+    db.write @dummy_path
+
+    path = File.expand_path '../db/bumped_sources.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 end

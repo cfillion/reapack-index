@@ -8,8 +8,6 @@ class ReaPack::Index
       @changelog = Changelog.new @node
     end
 
-    def is_new?; @is_new; end
-
     def modified?
       !!@dirty
     end
@@ -22,7 +20,13 @@ class ReaPack::Index
     end
 
     def change_sources
+      old_sources = hash_sources children(Source::TAG)
+        .each {|node| node.remove }
+
       yield
+
+      new_sources = hash_sources children(Source::TAG)
+      @dirty ||= old_sources != new_sources
     end
 
     def add_source(platform, file, url)
@@ -30,6 +34,13 @@ class ReaPack::Index
       src.platform = platform
       src.file = file
       src.url = url
+    end
+
+  private
+    def hash_sources(sources)
+      sources.map {|src|
+        [src[Source::PLATFORM], src[Source::FILE], src.content]
+      }
     end
   end
 

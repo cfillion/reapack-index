@@ -156,17 +156,21 @@ private
     @warnings = true
 
     OptionParser.new do |opts|
-      opts.banner = "Usage: reapack-indexer [options]"
+      opts.banner = 'Usage: reapack-indexer [options]'
 
-      opts.on "-v", "--[no-]verbose", "Run verbosely" do |bool|
+      opts.on '-v', '--[no-]verbose', 'Run verbosely' do |bool|
         @verbose = bool
       end
 
-      opts.on "-W", "--[no-]warnings", "Enable or disable warnings" do |bool|
+      opts.on '-W', '--[no-]warnings', 'Enable or disable warnings' do |bool|
         @warnings = bool
       end
 
-      opts.on "-h", "--help", "Prints this help" do
+      opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
+        @warnings = bool
+      end
+
+      opts.on '-h', '--help', 'Prints this help' do
         puts opts
         exit
       end

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="new-commit-hash">
+  <category name="Category Name">
+    <reapack name="Hello World.lua" type="script">
+      <version name="1.0">
+        <source platform="all">https://google.com/new-commit-hash/Category%20Name/Hello%20World.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>

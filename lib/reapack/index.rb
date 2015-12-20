@@ -33,9 +33,8 @@ class ReaPack::Index
       'https://github.com/\1/\2/raw/$commit/$path',
   }.freeze
 
-
   attr_reader :path, :source_pattern
-  attr_accessor :pwd
+  attr_accessor :pwd, :amend
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
@@ -61,7 +60,8 @@ class ReaPack::Index
     @path = path
     @changes = {}
     @pwd = String.new
-    @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }
+    @amend = false
+    @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }.freeze
 
     if File.exists? path
       @dirty = false
@@ -111,7 +111,7 @@ class ReaPack::Index
       if ver.is_new?
         log_change 'new version'
       else
-        next
+        next unless @amend
       end
 
       ver.changelog = mh[:changelog].to_s

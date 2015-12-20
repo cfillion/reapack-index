@@ -6,6 +6,8 @@ class ReaPack::Index
   class Package < NamedNode
     @tag = 'reapack'.freeze
 
+    TYPE = 'type'.freeze
+
     def initialize(node, parent = nil)
       super
 
@@ -19,13 +21,13 @@ class ReaPack::Index
     end
 
     def type
-      @node[:type]
+      @node[TYPE]
     end
 
     def type=(new_type)
-      return if @node[:type].to_s == new_type
+      return if @node[TYPE].to_s == new_type
 
-      @node[:type] = new_type
+      @node[TYPE] = new_type
       @dirty = true
     end
 

@@ -54,5 +54,9 @@ class ReaPack::Index
     def remove
       @node.remove
     end
+
+    def children(tag)
+      @node.element_children.select {|node| node.name == tag }
+    end
   end
 end
