@@ -1,14 +1,18 @@
-require 'reapack/index/version'
+require 'reapack/index/gem_version'
 
 require 'git'
 require 'io/console'
 require 'metaheader'
+require 'modularity'
 require 'nokogiri'
 require 'optparse'
 require 'uri'
 
+require 'reapack/index/git_patch'
 require 'reapack/index/indexer'
-require 'reapack/index/git-patch'
+require 'reapack/index/node'
+require 'reapack/index/package'
+require 'reapack/index/version'
 
 class ReaPack::Index
   Error = Class.new RuntimeError
@@ -94,22 +98,31 @@ class ReaPack::Index
 
     cat, pkg = find path
 
-    old_is_file = @is_file
-    @is_file = block if block_given?
+    log_change 'new category', 'new categories' if cat.is_new?
+    log_change 'new package' if pkg.is_new?
 
-    if pkg[:type].to_s != type.to_s
-      pkg[:type] = type
-      @dirty = true
+    pkg.type = type.to_s
+
+    basepath = dirname path
+    deps = filelist mh[:provides].to_s, basepath
+
+    unless pkg.has_version? mh[:version]
+      log_change 'new version'
+
+      pkg.add_version mh[:version] do |ver|
+        ver.changelog = mh[:changelog].to_s
+
+        ver.change_sources do
+          ver.add_source :all, nil, url_for(path, &block)
+
+          deps.each_pair {|file, path|
+            ver.add_source :all, file, url_for(path, &block)
+          }
+        end
+      end
     end
 
-    if ver = add_version(pkg, mh[:version])
-      add_changelog ver, mh[:changelog]
-      add_sources ver, mh, path
-    end
-
-    log_change 'updated script' if modified?
-  ensure
-    @is_file = old_is_file
+    log_change 'updated package' if pkg.modified? && !pkg.is_new?
   end
   
   def remove(path)
@@ -117,9 +130,9 @@ class ReaPack::Index
     return unless pkg
 
     pkg.remove
-    cat.remove if cat.element_children.empty?
+    cat.remove if cat.empty?
 
-    log_change "removed #{pkg[:type]}"
+    log_change "removed #{pkg.type}"
   end
 
   def source_pattern=(pattern)
@@ -179,147 +192,58 @@ private
     @changes[type][0] += 1
   end
 
-  def find(path, create = true)
-    cat_name = File.dirname path
-    cat_name = 'Other' if cat_name == '.'
+  def dirname(path)
+    name = File.dirname path
+    name == '.' ? nil : name
+  end
 
+  def find(path, create = true)
+    cat_name = dirname(path) || 'Other'
     pkg_name = File.basename path
 
-    cat = add_category cat_name, create
-    pkg = cat ? add_package(cat, pkg_name, create) : nil
+    cat = auto_create Category, cat_name, @doc.root, create
+    pkg = auto_create Package, pkg_name, cat ? cat.node : nil, create
 
     [cat, pkg]
   end
 
-  def add_category(name, create = true)
-    cat_node = @doc.root.element_children.select {|node|
-      node.name == 'category' && node[:name] == name
-    }.first
+  def auto_create(klass, name, parent, create)
+    return unless parent
 
-    if cat_node.nil? && create
-      log_change 'new category', 'new categories'
+    node = klass.find_in parent, name
 
-      cat_node = Nokogiri::XML::Node.new 'category', @doc
-      cat_node[:name] = name
-      cat_node.parent = @doc.root
+    if node
+      klass.new node
+    elsif create
+      klass.new name, parent
     end
-
-    cat_node
   end
 
-  def add_package(cat, name, create = true)
-    pkg_node = cat.element_children.select {|node|
-      node.name == 'reapack' && node[:name] == name
-    }.first
-
-    if pkg_node.nil? && create
-      log_change 'new package'
-
-      pkg_node = Nokogiri::XML::Node.new 'reapack', @doc
-      pkg_node[:name] = name
-      pkg_node.parent = cat
-    end
-
-    pkg_node
-  end
-
-  def add_version(pkg, name)
-    ver_node = pkg.element_children.select {|node|
-      node.name == 'version' && node[:name] == name
-    }.first
-
-    return if ver_node
-
-    log_change 'new version'
-
-    ver_node = Nokogiri::XML::Node.new 'version', @doc
-    ver_node[:name] = name
-    ver_node.parent = pkg
-
-    ver_node
-  end
-
-  def add_changelog(ver, log)
-    cl_node = ver.element_children.select {|node|
-      node.name == 'changelog'
-    }.first
-
-    cdata = nil
-
-    if log.to_s.empty?
-      if cl_node
-        cl_node.remove
-        @dirty = true
-      end
-
-      return
-    elsif cl_node.nil?
-      cl_node = Nokogiri::XML::Node.new 'changelog', @doc
-      cl_node.parent = ver
-      @dirty = true
-    elsif cdata = cl_node.children.first
-      @dirty = true if cdata.content != log
-      cdata.remove
-    end
-
-    cdata = Nokogiri::XML::CDATA.new @doc, log
-    cdata.parent = cl_node
-
-    cl_node
-  end
-
-  def add_sources(ver, mh, path)
-    if !@source_pattern
-      raise Error, "Source pattern is unset "\
+  def url_for(path, &block)
+    unless @source_pattern
+      raise Error, "Source pattern is unset " \
         "and the package doesn't specify its source url"
     end
 
-    dep_root = File.dirname path
+    block ||= @is_file
 
-    old_sources = []
-    ver.element_children.each {|node|
-      next unless node.name == 'source'
-      old_sources << parse_source(node)
-      node.remove
-    }
-
-    source = add_local_source ver, nil, path
-    old_sources.delete parse_source(source)
-
-    mh[:provides].to_s.lines {|line|
-      line.chomp!
-
-      dep_path = dep_root == '.' ? line : File.join(dep_root, line)
-      source = add_local_source ver, line, dep_path
-      old_sources.delete parse_source(source)
-    }
-
-    @dirty = true unless old_sources.empty?
-  end
-
-  def add_local_source(ver, file, path)
-    unless @is_file[path]
+    unless block[path.to_s]
       raise Error, "#{path}: No such file or directory"
     end
 
     url = @source_pattern
       .sub('$path', path)
       .sub('$commit', commit || 'master')
-
-    add_source ver, :all, file, url
   end
 
-  def add_source(ver, platform, file, url)
+  def filelist(list, base)
+    deps = list.lines.map {|line|
+      line.chomp!
+      path = base ? File.join(base, line) : line
 
-    node = Nokogiri::XML::Node.new 'source', @doc
-    node[:platform] = platform
-    node[:file] = file unless file.nil?
-    node.content = URI.escape url
-    node.parent = ver
-    node
-  end
+      [line, path]
+    }
 
-  def parse_source(node)
-    [node[:platform].to_s, node[:file].to_s, node.content]
+    Hash[*deps.flatten]
   end
 end

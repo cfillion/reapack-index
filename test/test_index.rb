@@ -79,8 +79,7 @@ class TestIndex < MiniTest::Test
     IN
 
     assert db.modified?
-    assert_equal '1 new category, 1 new package, 1 new version, ' \
-      '1 updated script', db.changelog
+    assert_equal '1 new category, 1 new package, 1 new version', db.changelog
 
     db.write!
 
