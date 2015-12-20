@@ -28,7 +28,7 @@ This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
 See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
-#### Package Tags
+### Package Tags
 
 These tags affects an entire package. Changes to any of those tags are
 applied immediately and may affect released versions.
@@ -56,11 +56,10 @@ Value must contain between one and four groups of digits.
 Version: 0.2015.12.25
 ```
 
-#### Version Tags
+### Version Tags
 
-These tags are specific to a single package version.
-You may still edit them after a release by calling
-the indexer with the `--amend` option.
+These tags are specific to a single package version. You may still edit them
+after a release by passing the `--amend` option to the indexer.
 
 **@changelog**
 
