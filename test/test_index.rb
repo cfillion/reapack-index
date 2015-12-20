@@ -326,6 +326,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @dummy_path
 
     db.pwd = @scripts_path
+    db.commit = @commit
     db.source_pattern = 'http://google.com/$path'
     error = assert_raises ReaPack::Index::Error do
       db.scan 'Track/Instrument Track.lua', <<-IN
@@ -336,6 +337,11 @@ class TestIndex < MiniTest::Test
     end
 
     assert_equal 'Track/404.html: No such file or directory', error.message
+
+    db.write!
+
+    path = File.expand_path '../db/empty.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_do_not_bump_sources
@@ -360,6 +366,7 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
 
     db.amend = true
+
     db.pwd = @scripts_path
     db.source_pattern = 'https://google.com/$commit/$path'
     db.commit = 'new-commit-hash'
@@ -368,7 +375,7 @@ class TestIndex < MiniTest::Test
       @version 1.0
     IN
 
-    assert_equal '1 updated package', db.changelog
+    assert_equal '1 updated package, 1 updated version', db.changelog
     assert db.modified?
     db.write @dummy_path
 

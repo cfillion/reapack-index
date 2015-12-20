@@ -20,7 +20,7 @@ class ReaPack::Index
     end
 
     def self.find_in(parent, name)
-      find_all(parent).select {|node| node.name == name }.first
+      find_all(parent).select {|obj| obj.name == name }.first
     end
 
     def self.find_all(parent)

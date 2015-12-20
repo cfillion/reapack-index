@@ -35,6 +35,10 @@ class ReaPack::Index
       @versions.has_key? name
     end
 
+    def versions
+      @versions.values
+    end
+
     def version(name)
       if has_version? name
         ver = @versions[name]

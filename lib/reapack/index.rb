@@ -64,8 +64,6 @@ class ReaPack::Index
     @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }.freeze
 
     if File.exists? path
-      @dirty = false
-
       @doc = Nokogiri::XML File.open(path) do |config|
         # don't add extra blank lines
         # because they don't go away when we remove a node
@@ -83,6 +81,8 @@ class ReaPack::Index
   end
 
   def scan(path, contents, &block)
+    backup = @doc.root.dup
+
     type = self.class.type_of path
     return unless type
 
@@ -97,22 +97,14 @@ class ReaPack::Index
       raise Error, "Invalid metadata in #{path}:\n#{errors.inspect}"
     end
 
-    cat, pkg = find path
-
-    log_change 'new category', 'new categories' if cat.is_new?
-    log_change 'new package' if pkg.is_new?
-
-    pkg.type = type.to_s
-
     basepath = dirname path
     deps = filelist mh[:provides].to_s, basepath
 
+    cat, pkg = find path
+    pkg.type = type.to_s
+
     pkg.version mh[:version] do |ver|
-      if ver.is_new?
-        log_change 'new version'
-      else
-        next unless @amend
-      end
+      next unless ver.is_new? || @amend
 
       ver.changelog = mh[:changelog].to_s
 
@@ -125,7 +117,24 @@ class ReaPack::Index
       end
     end
 
-    log_change 'updated package' if pkg.modified? && !pkg.is_new?
+    log_change 'new category', 'new categories' if cat.is_new?
+
+    if pkg.is_new?
+      log_change 'new package'
+    else
+      log_change 'updated package' if pkg.modified?
+    end
+
+    pkg.versions.each {|ver|
+      if ver.is_new?
+        log_change 'new version'
+      elsif ver.modified?
+        log_change 'updated version'
+      end
+    }
+  rescue Error
+    @doc.root = backup if cat || pkg
+    raise
   end
   
   def remove(path)
@@ -173,7 +182,7 @@ class ReaPack::Index
   end
 
   def modified?
-    @dirty
+    !!@dirty
   end
 
   def changelog
