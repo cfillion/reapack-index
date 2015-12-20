@@ -67,6 +67,7 @@ class ReaPack::Index
       yield ver
       @dirty ||= ver.modified?
     end
+
   private
     def read_versions
       @node.element_children.each {|node|

@@ -69,7 +69,7 @@ class ReaPack::Index
 
       @doc = Nokogiri::XML File.open(path) do |config|
         # don't add extra blank lines
-        # (because they don't go away when removing nodes)
+        # because they don't go away when we remove a node
         config.noblanks
       end
     else
@@ -187,11 +187,11 @@ class ReaPack::Index
   end
 
 private
-  def log_change(type, plural = nil)
+  def log_change(desc, plural = nil)
     @dirty = true
 
-    @changes[type] ||= [0, plural || type + 's']
-    @changes[type][0] += 1
+    @changes[desc] ||= [0, plural || desc + 's']
+    @changes[desc][0] += 1
   end
 
   def dirname(path)
@@ -204,7 +204,7 @@ private
     pkg_name = File.basename path
 
     cat = auto_create Category, cat_name, @doc.root, create
-    pkg = auto_create Package, pkg_name, cat ? cat.node : nil, create
+    pkg = auto_create Package, pkg_name, cat && cat.node, create
 
     [cat, pkg]
   end
@@ -222,18 +222,18 @@ private
   end
 
   def url_for(path, &block)
+    block ||= @is_file
+
     unless @source_pattern
       raise Error, "Source pattern is unset " \
         "and the package doesn't specify its source url"
     end
 
-    block ||= @is_file
-
     unless block[path.to_s]
       raise Error, "#{path}: No such file or directory"
     end
 
-    url = @source_pattern
+    @source_pattern
       .sub('$path', path)
       .sub('$commit', commit || 'master')
   end

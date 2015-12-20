@@ -11,15 +11,10 @@ class ReaPack::Index
 
       @node = node
       @changelog = Changelog.new @node
-      @dirty = false
     end
 
     def modified?
-      @dirty
-    end
-
-    def changelog
-      @changelog.text
+      !!@dirty
     end
 
     def changelog=(new_text)
@@ -56,11 +51,7 @@ class ReaPack::Index
     end
 
     def file=(new_file)
-      if new_file
-        @node[FILE] = new_file
-      elsif attr = @node.attribute(FILE)
-        attr.remove
-      end
+      @node[FILE] = new_file if new_file
     end
 
     def url=(new_url)
