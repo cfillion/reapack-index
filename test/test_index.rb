@@ -344,6 +344,26 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
+  def test_duplicate_dependencies
+    db = ReaPack::Index.new @dummy_path
+
+    db.pwd = @scripts_path
+    db.commit = @commit
+    db.source_pattern = 'http://google.com/$path'
+    error = assert_raises ReaPack::Index::Error do
+      db.scan 'Track/Instrument Track.lua', <<-IN
+        @version 1.0
+        @provides
+          test.png
+          test.png
+      IN
+    end
+
+    assert_equal "Invalid metadata in Track/Instrument Track.lua:" +
+      "\n  invalid value for tag @provides: duplicate file (test.png)",
+      error.message
+  end
+
   def test_do_not_bump_sources
     db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
 

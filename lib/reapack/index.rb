@@ -25,6 +25,11 @@ class ReaPack::Index
   HEADER_RULES = {
     :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
     :changelog => [MetaHeader::OPTIONAL, /.+/],
+    :provides => [MetaHeader::OPTIONAL, Proc.new {|value|
+      files = value.lines.map {|l| l.chomp }
+      dup = files.detect {|f| files.count(f) > 1 }
+      "duplicate file (%s)" % dup if dup
+    }]
   }.freeze
 
   SOURCE_HOSTS = {
@@ -96,7 +101,7 @@ class ReaPack::Index
 
     if errors = mh.validate(HEADER_RULES)
       prefix = "\n  "
-      raise Error, "Invalid metadata in %s: %s" %
+      raise Error, "Invalid metadata in %s:%s" %
         [path, prefix + errors.join(prefix)]
     end
 
