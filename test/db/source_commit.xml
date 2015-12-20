@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="commit-sha1">
   <category name="Category Name">
     <reapack name="Hello World.lua" type="script">

@@ -79,6 +79,8 @@ class ReaPack::Index
       @doc.root = Nokogiri::XML::Node.new 'index', @doc
       self.version = 1
     end
+
+    @doc.encoding = 'utf-8'
   end
 
   def scan(path, contents, &block)
