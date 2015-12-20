@@ -32,7 +32,12 @@ class ReaPack::Index::Indexer
     commits.reverse_each {|commit| process commit }
 
     if @total > 0
-      update_progress unless @verbose
+      unless @verbose
+        # bump to 100%
+        update_progress
+        print "\n"
+      end
+
       print "\n"
     end
 
@@ -69,7 +74,7 @@ private
   def scan(path, contents, &block)
     @db.scan path, contents, &block
   rescue ReaPack::Index::Error => e
-    warn "Warning: #{e.message}"
+    warn "Warning: #{e.message}".yellow
   end
 
   def process(commit)
@@ -115,7 +120,7 @@ private
       end
     }
   rescue NoMethodError => e
-    warn "Error: #{e}"
+    warn "Error: #{e}".red
   ensure
     @done += 1
   end
@@ -140,7 +145,10 @@ private
   def warn(line)
     return unless @warnings
 
-    line.prepend "\n" unless @verbose
+    if @add_nl
+      line.prepend "\n"
+      @add_nl = false
+    end
 
     Kernel.warn line
   end
@@ -149,6 +157,8 @@ private
     percent = (@done.to_f / @total) * 100
     print "\rIndexing commit %d of %d (%d%%)..." %
       [[@done + 1, @total].min, @total, percent]
+
+    @add_nl = true
   end
 
   def parse_options

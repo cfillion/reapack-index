@@ -1,5 +1,6 @@
 require 'reapack/index/gem_version'
 
+require 'colorize'
 require 'git'
 require 'io/console'
 require 'metaheader'
@@ -94,7 +95,9 @@ class ReaPack::Index
     end
 
     if errors = mh.validate(HEADER_RULES)
-      raise Error, "Invalid metadata in #{path}:\n#{errors.inspect}"
+      prefix = "\n  "
+      raise Error, "Invalid metadata in %s: %s" %
+        [path, prefix + errors.join(prefix)]
     end
 
     basepath = dirname path
