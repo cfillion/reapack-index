@@ -37,7 +37,7 @@ class ReaPack::Index::Indexer
     end
 
     unless @db.modified?
-      puts 'The database was not modified!'
+      puts 'Nothing to do!'
       return
     end
 
@@ -167,7 +167,7 @@ private
       end
 
       opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
-        @warnings = bool
+        @db.amend = bool
       end
 
       opts.on '-h', '--help', 'Prints this help' do

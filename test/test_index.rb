@@ -368,6 +368,7 @@ class TestIndex < MiniTest::Test
       @version 1.0
     IN
 
+    assert_equal '1 updated package', db.changelog
     assert db.modified?
     db.write @dummy_path
 
