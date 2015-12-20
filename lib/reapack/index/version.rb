@@ -1,17 +1,14 @@
 class ReaPack::Index
-  class Version
-    TAG = 'version'.freeze
+  class Version < NamedNode
+    @tag = 'version'.freeze
 
     def initialize(node, parent = nil)
-      unless parent.nil?
-        name, node = node, Nokogiri::XML::Node.new(TAG, parent.document)
-        node[:name] = name
-        node.parent = parent
-      end
+      super
 
-      @node = node
       @changelog = Changelog.new @node
     end
+
+    def is_new?; @is_new; end
 
     def modified?
       !!@dirty

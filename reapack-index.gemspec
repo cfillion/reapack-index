@@ -25,6 +25,5 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'git', '~> 1.2'
   spec.add_runtime_dependency 'metaheader', '~> 0.1'
-  spec.add_runtime_dependency 'modularity', '~> 2.0'
   spec.add_runtime_dependency 'nokogiri', '~> 1.6'
 end

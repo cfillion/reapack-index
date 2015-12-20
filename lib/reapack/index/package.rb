@@ -1,50 +1,21 @@
 class ReaPack::Index
-  class Category
-    TAG = 'category'.freeze
-    NAME = 'name'.freeze
-
-    include NamedNode[TAG, NAME]
-
-    def initialize(node, parent = nil)
-      @node, @is_new = make_node node, parent
-    end
-
-    attr_reader :node
-
-    def is_new?; @is_new; end
-
-    def empty?
-      @node.element_children.empty?
-    end
-
-    def remove
-      @node.remove
-    end
+  class Category < NamedNode
+    @tag = 'category'.freeze
   end
 
-  class Package
-    TAG = 'reapack'.freeze
-    NAME = 'name'.freeze
-
-    include NamedNode[TAG, NAME]
+  class Package < NamedNode
+    @tag = 'reapack'.freeze
 
     def initialize(node, parent = nil)
-      @node, @is_new = make_node node, parent
+      super
+
       @versions = {}
 
       read_versions
     end
 
     def modified?
-      !!@dirty
-    end
-
-    def is_new?
-      @is_new
-    end
-
-    def remove
-      @node.remove
+      !!@dirty || @versions.values.any? {|ver| ver.modified? }
     end
 
     def type
@@ -62,18 +33,22 @@ class ReaPack::Index
       @versions.has_key? name
     end
 
-    def add_version(name)
-      ver = @versions[name] = Version.new name, @node
+    def version(name)
+      if has_version? name
+        ver = @versions[name]
+      else
+        ver = @versions[name] = Version.new name, @node
+      end
+
       yield ver
+
       @dirty ||= ver.modified?
     end
 
   private
     def read_versions
-      @node.element_children.each {|node|
-        if node.name == Version::TAG
-          @versions[node[:name]] = Version.new node
-        end
+      Version.find_all(@node).each {|ver|
+        @versions[ver.name] = ver
       }
     end
   end

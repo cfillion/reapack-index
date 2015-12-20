@@ -3,14 +3,13 @@ require 'reapack/index/gem_version'
 require 'git'
 require 'io/console'
 require 'metaheader'
-require 'modularity'
 require 'nokogiri'
 require 'optparse'
 require 'uri'
 
 require 'reapack/index/git_patch'
 require 'reapack/index/indexer'
-require 'reapack/index/node'
+require 'reapack/index/named_node'
 require 'reapack/index/package'
 require 'reapack/index/version'
 
@@ -108,19 +107,21 @@ class ReaPack::Index
     basepath = dirname path
     deps = filelist mh[:provides].to_s, basepath
 
-    unless pkg.has_version? mh[:version]
-      log_change 'new version'
+    pkg.version mh[:version] do |ver|
+      if ver.is_new?
+        log_change 'new version'
+      else
+        next
+      end
 
-      pkg.add_version mh[:version] do |ver|
-        ver.changelog = mh[:changelog].to_s
+      ver.changelog = mh[:changelog].to_s
 
-        ver.change_sources do
-          ver.add_source :all, nil, url_for(path, &block)
+      ver.change_sources do
+        ver.add_source :all, nil, url_for(path, &block)
 
-          deps.each_pair {|file, path|
-            ver.add_source :all, file, url_for(path, &block)
-          }
-        end
+        deps.each_pair {|file, path|
+          ver.add_source :all, file, url_for(path, &block)
+        }
       end
     end
 
@@ -203,22 +204,10 @@ private
     cat_name = dirname(path) || 'Other'
     pkg_name = File.basename path
 
-    cat = auto_create Category, cat_name, @doc.root, create
-    pkg = auto_create Package, pkg_name, cat && cat.node, create
+    cat = Category.get cat_name, @doc.root, create
+    pkg = Package.get pkg_name, cat && cat.node, create
 
     [cat, pkg]
-  end
-
-  def auto_create(klass, name, parent, create)
-    return unless parent
-
-    node = klass.find_in parent, name
-
-    if node
-      klass.new node
-    elsif create
-      klass.new name, parent
-    end
   end
 
   def url_for(path, &block)
