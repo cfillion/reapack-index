@@ -172,8 +172,12 @@ private
         @verbose = bool
       end
 
-      opts.on '-W', '--[no-]warnings', 'Enable or disable warnings' do |bool|
-        @warnings = bool
+      opts.on '-W', '--warnings', 'Enable all warnings' do
+        @warnings = true
+      end
+
+      opts.on '-w', '--no-warnings', 'Turn off warnings' do
+        @warnings = false
       end
 
       opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
