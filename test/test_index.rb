@@ -360,7 +360,7 @@ class TestIndex < MiniTest::Test
     end
 
     assert_equal "Invalid metadata in Track/Instrument Track.lua:" +
-      "\n  invalid value for tag @provides: duplicate file (test.png)",
+      "\n  invalid value for tag \"provides\": duplicate file (test.png)",
       error.message
   end
 
