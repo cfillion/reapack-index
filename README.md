@@ -35,8 +35,8 @@ applied immediately and may affect released versions.
 
 **@noindex**
 
-Disable indexing for this file. Should be used on included files that cannot be
-used alone.
+Disable indexing for this file. Set this on included files that
+should not be distributed alone.
 
 ```
 @noindex
@@ -75,6 +75,7 @@ Changelog:
 **@provides**
 
 Add additional files to the package.
+These files will be installed/updated together with the package.
 
 ```
 @provides unicode.dat
