@@ -402,4 +402,36 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../db/bumped_sources.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
+
+  def test_scan_wordpress
+    db = ReaPack::Index.new @dummy_path
+
+    db.pwd = @scripts_path
+    db.source_pattern = 'http://google.com/$path'
+    db.scan 'Track/Instrument Track.lua', <<-IN
+/**
+ * Version: 1.1
+ */
+
+/**
+ * Changelog:
+ * v1.2 (2010-01-01)
+	+ Line 1
+	+ Line 2
+ * v1.1 (2011-01-01)
+	+ Line 3
+	+ Line 4
+ * v1.0 (2012-01-01)
+	+ Line 5
+	+ Line 6
+ */
+
+ Test
+    IN
+
+    db.write!
+
+    path = File.expand_path '../db/wordpress.xml', __FILE__
+    assert_equal File.read(path), File.read(db.path)
+  end
 end

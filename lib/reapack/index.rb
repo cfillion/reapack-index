@@ -12,6 +12,7 @@ require 'reapack/index/git_patch'
 require 'reapack/index/indexer'
 require 'reapack/index/named_node'
 require 'reapack/index/package'
+require 'reapack/index/parsers'
 require 'reapack/index/version'
 
 class ReaPack::Index
