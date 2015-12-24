@@ -11,7 +11,7 @@ class WordpressChangelog < MetaHeader::Parser
     input.encode! Encoding::UTF_8, invalid: :replace
 
     ver, changes = header[:version], header[:changelog]
-    return if ver.nil? || changes || CHANGELOG.match(input.nil?
+    return if ver.nil? || changes || CHANGELOG.match(input).nil?
 
     $1.lines {|line| read line.lstrip }
   end
