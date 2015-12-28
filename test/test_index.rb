@@ -27,6 +27,19 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(db.path), File.read(@dummy_path)
   end
 
+  def test_mkdir
+   path = File.expand_path '../dummy_dir/test.xml', __FILE__
+   dirname = File.dirname path
+
+   refute File.exist? dirname
+
+   db = ReaPack::Index.new path
+   db.write!
+
+   assert File.exist? dirname
+   FileUtils.rm_r dirname
+  end
+
   def test_new
     db = ReaPack::Index.new \
       File.expand_path '../db/does_not_exists.xml', __FILE__

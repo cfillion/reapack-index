@@ -1,6 +1,7 @@
 require 'reapack/index/gem_version'
 
 require 'colorize'
+require 'fileutils'
 require 'git'
 require 'io/console'
 require 'metaheader'
@@ -180,6 +181,7 @@ class ReaPack::Index
   end
 
   def write(path)
+    FileUtils.mkdir_p File.dirname(path)
     File.write path, @doc.to_xml
   end
 
