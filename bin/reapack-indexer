@@ -4,5 +4,5 @@ Signal.trap('INT') { abort }
 
 require 'reapack/index'
 
-indexer = ReaPack::Index::Indexer.new ARGV.first || Dir.pwd
+indexer = ReaPack::Index::Indexer.new ARGV
 indexer.run

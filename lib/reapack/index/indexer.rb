@@ -1,12 +1,13 @@
 class ReaPack::Index::Indexer
-  def initialize(path)
+  def initialize(args)
+    parse_options args
+
+    path = args.last || Dir.pwd
     @git = Git.open path
 
-    @db = ReaPack::Index.new File.join(@git.dir.to_s, 'index.xml')
+    @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
     @db.pwd = path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
-
-    parse_options
   end
 
   def run
@@ -93,10 +94,13 @@ private
 
     # initial commit
     unless parent
-      files.each_pair do |path, blob|
+      files.each do |path|
         next unless ReaPack::Index.type_of path
 
         log "-> indexing new file #{path}"
+
+        blob = commit.gtree.files[path]
+
         scan(path, blob.contents) {|file|
           files.include? file
         }
@@ -161,16 +165,28 @@ private
     @add_nl = true
   end
 
-  def parse_options
+  def parse_options(args)
     @verbose = false
     @warnings = true
+    @output = './index.xml'
 
     OptionParser.new do |opts|
-      opts.banner = 'Usage: reapack-indexer [options]'
+      opts.banner = "Package indexer for ReaPack-based repositories\n" +
+        "Usage: reapack-indexer [options] [directory]"
 
-      opts.on '-v', '--[no-]verbose', 'Run verbosely' do |bool|
+      opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
+        @db.amend = bool
+      end
+
+      opts.on '-o', "--output [FILE=#{@output}]",
+          'Set the output path of the database' do |file|
+        @output = file
+      end
+
+      opts.on '-V', '--[no-]verbose', 'Run verbosely' do |bool|
         @verbose = bool
       end
+
 
       opts.on '-W', '--warnings', 'Enable all warnings' do
         @warnings = true
@@ -180,15 +196,16 @@ private
         @warnings = false
       end
 
-      opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
-        @db.amend = bool
+      opts.on_tail '-v', '--version', 'Display version information' do
+        puts "reapack-index #{ReaPack::Index::VERSION}"
+        exit
       end
 
-      opts.on '-h', '--help', 'Prints this help' do
+      opts.on_tail '-h', '--help', 'Prints this help' do
         puts opts
         exit
       end
-    end.parse!
+    end.parse! args
   rescue OptionParser::InvalidOption => e
     Kernel.warn "reapack-indexer: #{e.message}"
     exit
