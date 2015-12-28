@@ -247,7 +247,9 @@ class TestIndex < MiniTest::Test
     db = ReaPack::Index.new @real_path
 
     db.remove 'Category Name/Hello World.lua'
+
     assert db.modified?
+    assert_equal '1 removed package', db.changelog
 
     db.write @dummy_path
 

@@ -154,7 +154,7 @@ class ReaPack::Index
     pkg.remove
     cat.remove if cat.empty?
 
-    log_change "removed #{pkg.type}"
+    log_change 'removed package'
   end
 
   def source_pattern=(pattern)
