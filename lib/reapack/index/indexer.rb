@@ -1,6 +1,6 @@
 class ReaPack::Index::Indexer
   def initialize(args)
-    parse_options Array(args)
+    parse_options args
 
     @git = Git.open @path
 
