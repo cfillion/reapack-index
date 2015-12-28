@@ -170,8 +170,10 @@ private
     @output = './index.xml'
 
     OptionParser.new do |opts|
+      opts.program_name = 'reapack-indexer'
+      opts.version = ReaPack::Index::VERSION
       opts.banner = "Package indexer for ReaPack-based repositories\n" +
-        "Usage: reapack-indexer [options] [directory]"
+        "Usage: #{opts.program_name} [options] [directory]"
 
       opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
         @db.amend = bool
@@ -196,7 +198,7 @@ private
       end
 
       opts.on_tail '-v', '--version', 'Display version information' do
-        puts "reapack-index #{ReaPack::Index::VERSION}"
+        puts opts.ver
         exit
       end
 
