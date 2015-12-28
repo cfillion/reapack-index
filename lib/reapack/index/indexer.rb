@@ -1,12 +1,11 @@
 class ReaPack::Index::Indexer
   def initialize(args)
-    parse_options args
+    parse_options Array(args)
 
-    path = args.last || Dir.pwd
-    @git = Git.open path
+    @git = Git.open @path
 
     @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
-    @db.pwd = path
+    @db.pwd = @path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
   end
 
@@ -206,6 +205,8 @@ private
         exit
       end
     end.parse! args
+
+    @path = args.last || Dir.pwd
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     Kernel.warn "reapack-indexer: #{e.message}"
     exit
