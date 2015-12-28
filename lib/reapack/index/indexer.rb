@@ -178,9 +178,9 @@ private
         @db.amend = bool
       end
 
-      opts.on '-o', "--output [FILE=#{@output}]",
+      opts.on '-o', "--output FILE=#{@output}",
           'Set the output path of the database' do |file|
-        @output = file
+        @output = file.strip
       end
 
       opts.on '-V', '--[no-]verbose', 'Run verbosely' do |bool|
@@ -206,7 +206,7 @@ private
         exit
       end
     end.parse! args
-  rescue OptionParser::InvalidOption => e
+  rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     Kernel.warn "reapack-indexer: #{e.message}"
     exit
   end
