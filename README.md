@@ -24,7 +24,8 @@ bundle exec bin/reascript-indexer [options] [path-to-your-reascript-repository]
 
 ### Configuration
 
-Various options can be used from the command line or stored in configuration files (one option per line):
+Options can be specified from the command line
+or stored in configuration files (one option per line):
 
 ```
 Options:
@@ -37,7 +38,9 @@ Options:
     -h, --help                       Prints this help
 ```
 
-Options are read from these sources, in order (the last read options override any previous value):
+Options are read from these sources, in order
+(latter options override any previous value):
+
 - ~/.reapack-index.conf (`~` = home directory)
 - ./.reapack-index.conf (`.` = current directory)
 - command line
