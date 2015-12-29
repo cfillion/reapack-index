@@ -180,6 +180,8 @@ private
       opts.banner = "Package indexer for ReaPack-based repositories\n" +
         "Usage: #{opts.program_name} [options] [directory]"
 
+      opts.separator 'Options:'
+
       opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
         @db.amend = bool
       end
