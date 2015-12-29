@@ -19,8 +19,28 @@ bundle install
 ### Usage
 
 ```
-bundle exec bin/reascript-indexer <path-to-your-reascript-repository>
+bundle exec bin/reascript-indexer [options] [path-to-your-reascript-repository]
 ```
+
+### Configuration
+
+Various options can be used from the command line or stored in configuration files (one option per line):
+
+```
+Options:
+    -a, --[no-]amend                 Reindex existing versions
+    -o, --output FILE=./index.xml    Set the output path of the database
+    -V, --[no-]verbose               Run verbosely
+    -W, --warnings                   Enable all warnings
+    -w, --no-warnings                Turn off warnings
+    -v, --version                    Display version information
+    -h, --help                       Prints this help
+```
+
+Options are read from these sources, in order (the last read options override any previous value):
+- ~/.reapack-index.conf (`~` = home directory)
+- ./.reapack-index.conf (`.` = current directory)
+- command line
 
 ## Metadata Documentation
 
