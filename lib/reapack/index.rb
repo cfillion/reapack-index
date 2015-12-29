@@ -7,6 +7,7 @@ require 'io/console'
 require 'metaheader'
 require 'nokogiri'
 require 'optparse'
+require 'shellwords'
 require 'uri'
 
 require 'reapack/index/git_patch'

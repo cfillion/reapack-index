@@ -1,6 +1,11 @@
 class ReaPack::Index::Indexer
+  CONFIG_SEARCH = [
+    '~',
+    '.',
+  ].freeze
+
   def initialize(args)
-    parse_options args
+    parse_options read_config + args
 
     @git = Git.open @path
 
@@ -212,5 +217,16 @@ private
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     Kernel.warn "reapack-indexer: #{e.message}"
     exit
+  end
+
+  def read_config
+    CONFIG_SEARCH.map {|dir|
+      path = File.expand_path '.reapack-index.conf', dir
+      next unless File.readable? path
+
+      opts = Array.new
+      File.foreach(path) {|line| opts << Shellwords.split(line) }
+      opts
+    }.flatten.compact
   end
 end
