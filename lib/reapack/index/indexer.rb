@@ -122,8 +122,8 @@ private
       if diff.type == 'deleted'
         @db.remove diff.path
       else
-        scan(diff.path, diff.blob.contents) {|path|
-          files.find {|file| file == path }
+        scan(diff.path, diff.blob.contents) {|file|
+          files.include? file
         }
       end
     }
@@ -135,14 +135,17 @@ private
 
   def lsfiles(tree)
     files = tree.files.keys
-    tree.trees.each {|array|
-      prefix = array.first
-      subfiles = lsfiles(array.last).map do |f|
+
+    tree.trees.each {|pair|
+      prefix = pair.first
+
+      subfiles = lsfiles(pair.last).map do |f|
         File.join prefix, f
       end
 
       files.concat subfiles
     }
+
     files
   end
 
@@ -194,7 +197,6 @@ private
       opts.on '-V', '--[no-]verbose', 'Run verbosely' do |bool|
         @verbose = bool
       end
-
 
       opts.on '-W', '--warnings', 'Enable all warnings' do
         @warnings = true
