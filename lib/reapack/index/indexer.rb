@@ -9,6 +9,11 @@ class ReaPack::Index::Indexer
 
     @git = Git.open @path
 
+    # This fixes lsfiles when running the indexer from
+    # a subdirectory of the git repository root.
+    # It would return an empty array without this.
+    Dir.chdir @path
+
     @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
     @db.pwd = @path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
