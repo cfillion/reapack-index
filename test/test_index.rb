@@ -45,6 +45,7 @@ class TestIndex < MiniTest::Test
       File.expand_path '../db/does_not_exists.xml', __FILE__
 
     assert db.modified?
+    assert_equal "empty database", db.changelog
 
     assert_equal 1, db.version
     assert_nil db.commit
@@ -80,7 +81,6 @@ class TestIndex < MiniTest::Test
 
   def test_scan_new_script
     db = ReaPack::Index.new @dummy_path
-    assert_nil db.changelog
 
     db.pwd = @scripts_path
     db.source_pattern = 'http://google.com/$path'

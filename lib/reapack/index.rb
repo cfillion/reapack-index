@@ -80,6 +80,7 @@ class ReaPack::Index
       end
     else
       @dirty = true
+      @is_new = true
 
       @doc = Nokogiri::XML::Document.new
       @doc.root = Nokogiri::XML::Node.new 'index', @doc
@@ -189,7 +190,7 @@ class ReaPack::Index
   def write!
     write @path
 
-    @dirty = false
+    @is_new = @dirty = false
     @changes.clear
   end
 
@@ -205,7 +206,11 @@ class ReaPack::Index
       list << "#{count} #{count != 1 ? plural : type}"
     }
 
-    list.empty? ? nil : list.join(', ')
+    if list.empty?
+      @is_new ? 'empty database' : nil
+    else
+      list.join(', ')
+    end
   end
 
 private
