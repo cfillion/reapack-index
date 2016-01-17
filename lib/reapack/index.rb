@@ -207,7 +207,7 @@ class ReaPack::Index
     }
 
     if list.empty?
-      @is_new ? 'empty database' : nil
+      @is_new ? 'empty index' : nil
     else
       list.join(', ')
     end

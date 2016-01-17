@@ -61,7 +61,7 @@ class ReaPack::Index::Indexer
 
     @db.write!
 
-    prompt 'Commit the new database?' do
+    prompt 'Commit the new index?' do
       @git.add @db.path
       @git.commit "index: #{changelog}"
 
@@ -195,7 +195,7 @@ private
       end
 
       opts.on '-o', "--output FILE=#{@output}",
-          'Set the output path of the database' do |file|
+          'Set the output filename and path for the index' do |file|
         @output = file.strip
       end
 

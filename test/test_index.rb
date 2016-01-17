@@ -2,8 +2,8 @@ require File.expand_path '../helper', __FILE__
 
 class TestIndex < MiniTest::Test
   def setup
-    @real_path = File.expand_path '../db/database.xml', __FILE__
-    @dummy_path = File.expand_path '../db/new_database.xml', __FILE__
+    @real_path = File.expand_path '../indexes/index.xml', __FILE__
+    @dummy_path = File.expand_path '../indexes/new_index.xml', __FILE__
     @scripts_path = File.expand_path '../scripts/', __FILE__
 
     @commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
@@ -14,17 +14,17 @@ class TestIndex < MiniTest::Test
   end
 
   def test_version_and_commit
-    db = ReaPack::Index.new @real_path
+    index = ReaPack::Index.new @real_path
 
-    assert_equal 1, db.version
-    assert_equal @commit, db.commit
+    assert_equal 1, index.version
+    assert_equal @commit, index.commit
   end
 
   def test_save
-    db = ReaPack::Index.new @real_path
+    index = ReaPack::Index.new @real_path
 
-    db.write @dummy_path
-    assert_equal File.read(db.path), File.read(@dummy_path)
+    index.write @dummy_path
+    assert_equal File.read(index.path), File.read(@dummy_path)
   end
 
   def test_mkdir
@@ -33,22 +33,22 @@ class TestIndex < MiniTest::Test
 
    refute File.exist? dirname
 
-   db = ReaPack::Index.new path
-   db.write!
+   index = ReaPack::Index.new path
+   index.write!
 
    assert File.exist? dirname
    FileUtils.rm_r dirname
   end
 
   def test_new
-    db = ReaPack::Index.new \
-      File.expand_path '../db/does_not_exists.xml', __FILE__
+    index = ReaPack::Index.new \
+      File.expand_path '../indexes/does_not_exists.xml', __FILE__
 
-    assert db.modified?
-    assert_equal "empty database", db.changelog
+    assert index.modified?
+    assert_equal "empty index", index.changelog
 
-    assert_equal 1, db.version
-    assert_nil db.commit
+    assert_equal 1, index.version
+    assert_nil index.commit
   end
 
   def test_type_of
@@ -69,140 +69,140 @@ class TestIndex < MiniTest::Test
   end
 
   def test_scan_unknown_type
-    db = ReaPack::Index.new @dummy_path
-    db.commit = @commit
+    index = ReaPack::Index.new @dummy_path
+    index.commit = @commit
 
-    db.scan 'src/main.cpp', String.new
-    db.write!
+    index.scan 'src/main.cpp', String.new
+    index.write!
 
-    path = File.expand_path '../db/empty.xml', __FILE__
+    path = File.expand_path '../indexes/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_new_script
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog
         Line 1
         Line 2
     IN
 
-    assert db.modified?
-    assert_equal '1 new category, 1 new package, 1 new version', db.changelog
+    assert index.modified?
+    assert_equal '1 new category, 1 new package, 1 new version', index.changelog
 
-    db.write!
+    index.write!
 
-    refute db.modified?
-    assert_nil db.changelog
+    refute index.modified?
+    assert_nil index.changelog
 
-    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
-    assert_equal File.read(path), File.read(db.path)
+    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
+    assert_equal File.read(path), File.read(index.path)
   end
 
   def test_change_changelog
-    db = ReaPack::Index.new \
-      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new \
+      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog New Changelog!
     IN
 
-    refute db.modified?
+    refute index.modified?
   end
 
   def test_change_changelog_amend
-    db = ReaPack::Index.new \
-      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new \
+      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
 
-    db.amend = true
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.amend = true
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog New Changelog!
     IN
 
-    assert db.modified?
+    assert index.modified?
   end
 
   def test_remove_changelog_amend
-    db = ReaPack::Index.new \
-      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new \
+      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
 
-    db.amend = true
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.amend = true
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
     IN
 
-    assert db.modified?
+    assert index.modified?
 
-    db.write @dummy_path
-    assert db.modified? # still modified after write() since write!() is not called
+    index.write @dummy_path
+    assert index.modified? # still modified after write() since write!() is not called
 
-    path = File.expand_path '../db/no_changelog.xml', __FILE__
+    path = File.expand_path '../indexes/no_changelog.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_identical_amend
-    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
-    db = ReaPack::Index.new path
+    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new path
 
-    db.amend = true
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.amend = true
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog
         Line 1
         Line 2
     IN
 
-    refute db.modified?
+    refute index.modified?
 
-    db.write @dummy_path
+    index.write @dummy_path
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_change_source_pattern
-    path = File.expand_path '../db/Instrument Track.lua.xml', __FILE__
-    db = ReaPack::Index.new path
+    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'https://duckduckgo.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'https://duckduckgo.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @changelog
         Line 1
         Line 2
     IN
 
-    refute db.modified?
+    refute index.modified?
   end
 
   def test_scan_source_with_commit
     path = File.expand_path @dummy_path, __FILE__
-    db = ReaPack::Index.new path
+    index = ReaPack::Index.new path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'https://google.com/$commit/$path'
-    db.commit = 'commit-sha1'
+    index.pwd = @scripts_path
+    index.source_pattern = 'https://google.com/$commit/$path'
+    index.commit = 'commit-sha1'
 
-    db.scan 'Category Name/Hello World.lua', <<-IN
+    index.scan 'Category Name/Hello World.lua', <<-IN
       @version 1.0
     IN
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/source_commit.xml', __FILE__
+    path = File.expand_path '../indexes/source_commit.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
@@ -216,26 +216,26 @@ class TestIndex < MiniTest::Test
   end
 
   def test_validate_during_scan
-    db = ReaPack::Index.new @dummy_path
-    db.commit = @commit
+    index = ReaPack::Index.new @dummy_path
+    index.commit = @commit
 
     error = assert_raises ReaPack::Index::Error do
-      db.scan 'Cat/test.lua', 'hello'
+      index.scan 'Cat/test.lua', 'hello'
     end
 
-    db.write!
+    index.write!
 
     assert_match /\AInvalid metadata in Cat\/test\.lua:/, error.message
 
-    path = File.expand_path '../db/empty.xml', __FILE__
+    path = File.expand_path '../indexes/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_no_default_source_pattern
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
     error = assert_raises ReaPack::Index::Error do
-      db.scan 'Track/Instrument Track.lua', <<-IN
+      index.scan 'Track/Instrument Track.lua', <<-IN
         @version 1.0
       IN
     end
@@ -244,107 +244,107 @@ class TestIndex < MiniTest::Test
   end
 
   def test_remove
-    db = ReaPack::Index.new @real_path
+    index = ReaPack::Index.new @real_path
 
-    db.remove 'Category Name/Hello World.lua'
+    index.remove 'Category Name/Hello World.lua'
 
-    assert db.modified?
-    assert_equal '1 removed package', db.changelog
+    assert index.modified?
+    assert_equal '1 removed package', index.changelog
 
-    db.write @dummy_path
+    index.write @dummy_path
 
-    path = File.expand_path '../db/empty.xml', __FILE__
+    path = File.expand_path '../indexes/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_remove_not_found
-    db = ReaPack::Index.new @real_path
+    index = ReaPack::Index.new @real_path
 
-    db.remove 'Cat/test.lua'
-    refute db.modified?
+    index.remove 'Cat/test.lua'
+    refute index.modified?
   end
 
   def test_scan_no_category
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'test.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'test.lua', <<-IN
       @version 1.0
     IN
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/default_category.xml', __FILE__
-    assert_equal File.read(path), File.read(db.path)
+    path = File.expand_path '../indexes/default_category.xml', __FILE__
+    assert_equal File.read(path), File.read(index.path)
   end
 
   def test_scan_noindex
-    db = ReaPack::Index.new \
-      File.expand_path '../db/Instrument Track.lua.xml', __FILE__
+    index = ReaPack::Index.new \
+      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @noindex
     IN
 
-    assert db.modified?
+    assert index.modified?
 
-    db.commit = @commit
-    db.write @dummy_path
+    index.commit = @commit
+    index.write @dummy_path
 
-    path = File.expand_path '../db/empty.xml', __FILE__
+    path = File.expand_path '../indexes/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_dependencies
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
       @version 1.0
       @provides
         Resources/unicode.dat
         test.png
     IN
 
-    assert db.modified?
+    assert index.modified?
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/dependencies.xml', __FILE__
+    path = File.expand_path '../indexes/dependencies.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_dependencies_from_root
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'test.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'test.lua', <<-IN
       @version 1.0
       @provides
         Track/test.png
     IN
 
-    assert db.modified?
+    assert index.modified?
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/dependencies_from_root.xml', __FILE__
+    path = File.expand_path '../indexes/dependencies_from_root.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_missing_dependency
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.commit = @commit
-    db.source_pattern = 'http://google.com/$path'
+    index.pwd = @scripts_path
+    index.commit = @commit
+    index.source_pattern = 'http://google.com/$path'
     error = assert_raises ReaPack::Index::Error do
-      db.scan 'Track/Instrument Track.lua', <<-IN
+      index.scan 'Track/Instrument Track.lua', <<-IN
         @version 1.0
         @provides
           404.html
@@ -353,20 +353,20 @@ class TestIndex < MiniTest::Test
 
     assert_equal 'Track/404.html: No such file or directory', error.message
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/empty.xml', __FILE__
+    path = File.expand_path '../indexes/empty.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_duplicate_dependencies
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.commit = @commit
-    db.source_pattern = 'http://google.com/$path'
+    index.pwd = @scripts_path
+    index.commit = @commit
+    index.source_pattern = 'http://google.com/$path'
     error = assert_raises ReaPack::Index::Error do
-      db.scan 'Track/Instrument Track.lua', <<-IN
+      index.scan 'Track/Instrument Track.lua', <<-IN
         @version 1.0
         @provides
           test.png
@@ -380,50 +380,50 @@ class TestIndex < MiniTest::Test
   end
 
   def test_do_not_bump_sources
-    db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
+    index = ReaPack::Index.new File.expand_path '../indexes/source_commit.xml', __FILE__
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'https://google.com/$commit/$path'
-    db.commit = 'new-commit-hash'
+    index.pwd = @scripts_path
+    index.source_pattern = 'https://google.com/$commit/$path'
+    index.commit = 'new-commit-hash'
 
-    db.scan 'Category Name/Hello World.lua', <<-IN
+    index.scan 'Category Name/Hello World.lua', <<-IN
       @version 1.0
     IN
 
-    refute db.modified?
-    db.write @dummy_path
+    refute index.modified?
+    index.write @dummy_path
 
-    path = File.expand_path '../db/replaced_commit.xml', __FILE__
+    path = File.expand_path '../indexes/replaced_commit.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_bump_sources_amend
-    db = ReaPack::Index.new File.expand_path '../db/source_commit.xml', __FILE__
+    index = ReaPack::Index.new File.expand_path '../indexes/source_commit.xml', __FILE__
 
-    db.amend = true
+    index.amend = true
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'https://google.com/$commit/$path'
-    db.commit = 'new-commit-hash'
+    index.pwd = @scripts_path
+    index.source_pattern = 'https://google.com/$commit/$path'
+    index.commit = 'new-commit-hash'
 
-    db.scan 'Category Name/Hello World.lua', <<-IN
+    index.scan 'Category Name/Hello World.lua', <<-IN
       @version 1.0
     IN
 
-    assert_equal '1 updated package, 1 updated version', db.changelog
-    assert db.modified?
-    db.write @dummy_path
+    assert_equal '1 updated package, 1 updated version', index.changelog
+    assert index.modified?
+    index.write @dummy_path
 
-    path = File.expand_path '../db/bumped_sources.xml', __FILE__
+    path = File.expand_path '../indexes/bumped_sources.xml', __FILE__
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
   def test_scan_wordpress
-    db = ReaPack::Index.new @dummy_path
+    index = ReaPack::Index.new @dummy_path
 
-    db.pwd = @scripts_path
-    db.source_pattern = 'http://google.com/$path'
-    db.scan 'Track/Instrument Track.lua', <<-IN
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
 /**
  * Version: 1.1
  */
@@ -444,9 +444,9 @@ class TestIndex < MiniTest::Test
  Test
     IN
 
-    db.write!
+    index.write!
 
-    path = File.expand_path '../db/wordpress.xml', __FILE__
-    assert_equal File.read(path), File.read(db.path)
+    path = File.expand_path '../indexes/wordpress.xml', __FILE__
+    assert_equal File.read(path), File.read(index.path)
   end
 end
