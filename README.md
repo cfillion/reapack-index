@@ -82,7 +82,7 @@ Version: 0.2015.12.25
 ### Version Tags
 
 These tags are specific to a single package version. You may still edit them
-after a release by passing the `--amend` option to the indexer.
+after a release by running the indexer with the `--amend` option.
 
 **@changelog**
 
