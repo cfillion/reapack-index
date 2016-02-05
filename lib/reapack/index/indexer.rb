@@ -15,6 +15,7 @@ class ReaPack::Index::Indexer
     Dir.chdir @path
 
     @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
+    @db.amend = @amend
     @db.pwd = @path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
   end
@@ -191,7 +192,7 @@ private
       opts.separator 'Options:'
 
       opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
-        @db.amend = bool
+        @amend = bool
       end
 
       opts.on '-o', "--output FILE=#{@output}",
