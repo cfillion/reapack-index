@@ -13,6 +13,7 @@ class ReaPack::Index
     end
 
     def changelog=(new_text)
+      new_text = new_text.to_s
       return if new_text == @changelog.text
 
       @changelog.text = new_text

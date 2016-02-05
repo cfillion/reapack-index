@@ -118,7 +118,7 @@ class ReaPack::Index
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
 
-      ver.changelog = mh[:changelog].to_s
+      ver.changelog = mh[:changelog]
 
       ver.change_sources do
         ver.add_source :all, nil, url_for(path, &block)

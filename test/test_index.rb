@@ -152,7 +152,7 @@ class TestIndex < MiniTest::Test
     assert_equal File.read(path), File.read(@dummy_path)
   end
 
-  def test_scan_identical_amend
+  def test_amend_identical_with_changelog
     path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
     index = ReaPack::Index.new path
 
@@ -170,6 +170,25 @@ class TestIndex < MiniTest::Test
 
     index.write @dummy_path
     assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_amend_identical_no_changelog
+    index = ReaPack::Index.new @dummy_path
+
+    index.amend = true
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+    IN
+
+    index.write!
+
+    index.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+    IN
+
+    refute index.modified?
   end
 
   def test_scan_change_source_pattern
