@@ -2,6 +2,8 @@ class ReaPack::Index
   class Version < NamedNode
     @tag = 'version'.freeze
 
+    AUTHOR = 'author'.freeze
+
     def initialize(node, parent = nil)
       super
 
@@ -17,6 +19,13 @@ class ReaPack::Index
       return if new_text == @changelog.text
 
       @changelog.text = new_text
+      @dirty = true
+    end
+
+    def author=(new_author)
+      return if @node[AUTHOR] == new_author
+
+      @node[AUTHOR] = new_author
       @dirty = true
     end
 

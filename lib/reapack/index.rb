@@ -26,7 +26,11 @@ class ReaPack::Index
   }.freeze
 
   HEADER_RULES = {
+    # package-wide tags
     :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
+
+    # version-specific tags
+    :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
     :changelog => [MetaHeader::OPTIONAL, /.+/],
     :provides => [MetaHeader::OPTIONAL, Proc.new {|value|
       files = value.lines.map {|l| l.chomp }
@@ -118,6 +122,7 @@ class ReaPack::Index
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
 
+      ver.author = mh[:author]
       ver.changelog = mh[:changelog]
 
       ver.change_sources do

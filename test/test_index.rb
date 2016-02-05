@@ -468,4 +468,56 @@ class TestIndex < MiniTest::Test
     path = File.expand_path '../indexes/wordpress.xml', __FILE__
     assert_equal File.read(path), File.read(index.path)
   end
+
+  def test_author
+    index = ReaPack::Index.new @dummy_path
+
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+    index.scan 'Track/Instrument Track.lua', <<-IN
+      @version 1.0
+      @author cfillion
+    IN
+
+    assert index.modified?
+
+    index.write @dummy_path
+
+    path = File.expand_path '../indexes/version_author.xml', __FILE__
+    assert_equal File.read(path), File.read(@dummy_path)
+  end
+
+  def test_author_boolean
+    index = ReaPack::Index.new @dummy_path
+
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan 'Track/Instrument Track.lua', <<-IN
+       @version 1.0
+       @author
+     IN
+    end
+
+    assert_match /Invalid metadata/, error.message
+  end
+
+  def test_author_multiline
+    index = ReaPack::Index.new @dummy_path
+
+    index.pwd = @scripts_path
+    index.source_pattern = 'http://google.com/$path'
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan 'Track/Instrument Track.lua', <<-IN
+       @version 1.0
+       @author
+         hello
+         world
+     IN
+    end
+
+    assert_match /Invalid metadata/, error.message
+  end
 end

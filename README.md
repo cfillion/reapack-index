@@ -51,6 +51,8 @@ This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
 See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
+Tag not explicitly marked as required are optional.
+
 ### Package Tags
 
 These tags affects an entire package. Changes to any of those tags are
@@ -83,6 +85,14 @@ Version: 0.2015.12.25
 
 These tags are specific to a single package version. You may still edit them
 after a release by running the indexer with the `--amend` option.
+
+**@author**
+
+```
+@author cfillion
+
+Author: Christian Fillion
+```
 
 **@changelog**
 
