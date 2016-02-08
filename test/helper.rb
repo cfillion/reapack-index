@@ -1,16 +1,17 @@
-if ENV['CI']
-  require 'coveralls'
+require 'coveralls'
+require 'simplecov'
 
-  Coveralls::Output.silent = true
-  Coveralls.wear!
-else
-  require 'simplecov'
+Coveralls::Output.silent = true
 
-  SimpleCov.start {
-    project_name 'reapack-index'
-    add_filter '/test/'
-  }
-end
+SimpleCov.formatters = [
+  SimpleCov::Formatter::HTMLFormatter,
+  Coveralls::SimpleCov::Formatter,
+]
+
+SimpleCov.start {
+  project_name 'reapack-index'
+  add_filter '/test/'
+}
 
 require 'reapack/index'
 require 'minitest/autorun'
