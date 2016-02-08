@@ -165,8 +165,11 @@ class ReaPack::Index
   end
 
   def source_pattern=(pattern)
-    return if pattern.nil?
-    raise ArgumentError, '$path not in pattern' unless pattern.include? '$path'
+    if pattern.nil?
+      raise ArgumentError, 'Cannot use nil as a source pattern'
+    elsif not pattern.include? '$path'
+      raise ArgumentError, '$path not in source pattern'
+    end
 
     @source_pattern = pattern
   end

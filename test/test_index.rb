@@ -324,7 +324,10 @@ class TestIndex < MiniTest::Test
 
   def test_nil_source_pattern
     index = ReaPack::Index.new @dummy_path
-    index.source_pattern = nil # don't crash
+
+    error = assert_raises ArgumentError do
+     index.source_pattern = nil
+    end
   end
 
   def test_missing_version

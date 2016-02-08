@@ -1,3 +1,5 @@
+require File.expand_path '../helper', __FILE__
+
 class TestParsers < MiniTest::Test
   def test_wordpress
     mh = MetaHeader.new <<-IN
