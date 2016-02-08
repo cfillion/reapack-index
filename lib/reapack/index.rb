@@ -46,8 +46,10 @@ class ReaPack::Index
       'https://github.com/\1/\2/raw/$commit/$path',
   }.freeze
 
+  ROOT = File.expand_path('/').freeze
+
   attr_reader :path, :source_pattern
-  attr_accessor :pwd, :amend
+  attr_accessor :amend, :files
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
@@ -70,11 +72,10 @@ class ReaPack::Index
   end
 
   def initialize(path)
-    @path = path
-    @changes = {}
-    @pwd = String.new
     @amend = false
-    @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }.freeze
+    @changes = {}
+    @files = []
+    @path = path
 
     if File.exists? path
       # noblanks: don't preserve the original white spaces
@@ -87,19 +88,19 @@ class ReaPack::Index
 
       @doc = Nokogiri::XML::Document.new
       @doc.root = Nokogiri::XML::Node.new 'index', @doc
-      self.version = 1
     end
 
+    @doc.root[:version] = 1
     @doc.encoding = 'utf-8'
   end
 
-  def scan(path, contents, &block)
-    backup = @doc.root.dup
-
+  def scan(path, contents)
     type = self.class.type_of path
     return unless type
 
     mh = MetaHeader.new contents
+
+    backup = @doc.root.dup
 
     if mh[:noindex]
       remove path
@@ -107,7 +108,7 @@ class ReaPack::Index
     end
 
     if errors = mh.validate(HEADER_RULES)
-      prefix = "\n  "
+      prefix = "\n\x20\x20"
       raise Error, "Invalid metadata in %s:%s" %
         [path, prefix + errors.join(prefix)]
     end
@@ -125,10 +126,10 @@ class ReaPack::Index
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        ver.add_source :all, nil, url_for(path, &block)
+        ver.add_source :all, nil, url_for(path)
 
         deps.each_pair {|file, path|
-          ver.add_source :all, file, url_for(path, &block)
+          ver.add_source :all, file, url_for(path)
         }
       end
     end
@@ -137,19 +138,19 @@ class ReaPack::Index
 
     if pkg.is_new?
       log_change 'new package'
-    else
-      log_change 'updated package' if pkg.modified?
+    elsif pkg.modified?
+      log_change 'modified package'
     end
 
     pkg.versions.each {|ver|
       if ver.is_new?
         log_change 'new version'
       elsif ver.modified?
-        log_change 'updated version'
+        log_change 'modified version'
       end
     }
   rescue Error
-    @doc.root = backup if cat || pkg
+    @doc.root = backup
     raise
   end
   
@@ -174,16 +175,16 @@ class ReaPack::Index
     @doc.root[:version].to_i
   end
 
-  def version=(ver)
-    @doc.root[:version] = ver
-  end
-
   def commit
     @doc.root[:commit]
   end
 
   def commit=(sha1)
-    @doc.root[:commit] = sha1
+    if sha1.nil?
+      @doc.root.remove_attribute 'commit'
+    else
+      @doc.root['commit'] = sha1
+    end
   end
 
   def write(path)
@@ -240,15 +241,13 @@ private
     [cat, pkg]
   end
 
-  def url_for(path, &block)
-    block ||= @is_file
-
+  def url_for(path)
     unless @source_pattern
       raise Error, "Source pattern is unset " \
         "and the package doesn't specify its source url"
     end
 
-    unless block[path.to_s]
+    unless @files.include? path
       raise Error, "#{path}: No such file or directory"
     end
 
@@ -260,9 +259,9 @@ private
   def filelist(list, base)
     deps = list.lines.map {|line|
       line.chomp!
-      path = base ? File.join(base, line) : line
+      path = File.expand_path line, ROOT + base
 
-      [line, path]
+      [line, path[ROOT.size..-1]]
     }
 
     Hash[*deps.flatten]

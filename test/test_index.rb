@@ -1,55 +1,15 @@
 require File.expand_path '../helper', __FILE__
 
-__END__
 class TestIndex < MiniTest::Test
   def setup
-    @real_path = File.expand_path '../indexes/index.xml', __FILE__
-    @dummy_path = File.expand_path '../indexes/new_index.xml', __FILE__
-    @scripts_path = File.expand_path '../scripts/', __FILE__
+    @real_path = File.expand_path '../data/index.xml', __FILE__
+    @dummy_path = Dir::Tmpname.create('index.xml') {|path| path }
 
     @commit = '399f5609cff3e6fd92b5542d444fbf86da0443c6'
   end
 
   def teardown
     File.delete @dummy_path if File.exists? @dummy_path
-  end
-
-  def test_version_and_commit
-    index = ReaPack::Index.new @real_path
-
-    assert_equal 1, index.version
-    assert_equal @commit, index.commit
-  end
-
-  def test_save
-    index = ReaPack::Index.new @real_path
-
-    index.write @dummy_path
-    assert_equal File.read(index.path), File.read(@dummy_path)
-  end
-
-  def test_mkdir
-   path = File.expand_path '../dummy_dir/test.xml', __FILE__
-   dirname = File.dirname path
-
-   refute File.exist? dirname
-
-   index = ReaPack::Index.new path
-   index.write!
-
-   assert File.exist? dirname
-   FileUtils.rm_r dirname
-  end
-
-  def test_new
-    index = ReaPack::Index.new \
-      File.expand_path '../indexes/does_not_exists.xml', __FILE__
-
-    assert index.modified?
-    assert_equal "empty index", index.changelog
-
-    assert_equal 1, index.version
-    assert_nil index.commit
   end
 
   def test_type_of
@@ -69,198 +29,482 @@ class TestIndex < MiniTest::Test
       ReaPack::Index.source_for('https://github.com/User/Repo.git')
   end
 
-  def test_scan_unknown_type
-    index = ReaPack::Index.new @dummy_path
-    index.commit = @commit
-
-    index.scan 'src/main.cpp', String.new
-    index.write!
-
-    path = File.expand_path '../indexes/empty.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_scan_new_script
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @changelog
-        Line 1
-        Line 2
-    IN
-
-    assert index.modified?
-    assert_equal '1 new category, 1 new package, 1 new version', index.changelog
-
-    index.write!
-
-    refute index.modified?
-    assert_nil index.changelog
-
-    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-    assert_equal File.read(path), File.read(index.path)
-  end
-
-  def test_change_changelog
-    index = ReaPack::Index.new \
-      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @changelog New Changelog!
-    IN
-
-    refute index.modified?
-  end
-
-  def test_change_changelog_amend
-    index = ReaPack::Index.new \
-      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-
-    index.amend = true
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @changelog New Changelog!
-    IN
-
-    assert index.modified?
-  end
-
-  def test_remove_changelog_amend
-    index = ReaPack::Index.new \
-      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-
-    index.amend = true
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-    IN
-
-    assert index.modified?
-
-    index.write @dummy_path
-    assert index.modified? # still modified after write() since write!() is not called
-
-    path = File.expand_path '../indexes/no_changelog.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_amend_identical_with_changelog
-    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-    index = ReaPack::Index.new path
-
-    index.amend = true
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @changelog
-        Line 1
-        Line 2
-    IN
-
-    refute index.modified?
-
-    index.write @dummy_path
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_amend_identical_no_changelog
-    index = ReaPack::Index.new @dummy_path
-
-    index.amend = true
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-    IN
-
-    index.write!
-
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-    IN
-
-    refute index.modified?
-  end
-
-  def test_scan_change_source_pattern
-    path = File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
-    index = ReaPack::Index.new path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'https://duckduckgo.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @changelog
-        Line 1
-        Line 2
-    IN
-
-    refute index.modified?
-  end
-
-  def test_scan_source_with_commit
-    path = File.expand_path @dummy_path, __FILE__
-    index = ReaPack::Index.new path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'https://google.com/$commit/$path'
-    index.commit = 'commit-sha1'
-
-    index.scan 'Category Name/Hello World.lua', <<-IN
-      @version 1.0
-    IN
-
-    index.write!
-
-    path = File.expand_path '../indexes/source_commit.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
   def test_validate_standalone
-    refute_nil ReaPack::Index.validate_file @real_path
+    refute_nil ReaPack::Index.validate_file @real_path # not a valid script
   end
 
   def test_validate_noindex
     assert_nil ReaPack::Index.validate_file \
-      File.expand_path '../scripts/noindex.lua', __FILE__
+      File.expand_path '../data/noindex.lua', __FILE__
   end
 
-  def test_validate_during_scan
-    index = ReaPack::Index.new @dummy_path
-    index.commit = @commit
+  def test_read
+    index = ReaPack::Index.new @real_path
 
-    error = assert_raises ReaPack::Index::Error do
-      index.scan 'Cat/test.lua', 'hello'
-    end
+    assert_equal 1, index.version
+    assert_equal @commit, index.commit
+  end
+
+  def test_new
+    index = ReaPack::Index.new @dummy_path
+
+    assert_equal 1, index.version
+    assert_nil index.commit
+
+    assert_equal true, index.modified?
+    assert_equal "empty index", index.changelog
+
+    index.write @dummy_path
+    assert_equal true, index.modified?
+
+    index.write!
+    assert_equal false, index.modified?
+  end
+
+  def test_save
+    index = ReaPack::Index.new @real_path
+
+    index.write @dummy_path
+    assert_equal File.read(@real_path), File.read(@dummy_path)
+  end
+
+  def test_mkdir
+    path = File.expand_path '../dummy_dir/test.xml', __FILE__
+    dirname = File.dirname path
+
+    refute File.exist? dirname
+
+    index = ReaPack::Index.new path
+    index.write!
+
+    assert File.exist? dirname
+  ensure
+    FileUtils.rm_r dirname if File.exist? dirname
+  end
+
+  def test_ignore_unknown_type
+    index = ReaPack::Index.new @dummy_path
+
+    index.scan 'src/main.cpp', String.new
+    index.write!
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1"/>
+    XML
+
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_new_package
+    index = ReaPack::Index.new @dummy_path
+    assert_empty index.files
+
+    index.files = ['Category/Path/Instrument Track.lua']
+    index.source_pattern = '$path'
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @changelog Hello World
+    IN
+
+    assert_equal true, index.modified?
+    assert_equal '1 new category, 1 new package, 1 new version', index.changelog
 
     index.write!
 
-    assert_match /\AInvalid metadata in Cat\/test\.lua:/, error.message
+    assert_equal false, index.modified?
+    assert_nil index.changelog
 
-    path = File.expand_path '../indexes/empty.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category/Path">
+    <reapack name="Instrument Track.lua" type="script">
+      <version name="1.0">
+        <changelog><![CDATA[Hello World]]></changelog>
+        <source platform="all">Category/Path/Instrument%20Track.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    assert_equal expected, File.read(index.path)
   end
 
-  def test_no_default_source_pattern
+  def test_default_category
     index = ReaPack::Index.new @dummy_path
+    assert_empty index.files
+
+    index.files = ['script.lua']
+    index.source_pattern = '$path'
+    index.scan index.files.first, <<-IN
+      @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Other">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_edit_version_amend_off
+    index = ReaPack::Index.new @real_path
+    assert_equal false, index.amend
+    index.source_pattern = 'http://google.com/$path'
+
+    index.files = ['Category Name/Hello World.lua']
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @changelog New Changelog!
+    IN
+
+    assert_equal false, index.modified?
+    assert_nil index.changelog
+  end
+
+  def test_edit_version_amend_on
+    index = ReaPack::Index.new @real_path
+    index.amend = true
+    assert_equal true, index.amend
+
+    index.source_pattern = 'http://google.com/$path'
+    index.files = ['Category Name/Hello World.lua']
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @changelog New Changelog!
+    IN
+
+    assert index.modified?, 'index is not modified'
+    assert_equal '1 modified package, 1 modified version', index.changelog
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6">
+  <category name="Category Name">
+    <reapack name="Hello World.lua" type="script">
+      <version name="1.0">
+        <changelog><![CDATA[New Changelog!]]></changelog>
+        <source platform="all">http://google.com/Category%20Name/Hello%20World.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write @dummy_path
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_edit_version_amend_unmodified
+    index = ReaPack::Index.new @real_path
+    index.amend = true
+    index.source_pattern = 'https://google.com/$path'
+
+    index.files = ['Category Name/Hello World.lua']
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @author cfillion
+      @changelog Fixed a division by zero error.
+    IN
+
+    assert_equal false, index.modified?
+    assert_nil index.changelog
+  end
+
+  def test_file_unlisted
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = 'http://google.com/$path'
 
     error = assert_raises ReaPack::Index::Error do
-      index.scan 'Track/Instrument Track.lua', <<-IN
+     index.scan 'unlisted.lua', <<-IN
+       @version 1.0
+     IN
+    end
+
+    assert_equal 'unlisted.lua: No such file or directory', error.message
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1"/>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_source_pattern_unset
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['script.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan index.files.first, <<-IN
+       @version 1.0
+     IN
+    end
+
+    assert_match /Source pattern is unset/, error.message
+  end
+
+  def test_source_pattern_no_path
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['script.lua']
+    
+    assert_raises ArgumentError do
+      index.source_pattern = 'no path variable here'
+    end
+  end
+
+  def test_source_pattern_defaut_branch
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['Category/script.lua']
+    index.source_pattern = '$commit/$path'
+
+    index.commit = nil
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">master/Category/script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_source_pattern_commit
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['Category/script.lua']
+    index.source_pattern = '$commit/$path'
+
+    index.commit = @commit
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">399f5609cff3e6fd92b5542d444fbf86da0443c6/Category/script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_nil_source_pattern
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = nil # don't crash
+  end
+
+  def test_missing_version
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['test.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, 'no version tag here'
+    end
+
+    expected = <<-ERR
+Invalid metadata in test.lua:
+  missing tag "version"
+    ERR
+
+    assert_equal expected.chomp, error.message
+  end
+
+  def test_changelog_boolean
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['test.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
         @version 1.0
+        @changelog
       IN
     end
 
-    assert_match /\ASource pattern is unset/, error.message
+    expected = <<-ERR
+Invalid metadata in test.lua:
+  invalid value for tag "changelog"
+    ERR
+
+    assert_equal expected.chomp, error.message
+  end
+
+  def test_author
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['Category/script.lua']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @author cfillion
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0" author="cfillion">
+        <source platform="all">Category/script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_author_boolean
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['test.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @author
+      IN
+    end
+
+    expected = <<-ERR
+Invalid metadata in test.lua:
+  invalid value for tag "author"
+    ERR
+
+    assert_equal expected.chomp, error.message
+  end
+
+  def test_author_multiline
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['test.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @author
+          hello
+          world
+      IN
+    end
+
+    expected = <<-ERR
+Invalid metadata in test.lua:
+  invalid value for tag "author"
+    ERR
+
+    assert_equal expected.chomp, error.message
+  end
+
+  def test_provides
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    index.files = [
+      'Category/script.lua',
+      'Resources/unicode.dat',
+      'Category/test.png',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        ../Resources/unicode.dat
+        test.png
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">Category/script.lua</source>
+        <source platform="all" file="../Resources/unicode.dat">Resources/unicode.dat</source>
+        <source platform="all" file="test.png">Category/test.png</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_provides_unlisted
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    index.files = ['Category/script.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan index.files.first, <<-IN
+       @version 1.0
+       @provides
+         test.png
+     IN
+    end
+
+    assert_equal 'Category/test.png: No such file or directory', error.message
+  end
+
+  def test_provides_duplicate
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan 'script.lua', <<-IN
+       @version 1.0
+       @provides
+         test.png
+         test.png
+     IN
+    end
+
+    expected = <<-ERROR
+Invalid metadata in script.lua:
+  invalid value for tag "provides": duplicate file (test.png)
+    ERROR
+
+    assert_equal expected.chomp, error.message
   end
 
   def test_remove
@@ -268,257 +512,49 @@ class TestIndex < MiniTest::Test
 
     index.remove 'Category Name/Hello World.lua'
 
-    assert index.modified?
+    assert_equal true, index.modified?
     assert_equal '1 removed package', index.changelog
 
-    index.write @dummy_path
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6"/>
+    XML
 
-    path = File.expand_path '../indexes/empty.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
+    index.write @dummy_path
+    assert_equal expected, File.read(@dummy_path)
   end
 
-  def test_remove_not_found
+  def test_remove_inexistant
     index = ReaPack::Index.new @real_path
 
-    index.remove 'Cat/test.lua'
-    refute index.modified?
+    index.remove '404.lua'
+
+    assert_equal false, index.modified?
+    assert_nil index.changelog
   end
 
-  def test_scan_no_category
-    index = ReaPack::Index.new @dummy_path
+  def test_noindex
+    index = ReaPack::Index.new @real_path
 
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'test.lua', <<-IN
-      @version 1.0
-    IN
+    index.scan 'script.lua', '@noindex'
 
-    index.write!
-
-    path = File.expand_path '../indexes/default_category.xml', __FILE__
-    assert_equal File.read(path), File.read(index.path)
+    assert_equal false, index.modified?
   end
 
-  def test_scan_noindex
-    index = ReaPack::Index.new \
-      File.expand_path '../indexes/Instrument Track.lua.xml', __FILE__
+  def test_noindex_remove
+    index = ReaPack::Index.new @real_path
 
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @noindex
-    IN
+    index.scan 'Category Name/Hello World.lua', '@noindex'
 
-    assert index.modified?
+    assert_equal true, index.modified?
+    assert_equal '1 removed package', index.changelog
 
-    index.commit = @commit
-    index.write @dummy_path
-
-    path = File.expand_path '../indexes/empty.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_scan_dependencies
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @provides
-        Resources/unicode.dat
-        test.png
-    IN
-
-    assert index.modified?
-
-    index.write!
-
-    path = File.expand_path '../indexes/dependencies.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_scan_dependencies_from_root
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'test.lua', <<-IN
-      @version 1.0
-      @provides
-        Track/test.png
-    IN
-
-    assert index.modified?
-
-    index.write!
-
-    path = File.expand_path '../indexes/dependencies_from_root.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_missing_dependency
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.commit = @commit
-    index.source_pattern = 'http://google.com/$path'
-    error = assert_raises ReaPack::Index::Error do
-      index.scan 'Track/Instrument Track.lua', <<-IN
-        @version 1.0
-        @provides
-          404.html
-      IN
-    end
-
-    assert_equal 'Track/404.html: No such file or directory', error.message
-
-    index.write!
-
-    path = File.expand_path '../indexes/empty.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_duplicate_dependencies
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.commit = @commit
-    index.source_pattern = 'http://google.com/$path'
-    error = assert_raises ReaPack::Index::Error do
-      index.scan 'Track/Instrument Track.lua', <<-IN
-        @version 1.0
-        @provides
-          test.png
-          test.png
-      IN
-    end
-
-    assert_equal "Invalid metadata in Track/Instrument Track.lua:" +
-      "\n  invalid value for tag \"provides\": duplicate file (test.png)",
-      error.message
-  end
-
-  def test_do_not_bump_sources
-    index = ReaPack::Index.new File.expand_path '../indexes/source_commit.xml', __FILE__
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'https://google.com/$commit/$path'
-    index.commit = 'new-commit-hash'
-
-    index.scan 'Category Name/Hello World.lua', <<-IN
-      @version 1.0
-    IN
-
-    refute index.modified?
-    index.write @dummy_path
-
-    path = File.expand_path '../indexes/replaced_commit.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_bump_sources_amend
-    index = ReaPack::Index.new File.expand_path '../indexes/source_commit.xml', __FILE__
-
-    index.amend = true
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'https://google.com/$commit/$path'
-    index.commit = 'new-commit-hash'
-
-    index.scan 'Category Name/Hello World.lua', <<-IN
-      @version 1.0
-    IN
-
-    assert_equal '1 updated package, 1 updated version', index.changelog
-    assert index.modified?
-    index.write @dummy_path
-
-    path = File.expand_path '../indexes/bumped_sources.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_scan_wordpress
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-/**
- * Version: 1.1
- */
-
-/**
- * Changelog:
- * v1.2 (2010-01-01)
-	+ Line 1
-	+ Line 2
- * v1.1 (2011-01-01)
-	+ Line 3
-	+ Line 4
- * v1.0 (2012-01-01)
-	+ Line 5
-	+ Line 6
- */
-
- Test
-    IN
-
-    index.write!
-
-    path = File.expand_path '../indexes/wordpress.xml', __FILE__
-    assert_equal File.read(path), File.read(index.path)
-  end
-
-  def test_author
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-    index.scan 'Track/Instrument Track.lua', <<-IN
-      @version 1.0
-      @author cfillion
-    IN
-
-    assert index.modified?
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6"/>
+    XML
 
     index.write @dummy_path
-
-    path = File.expand_path '../indexes/version_author.xml', __FILE__
-    assert_equal File.read(path), File.read(@dummy_path)
-  end
-
-  def test_author_boolean
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-
-    error = assert_raises ReaPack::Index::Error do
-     index.scan 'Track/Instrument Track.lua', <<-IN
-       @version 1.0
-       @author
-     IN
-    end
-
-    assert_match /Invalid metadata/, error.message
-  end
-
-  def test_author_multiline
-    index = ReaPack::Index.new @dummy_path
-
-    index.pwd = @scripts_path
-    index.source_pattern = 'http://google.com/$path'
-
-    error = assert_raises ReaPack::Index::Error do
-     index.scan 'Track/Instrument Track.lua', <<-IN
-       @version 1.0
-       @author
-         hello
-         world
-     IN
-    end
-
-    assert_match /Invalid metadata/, error.message
+    assert_equal expected, File.read(@dummy_path)
   end
 end
