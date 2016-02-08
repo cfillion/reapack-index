@@ -11,32 +11,41 @@ class ReaPack::Index
     end
 
     def modified?
-      !!@dirty
+      super || @changelog.modified?
     end
 
     def changelog=(new_text)
-      new_text = new_text.to_s
-      return if new_text == @changelog.text
-
       @changelog.text = new_text
-      @dirty = true
+    end
+
+    def author
+      @node[AUTHOR].to_s
     end
 
     def author=(new_author)
-      return if @node[AUTHOR] == new_author
+      new_author ||= String.new
 
-      @node[AUTHOR] = new_author
+      return if author == new_author
+
+      if new_author.empty?
+        @node.remove_attribute AUTHOR
+      else
+        @node[AUTHOR] = new_author
+      end
+
       @dirty = true
     end
 
-    def change_sources
+    def replace_sources
+      was_dirty = @dirty
+
       old_sources = hash_sources children(Source::TAG)
         .each {|node| node.remove }
 
       yield
 
       new_sources = hash_sources children(Source::TAG)
-      @dirty ||= old_sources != new_sources
+      @dirty = was_dirty || old_sources != new_sources
     end
 
     def add_source(platform, file, url)
@@ -44,6 +53,8 @@ class ReaPack::Index
       src.platform = platform
       src.file = file
       src.url = url
+
+      @dirty = true
     end
 
   private
@@ -95,9 +106,21 @@ class ReaPack::Index
       end
     end
 
+    def modified?
+      !!@dirty
+    end
+
     attr_reader :text
 
     def text=(new_text)
+      new_text ||= String.new
+
+      if text == new_text
+        return
+      else
+        @dirty = true
+      end
+
       return @node.remove if new_text.empty?
 
       if @node

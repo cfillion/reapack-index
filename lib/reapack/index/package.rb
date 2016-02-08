@@ -17,15 +17,17 @@ class ReaPack::Index
     end
 
     def modified?
-      !!@dirty || @versions.values.any? {|ver| ver.modified? }
+      super || @versions.values.any? {|ver| ver.modified? }
     end
 
     def type
-      @node[TYPE]
+      @node[TYPE].to_s
     end
 
     def type=(new_type)
-      return if @node[TYPE].to_s == new_type
+      new_type ||= String.new
+
+      return if type == new_type
 
       @node[TYPE] = new_type
       @dirty = true
@@ -46,9 +48,11 @@ class ReaPack::Index
         ver = @versions[name] = Version.new name, @node
       end
 
-      yield ver
-
-      @dirty ||= ver.modified?
+      if block_given?
+        yield ver
+      else
+        ver
+      end
     end
 
   private

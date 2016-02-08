@@ -1,5 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
+__END__
 class TestIndex < MiniTest::Test
   def setup
     @real_path = File.expand_path '../indexes/index.xml', __FILE__

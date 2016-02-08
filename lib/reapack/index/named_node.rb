@@ -7,7 +7,21 @@ class ReaPack::Index
       @tag
     end
 
-    def self.get(name, parent, create = true)
+    def self.find_in(parent, name)
+      node = parent.element_children.find {|node|
+        node.name == tag && node[NAME_ATTR] == name
+      }
+
+      self.new node if node
+    end
+
+    def self.find_all(parent)
+      parent.element_children
+        .select {|node| node.name == tag }
+        .map {|node| self.new node }
+    end
+
+    def self.get(name, parent, create)
       return unless parent
 
       node = self.find_in parent, name
@@ -19,20 +33,11 @@ class ReaPack::Index
       node
     end
 
-    def self.find_in(parent, name)
-      find_all(parent).select {|obj| obj.name == name }.first
-    end
-
-    def self.find_all(parent)
-      parent.element_children
-        .select {|node| node.name == tag }
-        .map {|node| self.new node }
-    end
-
     def initialize(node, parent = nil)
       return @node = node if parent.nil?
 
       @is_new = true
+      @dirty = true
 
       @node = Nokogiri::XML::Node.new self.class.tag, parent.document
       @node[NAME_ATTR] = node
@@ -42,6 +47,7 @@ class ReaPack::Index
     attr_reader :node
 
     def is_new?; !!@is_new; end
+    def modified?; !!@dirty; end
 
     def name
       @node[NAME_ATTR]

@@ -77,11 +77,10 @@ class ReaPack::Index
     @is_file = Proc.new {|path| File.file? File.join(@pwd, path) }.freeze
 
     if File.exists? path
-      @doc = Nokogiri::XML File.open(path) do |config|
-        # don't add extra blank lines
-        # because they don't go away when we remove a node
-        config.noblanks
-      end
+      # noblanks: don't preserve the original white spaces
+      # so we always output a neat document
+      setup = proc {|config| config.noblanks }
+      @doc = Nokogiri::XML File.open(path), &setup
     else
       @dirty = true
       @is_new = true
@@ -125,7 +124,7 @@ class ReaPack::Index
       ver.author = mh[:author]
       ver.changelog = mh[:changelog]
 
-      ver.change_sources do
+      ver.replace_sources do
         ver.add_source :all, nil, url_for(path, &block)
 
         deps.each_pair {|file, path|
