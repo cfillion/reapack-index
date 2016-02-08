@@ -21,6 +21,8 @@ module IndexerUtils
 
       @git = Git.init path
       @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
+      @git.config('user.name', 'John Doe')
+      @git.config('user.email', 'john@doe.com')
 
       setup[] if setup
 
