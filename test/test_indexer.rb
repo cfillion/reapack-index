@@ -14,11 +14,6 @@ module IndexerUtils
     $stdin = FakeIO.new
 
     Dir.mktmpdir('test-repository') do |path|
-      # I have no idea why, but this prevents random error like this:
-      # > shell-init: error retrieving current directory: getcwd:
-      # > cannot access parent directories: No such file or directory
-      Dir.chdir path 
-
       @git = Git.init path
       @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
       @git.config('user.name', 'John Doe')
@@ -50,8 +45,8 @@ end
 class TestIndexer < MiniTest::Test
   include IndexerUtils
 
-  def setup
-    # fix the strange "No such file or directory - getcwd" errors
+  def teardown
+    # who is changing the working directory without restoring it?!
     Dir.chdir File.dirname(__FILE__)
   end
 

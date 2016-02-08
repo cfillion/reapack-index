@@ -7,7 +7,9 @@ class ReaPack::Index::Indexer
   PROGRAM_NAME = 'reapack-indexer'.freeze
 
   def initialize(args)
+    @path = args.last || Dir.pwd
     parse_options read_config + args
+
     return unless @exit.nil?
 
     @git = Git.open @path
@@ -240,8 +242,6 @@ private
         @exit = true
       end
     end.parse! args
-
-    @path = args.last || Dir.pwd
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     Kernel.warn "#{PROGRAM_NAME}: #{e.message}"
     @exit = false
@@ -249,6 +249,7 @@ private
 
   def read_config
     CONFIG_SEARCH.map {|dir|
+      dir = File.expand_path dir, @path
       path = File.expand_path '.reapack-index.conf', dir
       next unless File.readable? path
 
