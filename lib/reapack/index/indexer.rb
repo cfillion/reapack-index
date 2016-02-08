@@ -4,15 +4,13 @@ class ReaPack::Index::Indexer
     '.',
   ].freeze
 
+  PROGRAM_NAME = 'reapack-indexer'.freeze
+
   def initialize(args)
     parse_options read_config + args
+    return unless @exit.nil?
 
     @git = Git.open @path
-
-    # This fixes lsfiles when running the indexer from
-    # a subdirectory of the git repository root.
-    # It would return an empty array without this.
-    Dir.chdir @path
 
     @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
@@ -20,15 +18,24 @@ class ReaPack::Index::Indexer
   end
 
   def run
+    pwd = Dir.pwd
+
+    return @exit unless @exit.nil?
+
+    # This fixes lsfiles when running the indexer from
+    # a subdirectory of the git repository root.
+    # It would return an empty array without this.
+    Dir.chdir @path
+
     @done = 0
 
     branch = @git.current_branch
 
     if branch.nil?
       Kernel.warn 'Current branch is empty, cannot continue.'
-      abort
+      return false
     elsif branch != 'master'
-      abort unless prompt("Current branch #{@git.current_branch} is not" \
+      return false unless prompt("Current branch #{@git.current_branch} is not" \
         " the master branch. Continue anyway?")
     end
 
@@ -53,7 +60,7 @@ class ReaPack::Index::Indexer
 
     unless @db.modified?
       puts 'Nothing to do!'
-      return
+      return true
     end
 
     changelog = @db.changelog
@@ -67,12 +74,16 @@ class ReaPack::Index::Indexer
 
       puts 'done'
     end
+
+    true
+  ensure
+    Dir.chdir pwd
   end
 
 private
   def prompt(question, &block)
     print "#{question} [y/N] "
-    answer = STDIN.getch
+    answer = $stdin.getch
     puts answer
 
     yes = answer.downcase == 'y'
@@ -191,10 +202,10 @@ private
     @output = './index.xml'
 
     OptionParser.new do |opts|
-      opts.program_name = 'reapack-indexer'
+      opts.program_name = PROGRAM_NAME
       opts.version = ReaPack::Index::VERSION
       opts.banner = "Package indexer for ReaPack-based repositories\n" +
-        "Usage: #{opts.program_name} [options] [directory]"
+        "Usage: #{PROGRAM_NAME} [options] [directory]"
 
       opts.separator 'Options:'
 
@@ -221,19 +232,19 @@ private
 
       opts.on_tail '-v', '--version', 'Display version information' do
         puts opts.ver
-        exit
+        @exit = true
       end
 
       opts.on_tail '-h', '--help', 'Prints this help' do
         puts opts
-        exit
+        @exit = true
       end
     end.parse! args
 
     @path = args.last || Dir.pwd
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
-    Kernel.warn "reapack-indexer: #{e.message}"
-    exit
+    Kernel.warn "#{PROGRAM_NAME}: #{e.message}"
+    @exit = false
   end
 
   def read_config
