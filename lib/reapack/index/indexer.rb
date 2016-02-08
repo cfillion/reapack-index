@@ -15,9 +15,8 @@ class ReaPack::Index::Indexer
     Dir.chdir @path
 
     @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
-    @db.amend = @amend
-    @db.pwd = @path
     @db.source_pattern = ReaPack::Index.source_for @git.remote.url
+    @db.amend = @amend
   end
 
   def run
@@ -82,8 +81,8 @@ private
     yes
   end
 
-  def scan(path, contents, &block)
-    @db.scan path, contents, &block
+  def scan(path, contents)
+    @db.scan path, contents
   rescue ReaPack::Index::Error => e
     warn "Warning: #{e.message}".yellow
   end
@@ -100,20 +99,18 @@ private
     @db.commit = commit.sha
     parent = commit.parent
 
-    files = lsfiles commit.gtree
+    @db.files = lsfiles commit.gtree
 
     # initial commit
     unless parent
-      files.each do |path|
+      @db.files.each do |path|
         next unless ReaPack::Index.type_of path
 
         log "-> indexing new file #{path}"
 
         blob = commit.gtree.files[path]
 
-        scan(path, blob.contents) {|file|
-          files.include? file
-        }
+        scan path, blob.contents
       end
 
       return
@@ -128,9 +125,7 @@ private
       if diff.type == 'deleted'
         @db.remove diff.path
       else
-        scan(diff.path, diff.blob.contents) {|file|
-          files.include? file
-        }
+        scan diff.path, diff.blob.contents
       end
     }
   rescue NoMethodError => e
