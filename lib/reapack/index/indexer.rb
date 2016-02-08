@@ -6,6 +6,8 @@ class ReaPack::Index::Indexer
 
   PROGRAM_NAME = 'reapack-indexer'.freeze
 
+  DiffEntry = Struct.new :file, :action, :blob
+
   def initialize(args)
     @path = args.last || Dir.pwd
     parse_options read_config + args
@@ -29,8 +31,6 @@ class ReaPack::Index::Indexer
     # It would return an empty array without this.
     Dir.chdir @path
 
-    @done = 0
-
     branch = @git.current_branch
 
     if branch.nil?
@@ -47,7 +47,7 @@ class ReaPack::Index::Indexer
       commits = @git.log 999999
     end
 
-    @total = commits.size
+    @done, @total = 0, commits.size
     commits.reverse_each {|commit| process commit }
 
     if @total > 0
@@ -110,35 +110,33 @@ private
     end
 
     @db.commit = commit.sha
-    parent = commit.parent
-
     @db.files = lsfiles commit.gtree
 
-    # initial commit
-    unless parent
-      @db.files.each do |path|
-        next unless ReaPack::Index.type_of path
+    parent = commit.parent
+    entries = []
 
-        log "-> indexing new file #{path}"
-
-        blob = get_blob path, commit.gtree
-
-        scan path, blob.contents
-      end
-
-      return
+    if parent
+      ReaPack::Index::GitDiff.new(@git, parent.sha, commit.sha).each {|diff|
+        entry = DiffEntry.new diff.path, diff.type, diff.blob
+        entries << entry
+      }
+    else
+      # initial commit
+      @db.files.each {|path|
+        entry = DiffEntry.new path, 'new', get_blob(path, commit.gtree)
+        entries << entry
+      }
     end
 
-    diffs = ReaPack::Index::GitDiff.new(@git, commit.parent.sha, commit.sha).to_a
-    diffs.each {|diff|
-      next unless ReaPack::Index.type_of diff.path
+    entries.each {|entry|
+      next unless ReaPack::Index.type_of entry.file
 
-      log "-> indexing #{diff.type} file #{diff.path}"
+      log "-> indexing #{entry.action} file #{entry.file}"
 
-      if diff.type == 'deleted'
-        @db.remove diff.path
+      if entry.action == 'deleted'
+        @db.remove entry.file
       else
-        scan diff.path, diff.blob.contents
+        scan entry.file, entry.blob.contents
       end
     }
   rescue NoMethodError => e
@@ -164,8 +162,6 @@ private
   end
 
   def get_blob(path, tree)
-    blob = nil
-
     directories = path.split File::SEPARATOR
     directories.shift if directories.first == '.'
     file = directories.pop

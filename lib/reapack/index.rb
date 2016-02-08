@@ -77,7 +77,7 @@ class ReaPack::Index
     @files = []
     @path = path
 
-    if File.exists? path
+    if File.exist? path
       # noblanks: don't preserve the original white spaces
       # so we always output a neat document
       setup = proc {|config| config.noblanks }
@@ -128,8 +128,8 @@ class ReaPack::Index
       ver.replace_sources do
         ver.add_source :all, nil, url_for(path)
 
-        deps.each_pair {|file, path|
-          ver.add_source :all, file, url_for(path)
+        deps.each_pair {|filename, dep_path|
+          ver.add_source :all, filename, url_for(dep_path)
         }
       end
     end
