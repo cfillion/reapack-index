@@ -1,7 +1,7 @@
 require 'coveralls'
 require 'simplecov'
 
-Coveralls::Output.silent = true
+Coveralls::Output.silent = !ENV['CI']
 
 SimpleCov.formatters = [
   SimpleCov::Formatter::HTMLFormatter,
