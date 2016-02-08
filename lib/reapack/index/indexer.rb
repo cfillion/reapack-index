@@ -108,7 +108,7 @@ private
 
         log "-> indexing new file #{path}"
 
-        blob = commit.gtree.files[path]
+        blob = get_blob path, commit.gtree
 
         scan path, blob.contents
       end
@@ -148,6 +148,18 @@ private
     }
 
     files
+  end
+
+  def get_blob(path, tree)
+    blob = nil
+
+    directories = path.split File::SEPARATOR
+    directories.shift if directories.first == '.'
+    file = directories.pop
+
+    directories.each {|dir| tree = tree.trees[dir] }
+
+    tree.files[file]
   end
 
   def log(line)
