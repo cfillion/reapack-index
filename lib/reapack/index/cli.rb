@@ -1,4 +1,4 @@
-class ReaPack::Index::Indexer
+class ReaPack::Index::CLI
   CONFIG_SEARCH = [
     '~',
     '.',

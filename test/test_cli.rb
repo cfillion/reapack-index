@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-module IndexerUtils
+module CLIUtils
   class FakeIO
     def initialize
       @getch = 'n'
@@ -21,7 +21,7 @@ module IndexerUtils
 
       setup[] if setup
 
-      @indexer = ReaPack::Index::Indexer.new \
+      @indexer = ReaPack::Index::CLI.new \
         ['--no-progress', '--no-commit'] + options + ['--', path]
 
       yield if block_given?
@@ -43,8 +43,8 @@ module IndexerUtils
   end
 end
 
-class TestIndexer < MiniTest::Test
-  include IndexerUtils
+class TestCLI < MiniTest::Test
+  include CLIUtils
 
   def teardown
     # who is changing the working directory without restoring it?!
@@ -53,21 +53,21 @@ class TestIndexer < MiniTest::Test
 
   def test_help
     assert_output /--help/, '' do
-      i = ReaPack::Index::Indexer.new ['--help']
+      i = ReaPack::Index::CLI.new ['--help']
       assert_equal true, i.run # does nothing
     end
   end
 
   def test_version
     assert_output /#{Regexp.escape ReaPack::Index::VERSION.to_s}/, '' do
-      i = ReaPack::Index::Indexer.new ['--version']
+      i = ReaPack::Index::CLI.new ['--version']
       assert_equal true, i.run # does nothing
     end
   end
 
   def test_invalid_option
     assert_output '', /reapack-indexer: invalid option: --hello-world/i do
-      i = ReaPack::Index::Indexer.new ['--hello-world']
+      i = ReaPack::Index::CLI.new ['--hello-world']
       assert_equal false, i.run # does nothing
     end
   end
@@ -335,7 +335,7 @@ class TestIndexer < MiniTest::Test
 
   def test_missing_argument
     assert_output nil, /missing argument/ do
-      i = ReaPack::Index::Indexer.new ['--output']
+      i = ReaPack::Index::CLI.new ['--output']
       assert_equal false, i.run # does nothing
     end
   end
@@ -429,7 +429,7 @@ class TestIndexer < MiniTest::Test
       Dir.chdir File.join(@git.dir.to_s, 'Category')
 
       assert_output /--help/ do
-        ReaPack::Index::Indexer.new
+        ReaPack::Index::CLI.new
       end
     end
   ensure
@@ -446,7 +446,7 @@ class TestIndexer < MiniTest::Test
         Dir.chdir @git.dir.to_s
 
         assert_output '', '' do
-          i2 = ReaPack::Index::Indexer.new ['--no-commit', '--quiet']
+          i2 = ReaPack::Index::CLI.new ['--no-commit', '--quiet']
           i2.run
         end
       ensure
@@ -457,12 +457,12 @@ class TestIndexer < MiniTest::Test
 
   def test_no_such_repository
     assert_output '', /no such file or directory/i do
-      i = ReaPack::Index::Indexer.new ['/hello/world']
+      i = ReaPack::Index::CLI.new ['/hello/world']
       assert_equal false, i.run
     end
 
     assert_output '', /could not find repository/i do
-      i = ReaPack::Index::Indexer.new ['/']
+      i = ReaPack::Index::CLI.new ['/']
       assert_equal false, i.run
     end
   end
