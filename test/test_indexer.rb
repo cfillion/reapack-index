@@ -91,6 +91,7 @@ class TestIndexer < MiniTest::Test
       end
 
       assert_match 'Category/test2.lua', read_index
+      assert_match "raw/#{@git.log(1).last.sha}/test1.lua", read_index
     end
   end
 
@@ -98,7 +99,6 @@ class TestIndexer < MiniTest::Test
     wrapper do
       @git.add mkfile('README.md', '# Hello World')
       @git.commit 'initial commit'
-
 
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.add mkfile('Category/test2.lua', '@version 1.0')

@@ -65,7 +65,6 @@ class ReaPack::Index::Indexer
     changelog = @db.changelog
     puts changelog
 
-    @db.commit = commits.last.oid
     @db.write!
 
     prompt 'Commit the new index?' do
@@ -104,6 +103,7 @@ private
       update_progress
     end
 
+    @db.commit = commit.oid
     @db.files = lsfiles commit.tree
 
     parent = commit.parents.first
