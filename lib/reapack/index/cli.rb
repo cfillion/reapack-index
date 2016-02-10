@@ -190,7 +190,7 @@ private
     return unless @opts[:warnings]
 
     if @add_nl
-      line.prepend "\n"
+      $stderr.puts
       @add_nl = false
     end
 
@@ -237,6 +237,10 @@ private
 
       op.on '-c', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
         opts[:commit] = bool
+      end
+
+      op.on '--prompt-commit', 'Ask at runtime whether to commit the index' do |bool|
+        opts[:commit] = nil
       end
 
       op.on '-W', '--warnings', 'Enable warnings' do

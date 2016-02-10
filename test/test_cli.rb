@@ -9,10 +9,16 @@ module CLIUtils
     attr_accessor :getch
   end
 
-  def wrapper(options = [], setup = nil)
+  def fake_input
     stdin = $stdin
     $stdin = FakeIO.new
 
+    yield $stdin
+  ensure
+    $stdin = stdin
+  end
+
+  def wrapper(options = [], setup = nil)
     Dir.mktmpdir('test-repository') do |path|
       @git = Git.init path
       @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
@@ -27,7 +33,6 @@ module CLIUtils
       yield if block_given?
     end
   ensure
-    $stdin = stdin
     @git = @indexer = nil
   end
 
@@ -353,7 +358,7 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_commit
+  def test_create_commit
     wrapper ['--commit'] do
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
@@ -363,6 +368,40 @@ class TestCLI < MiniTest::Test
       commit = @git.log(1).last
       assert_equal 'index: empty index', commit.message
       assert_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
+    end
+  end
+
+  def test_create_commit_accept
+    wrapper ['--prompt-commit'] do
+      @git.add mkfile('.gitkeep')
+      @git.commit 'initial commit'
+
+      fake_input do |fio|
+        fio.getch = 'y'
+        stdin, stderr = capture_io { @indexer.run }
+        assert_match /commit created/i, stderr
+      end
+
+      commit = @git.log(1).last
+      assert_equal 'index: empty index', commit.message
+      assert_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
+    end
+  end
+
+  def test_create_commit_decline
+    wrapper ['--prompt-commit'] do
+      @git.add mkfile('.gitkeep')
+      @git.commit 'initial commit'
+
+      fake_input do |fio|
+        fio.getch = 'n'
+        stdin, stderr = capture_io { @indexer.run }
+        refute_match /commit created/i, stderr
+      end
+
+      commit = @git.log(1).last
+      refute_equal 'index: empty index', commit.message
+      refute_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
     end
   end
 

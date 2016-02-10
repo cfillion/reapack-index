@@ -34,6 +34,7 @@ Options:
         --[no-]progress              Enable or disable progress information
     -V, --[no-]verbose               Activate diagnosis messages
     -c, --[no-]commit                Select whether to commit the modified index
+        --prompt-commit              Ask at runtime whether to commit the index
     -W, --warnings                   Enable warnings
     -w, --no-warnings                Turn off warnings
     -q, --[no-]quiet                 Disable almost all output
