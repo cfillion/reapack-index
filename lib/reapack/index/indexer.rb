@@ -270,7 +270,7 @@ private
       end
     end.parse! args
 
-    opts[:path] = args.first
+    opts[:path] = args.last
 
     opts
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
