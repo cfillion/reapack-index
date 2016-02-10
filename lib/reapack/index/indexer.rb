@@ -22,7 +22,7 @@ class ReaPack::Index::Indexer
     return unless @exit.nil?
 
     @git = Rugged::Repository.discover path
-    @opts = parse_options(read_config).merge @opts
+    @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
 
     @opts = DEFAULTS.merge @opts
 
@@ -54,12 +54,11 @@ class ReaPack::Index::Indexer
     commits = commits_since @db.commit
 
     @done, @total = 0, commits.size
-    print_progress if @total > 0
 
-    commits.each {|commit| process commit }
-
-    if @add_nl
-      $stderr.print "\n"
+    unless commits.empty?
+      print_progress
+      commits.each {|commit| process commit }
+      $stderr.print "\n" if @add_nl
     end
 
     unless @db.modified?
@@ -260,6 +259,10 @@ private
         opts[:quiet] = true
       end
 
+      op.on '--no-config', 'Bypass the configuration files' do |bool|
+        opts[:noconfig] = true
+      end
+
       op.on_tail '-v', '--version', 'Display version information' do
         puts op.ver
         @exit = true
@@ -274,6 +277,7 @@ private
     opts
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
+    $stderr.puts "Try '#{PROGRAM_NAME} --help' for more information."
     @exit = false
     opts
   end

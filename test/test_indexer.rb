@@ -66,7 +66,7 @@ class TestIndexer < MiniTest::Test
   end
 
   def test_invalid_option
-    assert_output '', "reapack-indexer: invalid option: --hello-world\n" do
+    assert_output '', /reapack-indexer: invalid option: --hello-world/i do
       i = ReaPack::Index::Indexer.new ['--hello-world']
       assert_equal false, i.run # does nothing
     end
@@ -387,6 +387,18 @@ class TestIndexer < MiniTest::Test
     assert_output /--help/, '' do
       wrapper [], setup
     end
+  end
+
+  def test_config
+    setup = proc {
+      mkfile '.reapack-index.conf', '--help'
+    }
+
+    stdout, stderr = capture_io do
+      wrapper ['--no-config'], setup
+    end
+
+    refute_match /--help/, stdout
   end
 
   def test_config_priority

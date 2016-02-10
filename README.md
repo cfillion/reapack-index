@@ -37,6 +37,7 @@ Options:
     -W, --warnings                   Enable warnings
     -w, --no-warnings                Turn off warnings
     -q, --[no-]quiet                 Disable almost all output
+        --no-config                  Bypass the configuration files
     -v, --version                    Display version information
     -h, --help                       Prints this help
 ```
