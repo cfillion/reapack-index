@@ -388,6 +388,57 @@ class TestIndexer < MiniTest::Test
     end
   end
 
+  def test_config_priority
+    setup = proc {
+      mkfile '.reapack-index.conf', '--no-warnings'
+    }
+
+    wrapper ['--warnings'], setup do
+      @git.add mkfile('test.lua', 'no version tag in this script!')
+      @git.commit 'initial commit'
+
+      assert_output nil, /warning/i do
+        assert_equal true, @indexer.run
+      end
+    end
+  end
+
+  def test_config_subdirectory
+    pwd = Dir.pwd
+
+    wrapper do
+      mkfile '.reapack-index.conf', '--help'
+      mkfile 'Category/.gitkeep'
+
+      Dir.chdir File.join(@git.dir.to_s, 'Category')
+
+      assert_output /--help/ do
+        ReaPack::Index::Indexer.new
+      end
+    end
+  ensure
+    Dir.chdir pwd
+  end
+
+  def test_working_directory_with_options
+    wrapper do
+      @git.add mkfile('README.md', '# Hello World')
+      @git.commit 'initial commit'
+
+      begin
+        pwd = Dir.pwd
+        Dir.chdir @git.dir.to_s
+
+        assert_output '', '' do
+          i2 = ReaPack::Index::Indexer.new ['--no-commit', '--quiet']
+          i2.run
+        end
+      ensure
+        Dir.chdir pwd
+      end
+    end
+  end
+
   def test_no_such_repository
     assert_output '', /no such file or directory/i do
       i = ReaPack::Index::Indexer.new ['/hello/world']
@@ -410,8 +461,8 @@ class TestIndexer < MiniTest::Test
       end
 
       assert_equal "empty index\n", stdout
-      assert_match /0%/, stderr
-      assert_match /100%/, stderr
+      assert_match "\rIndexing commit 1 of 1 (0%)..." \
+        "\rIndexing commit 1 of 1 (100%)...\n", stderr
     end
   end
 

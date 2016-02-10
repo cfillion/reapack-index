@@ -6,19 +6,26 @@ class ReaPack::Index::Indexer
 
   PROGRAM_NAME = 'reapack-indexer'.freeze
 
+  # @private
   DiffEntry = Struct.new :file, :action, :blob
 
-  def initialize(args)
-    @path = args.last || Dir.pwd
-    parse_options read_config + args
+  def initialize(argv = [])
+    @opts = {
+      verbose: false,
+      warnings: true,
+      progress: true,
+      quiet: false,
+      commit: nil,
+      output: './index.xml',
+    }
+
+    @opts.merge! parse_options(argv)
+    @opts[:path] ||= Dir.pwd
 
     return unless @exit.nil?
 
-    @git = Rugged::Repository.discover @path
-
-    @db = ReaPack::Index.new File.expand_path(@output, @git.workdir)
-    @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
-    @db.amend = @amend
+    @git = Rugged::Repository.discover @opts[:path]
+    @opts = parse_options(read_config).merge @opts
   rescue Rugged::OSError, Rugged::RepositoryError => e
     $stderr.puts e.message
     @exit = false
@@ -39,30 +46,29 @@ class ReaPack::Index::Indexer
         " the master branch. Continue anyway?")
     end
 
-    walker = Rugged::Walker.new @git
-    walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
-    walker.push @git.head.target_id
-    walker.hide @db.commit if @db.commit
+    @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
+    @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
+    @db.amend = @opts[:amend]
 
-    commits = walker.each.to_a
+    commits = commits_since @db.commit
 
     @done, @total = 0, commits.size
     print_progress if @total > 0
 
     commits.each {|commit| process commit }
 
-    if @total > 0 && @progress
+    if @add_nl
       $stderr.print "\n"
     end
 
     unless @db.modified?
-      $stderr.puts 'Nothing to do!' unless @quiet
+      $stderr.puts 'Nothing to do!' unless @opts[:quiet]
       return true
     end
 
     # changelog will be cleared by Index#write!
     changelog = @db.changelog
-    puts changelog unless @quiet
+    puts changelog unless @opts[:quiet]
 
     @db.write!
     commit changelog
@@ -82,8 +88,17 @@ private
     yes
   end
 
+  def commits_since(last_id)
+    walker = Rugged::Walker.new @git
+    walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
+    walker.push @git.head.target_id
+    walker.hide last_id if last_id
+
+    walker.each.to_a
+  end
+
   def process(commit)
-    if @verbose
+    if @opts[:verbose]
       sha = commit.oid[0..6]
       message = commit.message.lines.first.chomp
       log "Processing %s: %s" % [sha, message]
@@ -149,7 +164,7 @@ private
   end
 
   def commit(changelog)
-    return if @commit == false || (@commit.nil? && !prompt('Commit the new index?'))
+    return if @opts[:commit] == false || (@opts[:commit].nil? && !prompt('Commit the new index?'))
 
     target = @git.head.target
     root = Pathname.new @git.workdir
@@ -173,11 +188,11 @@ private
   end
 
   def log(line)
-    $stderr.puts line if @verbose
+    $stderr.puts line if @opts[:verbose]
   end
 
   def warn(line)
-    return unless @warnings
+    return unless @opts[:warnings]
 
     if @add_nl
       line.prepend "\n"
@@ -188,7 +203,7 @@ private
   end
 
   def print_progress
-    return if @verbose || !@progress
+    return if @opts[:verbose] || !@opts[:progress]
 
     percent = (@done.to_f / @total) * 100
     $stderr.print "\rIndexing commit %d of %d (%d%%)..." %
@@ -198,75 +213,75 @@ private
   end
 
   def parse_options(args)
-    @verbose = false
-    @warnings = true
-    @progress = true
-    @quiet = false
-    @commit = nil
-    @output = './index.xml'
+    opts = Hash.new
 
-    OptionParser.new do |opts|
-      opts.program_name = PROGRAM_NAME
-      opts.version = ReaPack::Index::VERSION
-      opts.banner = "Package indexer for ReaPack-based repositories\n" +
+    OptionParser.new do |op|
+      op.program_name = PROGRAM_NAME
+      op.version = ReaPack::Index::VERSION
+      op.banner = "Package indexer for ReaPack-based repositories\n" +
         "Usage: #{PROGRAM_NAME} [options] [directory]"
 
-      opts.separator 'Options:'
+      op.separator 'Options:'
 
-      opts.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
-        @amend = bool
+      op.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
+        opts[:amend] = bool
       end
 
-      opts.on '-o', "--output FILE=#{@output}",
+      op.on '-o', "--output FILE=#{@opts[:output]}",
           'Set the output filename and path for the index' do |file|
-        @output = file.strip
+        opts[:output] = file.strip
       end
 
-      opts.on '--[no-]progress', 'Enable or disable progress information' do |bool|
-        @progress = bool
+      op.on '--[no-]progress', 'Enable or disable progress information' do |bool|
+        opts[:progress] = bool
       end
 
-      opts.on '-V', '--[no-]verbose', 'Activate diagnosis messages' do |bool|
-        @verbose = bool
+      op.on '-V', '--[no-]verbose', 'Activate diagnosis messages' do |bool|
+        opts[:verbose] = bool
       end
 
-      opts.on '-c', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
-        @commit = bool
+      op.on '-c', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
+        opts[:commit] = bool
       end
 
-      opts.on '-W', '--warnings', 'Enable warnings' do
-        @warnings = true
+      op.on '-W', '--warnings', 'Enable warnings' do
+        opts[:warnings] = true
       end
 
-      opts.on '-w', '--no-warnings', 'Turn off warnings' do
-        @warnings = false
+      op.on '-w', '--no-warnings', 'Turn off warnings' do
+        opts[:warnings] = false
       end
 
-      opts.on '-q', '--[no-]quiet', 'Disable almost all output' do |bool|
-        @warnings = false
-        @progress = false
-        @verbose = false
-        @quiet = true
+      op.on '-q', '--[no-]quiet', 'Disable almost all output' do |bool|
+        opts[:warnings] = false
+        opts[:progress] = false
+        opts[:verbose] = false
+        opts[:quiet] = true
       end
 
-      opts.on_tail '-v', '--version', 'Display version information' do
-        puts opts.ver
+      op.on_tail '-v', '--version', 'Display version information' do
+        puts op.ver
         @exit = true
       end
 
-      opts.on_tail '-h', '--help', 'Prints this help' do
-        puts opts
+      op.on_tail '-h', '--help', 'Prints this help' do
+        puts op
         @exit = true
       end
     end.parse! args
+
+    opts[:path] = args.first
+
+    opts
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
     @exit = false
+    opts
   end
 
   def read_config
     CONFIG_SEARCH.map {|dir|
-      dir = File.expand_path dir, @path
+      dir = File.expand_path dir, @git.workdir
       path = File.expand_path '.reapack-index.conf', dir
       next unless File.readable? path
 
