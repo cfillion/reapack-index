@@ -20,7 +20,7 @@ class TestParsers < MiniTest::Test
 \t+ Line 6
  */
 
- Test
+ Test\x97
     IN
 
     changelog = <<-LOG

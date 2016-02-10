@@ -96,7 +96,7 @@ class TestIndexer < MiniTest::Test
 
   def test_normal_commit
     wrapper do
-      @git.add mkfile('README.md' '# Hello World')
+      @git.add mkfile('README.md', '# Hello World')
       @git.commit 'initial commit'
 
 
@@ -196,7 +196,7 @@ class TestIndexer < MiniTest::Test
     end
   end
 
-  def test_ignore_initial
+  def test_index_from_last
     setup = proc {
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.commit 'initial commit'
@@ -210,6 +210,9 @@ class TestIndexer < MiniTest::Test
     }
 
     wrapper do
+      # next line ensures only files in this commit are scanned
+      mkfile('test1.lua', '@version 1.1')
+
       @git.add mkfile('test2.lua', '@version 1.0')
       @git.commit 'second commit'
 
@@ -335,9 +338,7 @@ class TestIndexer < MiniTest::Test
     end
   end
 
-  def test_workaround_no_method_error
-    # undefined method `[]' for nil:NilClass in git/diff.rb:127 (process_full_diff)
-
+  def test_multibyte_filename
     wrapper do
       script = mkfile("\342\200\224.lua")
 
@@ -351,10 +352,7 @@ class TestIndexer < MiniTest::Test
     end
   end
 
-  def test_content_encoding
-    # ArgumentError: invalid byte sequence in UTF-8 in git/diff.rb:127
-    # (in split, called from process_full_diff)
-
+  def test_invalid_unicode_sequence
     wrapper do
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
@@ -373,7 +371,7 @@ class TestIndexer < MiniTest::Test
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
 
-      assert_output(/done/) { @indexer.run }
+      assert_output(/done/, '') { @indexer.run }
       
       commit = @git.log(1).last
       assert_equal 'index: empty index', commit.message

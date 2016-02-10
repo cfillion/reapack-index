@@ -1,5 +1,7 @@
 require File.expand_path '../helper', __FILE__
 
+require 'git'
+
 class TestIndex < MiniTest::Test
   def setup
     @real_path = File.expand_path '../data/index.xml', __FILE__

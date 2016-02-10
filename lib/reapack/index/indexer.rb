@@ -14,41 +14,37 @@ class ReaPack::Index::Indexer
 
     return unless @exit.nil?
 
-    @git = Git.open @path
+    @git = Rugged::Repository.discover @path
 
-    @db = ReaPack::Index.new File.expand_path(@output, @git.dir.to_s)
-    @db.source_pattern = ReaPack::Index.source_for @git.remote.url
+    @db = ReaPack::Index.new File.expand_path(@output, @git.workdir)
+    @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @amend
   end
 
   def run
-    pwd = Dir.pwd
-
     return @exit unless @exit.nil?
 
-    # This fixes lsfiles when running the indexer from
-    # a subdirectory of the git repository root.
-    # It would return an empty array without this.
-    Dir.chdir @path
-
-    branch = @git.current_branch
-
-    if branch.nil?
+    if @git.empty?
       Kernel.warn 'Current branch is empty, cannot continue.'
       return false
-    elsif branch != 'master'
-      return false unless prompt("Current branch #{@git.current_branch} is not" \
+    end
+
+    branch = @git.head.name['refs/heads/'.size..-1]
+
+    if branch != 'master'
+      return false unless prompt("Current branch #{branch} is not" \
         " the master branch. Continue anyway?")
     end
 
-    if @db.commit
-      commits = @git.log(999999).between @db.commit
-    else
-      commits = @git.log 999999
-    end
+    walker = Rugged::Walker.new @git
+    walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
+    walker.push @git.head.target_id
+    walker.hide @db.commit if @db.commit
+
+    commits = walker.each.to_a
 
     @done, @total = 0, commits.size
-    commits.reverse_each {|commit| process commit }
+    commits.each {|commit| process commit }
 
     if @total > 0
       unless @verbose
@@ -65,21 +61,20 @@ class ReaPack::Index::Indexer
       return true
     end
 
+    # changelog will be cleared by Index#write!
     changelog = @db.changelog
     puts changelog
 
+    @db.commit = commits.last.oid
     @db.write!
 
     prompt 'Commit the new index?' do
-      @git.add @db.path
-      @git.commit "index: #{changelog}"
+      commit changelog
 
       puts 'done'
     end
 
     true
-  ensure
-    Dir.chdir pwd
   end
 
 private
@@ -102,73 +97,80 @@ private
 
   def process(commit)
     if @verbose
-      sha = commit.sha[0..6]
+      sha = commit.oid[0..6]
       message = commit.message.lines.first.chomp
       log "Processing %s: %s" % [sha, message]
     else
       update_progress
     end
 
-    @db.commit = commit.sha
-    @db.files = lsfiles commit.gtree
+    @db.files = lsfiles commit.tree
 
-    parent = commit.parent
-    entries = []
-
+    parent = commit.parents.first
     if parent
-      ReaPack::Index::GitDiff.new(@git, parent.sha, commit.sha).each {|diff|
-        entry = DiffEntry.new diff.path, diff.type, diff.blob
-        entries << entry
-      }
+      diff = parent.diff commit.oid
     else
-      # initial commit
-      @db.files.each {|path|
-        entry = DiffEntry.new path, 'new', get_blob(path, commit.gtree)
-        entries << entry
-      }
+      diff = commit.diff
     end
 
-    entries.each {|entry|
-      next unless ReaPack::Index.type_of entry.file
-
-      log "-> indexing #{entry.action} file #{entry.file}"
-
-      if entry.action == 'deleted'
-        @db.remove entry.file
+    diff.each_delta {|delta|
+      if parent
+        status = delta.status
+        file = delta.new_file
       else
-        scan entry.file, entry.blob.contents
+        status = 'new'
+        file = delta.old_file
+      end
+
+      next unless ReaPack::Index.type_of file[:path]
+
+      log "-> indexing #{status} file #{file[:path]}"
+
+      if status == :deleted
+        @db.remove file[:path]
+      else
+        blob = @git.lookup file[:oid]
+        scan file[:path], blob.content.force_encoding("UTF-8")
       end
     }
-  rescue NoMethodError => e
-    warn "Error: #{e}".red
   ensure
     @done += 1
   end
 
-  def lsfiles(tree)
-    files = tree.files.keys
+  def lsfiles(tree, base = String.new)
+    files = []
 
-    tree.trees.each {|pair|
-      prefix = pair.first
-
-      subfiles = lsfiles(pair.last).map do |f|
-        File.join prefix, f
+    tree.each {|obj|
+      fullname = base.empty? ? obj[:name] : File.join(base, obj[:name])
+      case obj[:type]
+      when :blob
+        files << fullname
+      when :tree
+        files.concat lsfiles(@git.lookup(obj[:oid]), fullname)
       end
-
-      files.concat subfiles
     }
 
     files
   end
 
-  def get_blob(path, tree)
-    directories = path.split File::SEPARATOR
-    directories.shift if directories.first == '.'
-    file = directories.pop
+  def commit(changelog)
+    target = @git.head.target
+    root = Pathname.new @git.workdir
+    file = Pathname.new @db.path
 
-    directories.each {|dir| tree = tree.trees[dir] }
+    old_index = @git.index
+    old_index.read_tree target.tree
 
-    tree.files[file]
+    index = @git.index
+    index.add file.relative_path_from(root).to_s
+
+    Rugged::Commit.create @git, \
+      tree: index.write_tree(@git),
+      message: "index: #{changelog}",
+      parents: [target],
+      update_ref: 'HEAD'
+
+    old_index.write
   end
 
   def log(line)
