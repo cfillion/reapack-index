@@ -27,6 +27,6 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'colorize', '~> 0.7'
   spec.add_runtime_dependency 'rugged', '~> 0.24.0b12'
-  spec.add_runtime_dependency 'metaheader', '~> 0.1'
+  spec.add_runtime_dependency 'metaheader', '~> 1.0'
   spec.add_runtime_dependency 'nokogiri', '~> 1.6'
 end
