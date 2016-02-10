@@ -289,19 +289,6 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_warn_branch
-    wrapper do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
-
-      @git.branch('new-branch').checkout
-
-      assert_output '', /branch new-branch is not/ do
-        assert_equal false, @indexer.run
-      end
-    end
-  end
-
   def test_remove
     wrapper do
       script = mkfile 'test.lua', '@version 1.0'

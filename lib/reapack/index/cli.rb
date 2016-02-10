@@ -42,11 +42,6 @@ class ReaPack::Index::CLI
 
     branch = @git.head.name['refs/heads/'.size..-1]
 
-    if branch != 'master'
-      return false unless prompt("Current branch #{branch} is not" \
-        " the master branch. Continue anyway?")
-    end
-
     @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
     @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @opts[:amend]
@@ -142,7 +137,7 @@ private
       begin
         @db.scan file[:path], blob.content.force_encoding("UTF-8")
       rescue ReaPack::Index::Error => e
-        warn "Warning: #{e.message}".yellow
+        warn e.message
       end
     end
   end
@@ -199,7 +194,7 @@ private
       @add_nl = false
     end
 
-    Kernel.warn line
+    $stderr.puts "Warning: #{line}".yellow
   end
 
   def print_progress
