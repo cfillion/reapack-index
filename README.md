@@ -1,6 +1,6 @@
 # Package indexer for ReaPack-based repositories
 
-[https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)
+Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)
 
 [![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
 [![Coverage Status](https://coveralls.io/repos/cfillion/reapack-index/badge.svg?branch=master&service=github)](https://coveralls.io/github/cfillion/reapack-index?branch=master)
@@ -25,15 +25,18 @@ bundle exec bin/reascript-indexer [options] [path-to-your-reascript-repository]
 ### Configuration
 
 Options can be specified from the command line
-or stored in configuration files (one option per line):
+or stored in a configuration file (one option per line):
 
 ```
 Options:
     -a, --[no-]amend                 Reindex existing versions
-    -o, --output FILE=./index.xml    Set the output path of the database
-    -V, --[no-]verbose               Run verbosely
-    -W, --warnings                   Enable all warnings
+    -o, --output FILE=./index.xml    Set the output filename and path for the index
+        --[no-]progress              Enable or disable progress information
+    -V, --[no-]verbose               Activate diagnosis messages
+    -c, --[no-]commit                Select whether to commit the modified index
+    -W, --warnings                   Enable warnings
     -w, --no-warnings                Turn off warnings
+    -q, --[no-]quiet                 Disable almost all output
     -v, --version                    Display version information
     -h, --help                       Prints this help
 ```
@@ -42,7 +45,7 @@ Options are read from these sources, in order
 (latter options override any previous value):
 
 - ~/.reapack-index.conf (`~` = home directory)
-- ./.reapack-index.conf (`.` = current directory)
+- ./.reapack-index.conf (`.` = repository root)
 - command line
 
 ## Metadata Documentation
