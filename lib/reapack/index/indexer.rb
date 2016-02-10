@@ -6,26 +6,27 @@ class ReaPack::Index::Indexer
 
   PROGRAM_NAME = 'reapack-indexer'.freeze
 
-  # @private
-  DiffEntry = Struct.new :file, :action, :blob
+  DEFAULTS = {
+    verbose: false,
+    warnings: true,
+    progress: true,
+    quiet: false,
+    commit: nil,
+    output: './index.xml',
+  }.freeze
 
   def initialize(argv = [])
-    @opts = {
-      verbose: false,
-      warnings: true,
-      progress: true,
-      quiet: false,
-      commit: nil,
-      output: './index.xml',
-    }
-
-    @opts.merge! parse_options(argv)
-    @opts[:path] ||= Dir.pwd
+    @opts = parse_options(argv)
+    path = argv.last || Dir.pwd
 
     return unless @exit.nil?
 
-    @git = Rugged::Repository.discover @opts[:path]
+    @git = Rugged::Repository.discover path
     @opts = parse_options(read_config).merge @opts
+
+    @opts = DEFAULTS.merge @opts
+
+    log @opts.inspect if @exit.nil?
   rescue Rugged::OSError, Rugged::RepositoryError => e
     $stderr.puts e.message
     @exit = false
@@ -101,7 +102,7 @@ private
     if @opts[:verbose]
       sha = commit.oid[0..6]
       message = commit.message.lines.first.chomp
-      log "Processing %s: %s" % [sha, message]
+      log "processing %s: %s" % [sha, message]
     end
 
     @db.commit = commit.oid
@@ -227,7 +228,7 @@ private
         opts[:amend] = bool
       end
 
-      op.on '-o', "--output FILE=#{@opts[:output]}",
+      op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
         opts[:output] = file.strip
       end
@@ -270,8 +271,6 @@ private
       end
     end.parse! args
 
-    opts[:path] = args.last
-
     opts
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
@@ -283,7 +282,13 @@ private
     CONFIG_SEARCH.map {|dir|
       dir = File.expand_path dir, @git.workdir
       path = File.expand_path '.reapack-index.conf', dir
-      next unless File.readable? path
+
+      log 'reading configuration from %s' % path
+
+      unless File.readable? path
+        log 'configuration file is unreadable, skipping'
+        next
+      end
 
       opts = Array.new
       File.foreach(path) {|line| opts << Shellwords.split(line) }

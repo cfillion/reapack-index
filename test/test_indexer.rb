@@ -132,20 +132,21 @@ class TestIndexer < MiniTest::Test
   end
 
   def test_verbose
-    wrapper ['--verbose'] do
-      @git.add mkfile('test.lua', '@version 1.0')
-      @git.add mkfile('test.png')
-      @git.commit 'initial commit'
+    stdout, stderr = capture_io do
+      wrapper ['--verbose'] do
+        @git.add mkfile('test.lua', '@version 1.0')
+        @git.add mkfile('test.png')
+        @git.commit 'initial commit'
 
-      stdout, stderr = capture_io do
         assert_equal true, @indexer.run
       end
-
-      assert_equal "1 new category, 1 new package, 1 new version\n", stdout
-      assert_match /Processing [a-f0-9]{7}: initial commit/, stderr
-      assert_match /indexing new file test.lua/, stderr
-      refute_match /indexing new file test.png/, stderr
     end
+
+    assert_equal "1 new category, 1 new package, 1 new version\n", stdout
+    assert_match /reading configuration from .+\.reapack-index\.conf/i, stderr
+    assert_match /processing [a-f0-9]{7}: initial commit/i, stderr
+    assert_match /indexing new file test.lua/, stderr
+    refute_match /indexing new file test.png/, stderr
   end
 
   def test_verbose_override
@@ -158,7 +159,7 @@ class TestIndexer < MiniTest::Test
       end
 
       assert_equal "empty index\n", stdout
-      refute_match /Processing [a-f0-9]{7}: initial commit/, stderr
+      refute_match /processing [a-f0-9]{7}: initial commit/i, stderr
     end
   end
 
@@ -390,17 +391,20 @@ class TestIndexer < MiniTest::Test
 
   def test_config_priority
     setup = proc {
-      mkfile '.reapack-index.conf', '--no-warnings'
+      mkfile '.reapack-index.conf', "--verbose\n--no-warnings"
     }
 
-    wrapper ['--warnings'], setup do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+    stdout, stderr = capture_io do
+      wrapper ['--warnings'], setup do
+        @git.add mkfile('test.lua', 'no version tag in this script!')
+        @git.commit 'initial commit'
 
-      assert_output nil, /warning/i do
         assert_equal true, @indexer.run
       end
     end
+
+    assert_match /warning/i, stderr
+    assert_match /verbose/i, stderr
   end
 
   def test_config_subdirectory
@@ -491,7 +495,7 @@ class TestIndexer < MiniTest::Test
       @git.add mkfile('test.lua', 'no version tag in this script!')
       @git.commit 'initial commit'
 
-      assert_output nil, /\nWarning:/ do
+      assert_output nil, /\nWarning:/i do
         assert_equal true, @indexer.run
       end
     end
