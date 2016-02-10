@@ -19,13 +19,16 @@ class ReaPack::Index::Indexer
     @db = ReaPack::Index.new File.expand_path(@output, @git.workdir)
     @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @amend
+  rescue Rugged::OSError, Rugged::RepositoryError => e
+    $stderr.puts e.message
+    @exit = false
   end
 
   def run
     return @exit unless @exit.nil?
 
     if @git.empty?
-      Kernel.warn 'Current branch is empty, cannot continue.'
+      $stderr.puts 'Current branch is empty, cannot continue.'
       return false
     end
 
@@ -44,43 +47,34 @@ class ReaPack::Index::Indexer
     commits = walker.each.to_a
 
     @done, @total = 0, commits.size
+    print_progress if @total > 0
+
     commits.each {|commit| process commit }
 
-    if @total > 0
-      unless @verbose
-        # bump to 100%
-        update_progress
-        print "\n"
-      end
-
-      print "\n"
+    if @total > 0 && @progress
+      $stderr.print "\n"
     end
 
     unless @db.modified?
-      puts 'Nothing to do!'
+      $stderr.puts 'Nothing to do!' unless @quiet
       return true
     end
 
     # changelog will be cleared by Index#write!
     changelog = @db.changelog
-    puts changelog
+    puts changelog unless @quiet
 
     @db.write!
-
-    prompt 'Commit the new index?' do
-      commit changelog
-
-      puts 'done'
-    end
+    commit changelog
 
     true
   end
 
 private
   def prompt(question, &block)
-    print "#{question} [y/N] "
+    $stderr.print "#{question} [y/N] "
     answer = $stdin.getch
-    puts answer
+    $stderr.puts answer
 
     yes = answer.downcase == 'y'
     block[] if block_given? && yes
@@ -88,53 +82,54 @@ private
     yes
   end
 
-  def scan(path, contents)
-    @db.scan path, contents
-  rescue ReaPack::Index::Error => e
-    warn "Warning: #{e.message}".yellow
-  end
-
   def process(commit)
     if @verbose
       sha = commit.oid[0..6]
       message = commit.message.lines.first.chomp
       log "Processing %s: %s" % [sha, message]
-    else
-      update_progress
     end
 
     @db.commit = commit.oid
     @db.files = lsfiles commit.tree
 
     parent = commit.parents.first
+
     if parent
       diff = parent.diff commit.oid
     else
       diff = commit.diff
     end
 
-    diff.each_delta {|delta|
-      if parent
-        status = delta.status
-        file = delta.new_file
-      else
-        status = 'new'
-        file = delta.old_file
-      end
-
-      next unless ReaPack::Index.type_of file[:path]
-
-      log "-> indexing #{status} file #{file[:path]}"
-
-      if status == :deleted
-        @db.remove file[:path]
-      else
-        blob = @git.lookup file[:oid]
-        scan file[:path], blob.content.force_encoding("UTF-8")
-      end
-    }
+    diff.each_delta {|delta| index delta, parent.nil? }
   ensure
     @done += 1
+    print_progress
+  end
+
+  def index(delta, is_initial)
+    if is_initial
+      status = 'new'
+      file = delta.old_file
+    else
+      status = delta.status
+      file = delta.new_file
+    end
+
+    return unless ReaPack::Index.type_of file[:path]
+
+    log "-> indexing #{status} file #{file[:path]}"
+
+    if status == :deleted
+      @db.remove file[:path]
+    else
+      blob = @git.lookup file[:oid]
+
+      begin
+        @db.scan file[:path], blob.content.force_encoding("UTF-8")
+      rescue ReaPack::Index::Error => e
+        warn "Warning: #{e.message}".yellow
+      end
+    end
   end
 
   def lsfiles(tree, base = String.new)
@@ -154,6 +149,8 @@ private
   end
 
   def commit(changelog)
+    return if @commit == false || (@commit.nil? && !prompt('Commit the new index?'))
+
     target = @git.head.target
     root = Pathname.new @git.workdir
     file = Pathname.new @db.path
@@ -171,10 +168,12 @@ private
       update_ref: 'HEAD'
 
     old_index.write
+
+    $stderr.puts 'commit created'
   end
 
   def log(line)
-    puts line if @verbose
+    $stderr.puts line if @verbose
   end
 
   def warn(line)
@@ -188,9 +187,11 @@ private
     Kernel.warn line
   end
 
-  def update_progress
+  def print_progress
+    return if @verbose || !@progress
+
     percent = (@done.to_f / @total) * 100
-    print "\rIndexing commit %d of %d (%d%%)..." %
+    $stderr.print "\rIndexing commit %d of %d (%d%%)..." %
       [[@done + 1, @total].min, @total, percent]
 
     @add_nl = true
@@ -199,6 +200,9 @@ private
   def parse_options(args)
     @verbose = false
     @warnings = true
+    @progress = true
+    @quiet = false
+    @commit = nil
     @output = './index.xml'
 
     OptionParser.new do |opts|
@@ -218,16 +222,31 @@ private
         @output = file.strip
       end
 
-      opts.on '-V', '--[no-]verbose', 'Run verbosely' do |bool|
+      opts.on '--[no-]progress', 'Enable or disable progress information' do |bool|
+        @progress = bool
+      end
+
+      opts.on '-V', '--[no-]verbose', 'Activate diagnosis messages' do |bool|
         @verbose = bool
       end
 
-      opts.on '-W', '--warnings', 'Enable all warnings' do
+      opts.on '-c', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
+        @commit = bool
+      end
+
+      opts.on '-W', '--warnings', 'Enable warnings' do
         @warnings = true
       end
 
       opts.on '-w', '--no-warnings', 'Turn off warnings' do
         @warnings = false
+      end
+
+      opts.on '-q', '--[no-]quiet', 'Disable almost all output' do |bool|
+        @warnings = false
+        @progress = false
+        @verbose = false
+        @quiet = true
       end
 
       opts.on_tail '-v', '--version', 'Display version information' do
@@ -241,7 +260,7 @@ private
       end
     end.parse! args
   rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
-    Kernel.warn "#{PROGRAM_NAME}: #{e.message}"
+    $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
     @exit = false
   end
 

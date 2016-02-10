@@ -24,3 +24,5 @@ module MiniTest
     end
   end
 end
+
+String.disable_colorization = true

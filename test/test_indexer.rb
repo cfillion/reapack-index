@@ -21,7 +21,8 @@ module IndexerUtils
 
       setup[] if setup
 
-      @indexer = ReaPack::Index::Indexer.new options + ['--', path]
+      @indexer = ReaPack::Index::Indexer.new \
+        ['--no-progress', '--no-commit'] + options + ['--', path]
 
       yield if block_given?
     end
@@ -105,7 +106,7 @@ class TestIndexer < MiniTest::Test
       @git.add mkfile('Category/Sub/test3.lua', '@version 1.0')
       @git.commit 'second commit'
 
-      assert_output /3 new packages/, '' do
+      assert_output "3 new categories, 3 new packages, 3 new versions\n", '' do
         assert_equal true, @indexer.run
       end
 
@@ -140,10 +141,10 @@ class TestIndexer < MiniTest::Test
         assert_equal true, @indexer.run
       end
 
-      assert_match /Processing [a-f0-9]{7}: initial commit/, stdout
-      assert_match /indexing new file test.lua/, stdout
-      refute_match /indexing new file test.png/, stdout
-      assert_empty stderr
+      assert_equal "1 new category, 1 new package, 1 new version\n", stdout
+      assert_match /Processing [a-f0-9]{7}: initial commit/, stderr
+      assert_match /indexing new file test.lua/, stderr
+      refute_match /indexing new file test.png/, stderr
     end
   end
 
@@ -156,8 +157,8 @@ class TestIndexer < MiniTest::Test
         assert_equal true, @indexer.run
       end
 
-      refute_match /initial commit/, stdout
-      assert_empty stderr
+      assert_equal "empty index\n", stdout
+      refute_match /Processing [a-f0-9]{7}: initial commit/, stderr
     end
   end
 
@@ -209,7 +210,7 @@ class TestIndexer < MiniTest::Test
       mkfile 'index.xml', index
     }
 
-    wrapper do
+    wrapper [], setup do
       # next line ensures only files in this commit are scanned
       mkfile('test1.lua', '@version 1.1')
 
@@ -248,7 +249,7 @@ class TestIndexer < MiniTest::Test
       @git.add mkfile('Test/test.lua', "@version 1.0\n@author cfillion")
       @git.commit 'second commit'
 
-      assert_output /nothing to do/i, '' do
+      assert_output '', /nothing to do/i do
         assert_equal true, @indexer.run
       end
 
@@ -294,7 +295,7 @@ class TestIndexer < MiniTest::Test
 
       @git.branch('new-branch').checkout
 
-      assert_output /branch new-branch is not/, '' do
+      assert_output '', /branch new-branch is not/ do
         assert_equal false, @indexer.run
       end
     end
@@ -365,13 +366,11 @@ class TestIndexer < MiniTest::Test
   end
 
   def test_commit
-    wrapper do
-      $stdin.getch = 'y'
-
+    wrapper ['--commit'] do
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
 
-      assert_output(/done/, '') { @indexer.run }
+      assert_output("empty index\n", "commit created\n") { @indexer.run }
       
       commit = @git.log(1).last
       assert_equal 'index: empty index', commit.message
@@ -386,6 +385,75 @@ class TestIndexer < MiniTest::Test
 
     assert_output /--help/, '' do
       wrapper [], setup
+    end
+  end
+
+  def test_no_such_repository
+    assert_output '', /no such file or directory/i do
+      i = ReaPack::Index::Indexer.new ['/hello/world']
+      assert_equal false, i.run
+    end
+
+    assert_output '', /could not find repository/i do
+      i = ReaPack::Index::Indexer.new ['/']
+      assert_equal false, i.run
+    end
+  end
+
+  def test_progress
+    wrapper ['--progress'] do
+      @git.add mkfile('README.md', '# Hello World')
+      @git.commit 'initial commit'
+
+      stdout, stderr = capture_io do
+        assert_equal true, @indexer.run
+      end
+
+      assert_equal "empty index\n", stdout
+      assert_match /0%/, stderr
+      assert_match /100%/, stderr
+    end
+  end
+
+  def test_progress_no_new_commit
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      index = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="#{@git.log(1).last.sha}"/>
+      XML
+
+      mkfile 'index.xml', index
+    }
+
+    wrapper ['--progress'], setup do
+      assert_output '', "Nothing to do!\n" do
+        @indexer.run
+      end
+    end
+  end
+
+  def test_progress_warnings
+    wrapper ['--progress'] do
+      @git.add mkfile('test.lua', 'no version tag in this script!')
+      @git.commit 'initial commit'
+
+      assert_output nil, /\nWarning:/ do
+        assert_equal true, @indexer.run
+      end
+    end
+  end
+
+  def test_quiet_mode
+    wrapper ['--verbose', '--progress', '--quiet'] do
+      @git.add mkfile('test.lua', 'no version tag in this script!')
+      @git.commit 'initial commit'
+
+      assert_output '', '' do
+        assert_equal true, @indexer.run
+      end
     end
   end
 end
