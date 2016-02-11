@@ -4,4 +4,5 @@ Signal.trap('INT') { abort }
 
 require 'reapack/index'
 
+String.disable_colorization = !STDOUT.tty? || !STDERR.tty?
 exit !!ReaPack::Index::CLI.new(ARGV).run
