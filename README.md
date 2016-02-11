@@ -2,7 +2,9 @@
 
 Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)
 
+[![Gem Version](https://badge.fury.io/rb/reapack-index.svg)](http://badge.fury.io/rb/reapack-index)
 [![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
+[![Dependency Status](https://gemnasium.com/cfillion/reapack-index.svg)](https://gemnasium.com/cfillion/reapack-index)
 [![Coverage Status](https://coveralls.io/repos/cfillion/reapack-index/badge.svg?branch=master&service=github)](https://coveralls.io/github/cfillion/reapack-index?branch=master)
 
 ### Installation
