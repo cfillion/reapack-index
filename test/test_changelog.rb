@@ -1,8 +1,10 @@
 require File.expand_path '../helper', __FILE__
 
 class TestChangelog < MiniTest::Test
+  include XMLHelper
+
   def test_create
-    before = make_node '<source />'
+    before = make_node '<source/>'
     after = <<-XML
 <source>
   <changelog><![CDATA[hello]]></changelog>

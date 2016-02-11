@@ -44,15 +44,7 @@ class ReaPack::Index::CLI
     @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @opts[:amend]
 
-    commits = commits_since @db.commit
-
-    @done, @total = 0, commits.size
-
-    unless commits.empty?
-      print_progress
-      commits.each {|commit| process commit }
-      $stderr.print "\n" if @add_nl
-    end
+    scan_commits
 
     unless @db.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
@@ -81,13 +73,21 @@ private
     yes
   end
 
-  def commits_since(last_id)
+  def scan_commits
     walker = Rugged::Walker.new @git
     walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
     walker.push @git.head.target_id
-    walker.hide last_id if last_id
+    walker.hide @db.commit if @db.commit
 
-    walker.each.to_a
+    commits = walker.each.to_a
+
+    @done, @total = 0, commits.size
+
+    unless commits.empty?
+      print_progress
+      commits.each {|commit| process commit }
+      $stderr.print "\n" if @add_nl
+    end
   end
 
   def process(commit)
@@ -157,7 +157,12 @@ private
   end
 
   def commit(changelog)
-    return if @opts[:commit] == false || (@opts[:commit].nil? && !prompt('Commit the new index?'))
+    return unless case @opts[:commit]
+    when false, true
+      @opts[:commit]
+    else
+      prompt 'Commit the new index?'
+    end
 
     target = @git.head.target
     root = Pathname.new @git.workdir

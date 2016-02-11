@@ -1,5 +1,7 @@
 require File.expand_path '../helper', __FILE__
 
+require 'git'
+
 module CLIUtils
   class FakeIO
     def initialize

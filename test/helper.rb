@@ -16,12 +16,10 @@ SimpleCov.start {
 require 'reapack/index'
 require 'minitest/autorun'
 
-module MiniTest
-  class Test
-    def make_node(markup)
-      setup = proc {|config| config.noblanks }
-      Nokogiri::XML(markup, &setup).root
-    end
+module XMLHelper
+  def make_node(markup)
+    setup = proc {|config| config.noblanks }
+    Nokogiri::XML(markup, &setup).root
   end
 end
 

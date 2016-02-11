@@ -94,9 +94,7 @@ class ReaPack::Index
     def initialize(parent)
       @parent = parent
 
-      @node = parent.element_children.select {|node|
-        node.name == TAG
-      }.first
+      @node = parent.element_children.find {|node| node.name == TAG }
 
       if @node
         cdata = @node.children.first

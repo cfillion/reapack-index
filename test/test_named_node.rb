@@ -1,6 +1,8 @@
 require File.expand_path '../helper', __FILE__
 
 class TestNamedNode < MiniTest::Test
+  include XMLHelper
+
   def test_no_tag_set
     mock = Class.new ReaPack::Index::NamedNode
     assert_raises { mock.tag }

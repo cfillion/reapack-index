@@ -1,6 +1,8 @@
 require File.expand_path '../helper', __FILE__
 
 class TestVersion < MiniTest::Test
+  include XMLHelper
+
   def test_create
     before = make_node '<reapack />'
     after = <<-XML
