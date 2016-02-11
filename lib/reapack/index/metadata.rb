@@ -20,7 +20,9 @@ class ReaPack::Index
     def push_link(type, name = nil, url)
       Link.check_type type
 
-      raise Error, "invalid URL: #{url}" unless url.index('http') == 0
+      unless url =~ /\A#{URI::regexp(['http', 'https'])}\z/
+        raise Error, "invalid URL: #{url}"
+      end
 
       make_root
 
