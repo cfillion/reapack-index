@@ -72,6 +72,7 @@ class ReaPack::Index
 
       link = Link.new name || url, url
       node = Link.find type, link.name, @root
+      node ||= Link.find type, link.url, @root
 
       if node
         link[:'is_new?'] = false

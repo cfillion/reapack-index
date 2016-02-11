@@ -183,7 +183,7 @@ class TestMetadata < MiniTest::Test
     assert_equal false, md.modified?
   end
 
-  def test_replace_link
+  def test_replace_link_url
     before = make_node <<-XML
 <index>
   <metadata>
@@ -209,6 +209,40 @@ class TestMetadata < MiniTest::Test
     assert_equal false, link1.modified?
 
     link2 = md.push_link :website, 'Test', 'http://cfillion.tk'
+    assert_equal false, link2.is_new?
+    assert_equal true, link2.modified?
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_replace_link_name
+    before = make_node <<-XML
+<index>
+  <metadata>
+    <link rel="website" href="http://cfillion.tk">A</link>
+    <link rel="website">http://google.com</link>
+  </metadata>
+</index>
+    XML
+
+    after = <<-XML
+<index>
+  <metadata>
+    <link rel="website">http://cfillion.tk</link>
+    <link rel="website" href="http://google.com">B</link>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+
+    # remove name
+    link1 = md.push_link :website, 'http://cfillion.tk'
+    assert_equal false, link1.is_new?
+    assert_equal true, link1.modified?
+
+    # insert name
+    link2 = md.push_link :website, 'B', 'http://google.com'
     assert_equal false, link2.is_new?
     assert_equal true, link2.modified?
 
