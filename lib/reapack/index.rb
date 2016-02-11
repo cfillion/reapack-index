@@ -12,6 +12,7 @@ require 'shellwords'
 require 'uri'
 
 require 'reapack/index/cli'
+require 'reapack/index/metadata'
 require 'reapack/index/named_node'
 require 'reapack/index/package'
 require 'reapack/index/parsers'
