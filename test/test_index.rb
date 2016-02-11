@@ -113,7 +113,7 @@ class TestIndex < MiniTest::Test
     index.write!
 
     assert_equal false, index.modified?
-    assert_nil index.changelog
+    assert_empty index.changelog
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -171,7 +171,7 @@ class TestIndex < MiniTest::Test
     IN
 
     assert_equal false, index.modified?
-    assert_nil index.changelog
+    assert_empty index.changelog
   end
 
   def test_edit_version_amend_on
@@ -191,7 +191,7 @@ class TestIndex < MiniTest::Test
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6">
+<index version="1" commit="#{@commit}">
   <category name="Category Name">
     <reapack name="Hello World.lua" type="script">
       <version name="1.0">
@@ -220,7 +220,7 @@ class TestIndex < MiniTest::Test
     IN
 
     assert_equal false, index.modified?
-    assert_nil index.changelog
+    assert_empty index.changelog
   end
 
   def test_file_unlisted
@@ -307,11 +307,11 @@ class TestIndex < MiniTest::Test
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6">
+<index version="1" commit="#{@commit}">
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source platform="all">399f5609cff3e6fd92b5542d444fbf86da0443c6/Category/script.lua</source>
+        <source platform="all">#{@commit}/Category/script.lua</source>
       </version>
     </reapack>
   </category>
@@ -520,7 +520,7 @@ Invalid metadata in script.lua:
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6"/>
+<index version="1" commit="#{@commit}"/>
     XML
 
     index.write @dummy_path
@@ -533,7 +533,7 @@ Invalid metadata in script.lua:
     index.remove '404.lua'
 
     assert_equal false, index.modified?
-    assert_nil index.changelog
+    assert_empty index.changelog
   end
 
   def test_noindex
@@ -554,10 +554,70 @@ Invalid metadata in script.lua:
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="399f5609cff3e6fd92b5542d444fbf86da0443c6"/>
+<index version="1" commit="#{@commit}"/>
     XML
 
     index.write @dummy_path
     assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_add_anonymous_link
+    index = ReaPack::Index.new @dummy_path
+
+    assert_equal 0, index.links(:website).size
+    index.eval_link :website, 'http://test.com'
+    assert_equal 1, index.links(:website).size
+
+    assert_equal '1 new website link, empty index', index.changelog
+
+    index.write!
+  end
+
+  def test_add_named_link
+    index = ReaPack::Index.new @dummy_path
+
+    assert_equal 0, index.links(:website).size
+    index.eval_link :website, 'Test=http://test.com/hello=world'
+    assert_equal 1, index.links(:website).size
+
+    assert_equal '1 new website link, empty index', index.changelog
+
+    index.write!
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <metadata>
+    <link rel="website" href="http://test.com/hello=world">Test</link>
+  </metadata>
+</index>
+    XML
+
+    index.write @dummy_path
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_edit_link
+    index = ReaPack::Index.new @dummy_path
+    index.eval_link :website, 'Test=http://test.com'
+    index.eval_link :website, 'Test=http://test.com'
+    assert_equal '1 new website link, empty index', index.changelog
+
+    index.eval_link :website, 'Test=http://test.com/hello'
+    assert_equal '1 new website link, 1 modified website link, empty index',
+      index.changelog
+  end
+
+  def test_remove_link_by_name
+    index = ReaPack::Index.new @dummy_path
+    index.eval_link :website, 'Test=http://test.com'
+    index.eval_link :website, '-Test'
+    assert_equal '1 new website link, 1 removed website link, empty index', index.changelog
+  end
+
+  def test_remove_link_by_url
+    index = ReaPack::Index.new @dummy_path
+    index.eval_link :website, 'Test=http://test.com'
+    index.eval_link :website, '-http://test.com'
+    assert_equal '1 new website link, 1 removed website link, empty index', index.changelog
   end
 end

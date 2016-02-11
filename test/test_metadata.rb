@@ -17,13 +17,18 @@ class TestMetadata < MiniTest::Test
     assert_empty md.links(:website)
     assert_equal false, md.modified?
 
-    md.push_link :website, 'http://cfillion.tk'
+    link = md.push_link :website, 'http://cfillion.tk'
     assert_equal true, md.modified?
+    assert_equal true, link.is_new?
+    assert_equal true, link.modified?
 
     links = md.links :website
     assert_equal 1, links.size
     assert_equal links.first.url, links.first.name
     assert_equal 'http://cfillion.tk', links.first.url
+
+    assert_equal false, links.first.is_new?
+    assert_equal false, links.first.modified?
 
     assert_empty md.links(:donation)
     assert_equal after.chomp, before.to_s
@@ -199,8 +204,13 @@ class TestMetadata < MiniTest::Test
 
     md = ReaPack::Index::Metadata.new before
 
-    md.push_link :website, 'http://cfillion.tk'
-    md.push_link :website, 'Test', 'http://cfillion.tk'
+    link1 = md.push_link :website, 'http://cfillion.tk'
+    assert_equal false, link1.is_new?
+    assert_equal false, link1.modified?
+
+    link2 = md.push_link :website, 'Test', 'http://cfillion.tk'
+    assert_equal false, link2.is_new?
+    assert_equal true, link2.modified?
 
     assert_equal after.chomp, before.to_s
   end

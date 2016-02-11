@@ -93,6 +93,8 @@ class ReaPack::Index
 
     @doc.root[:version] = 1
     @doc.encoding = 'utf-8'
+
+    @metadata = Metadata.new @doc.root
   end
 
   def scan(path, contents)
@@ -165,6 +167,26 @@ class ReaPack::Index
     log_change 'removed package'
   end
 
+  def links(type)
+    @metadata.links type
+  end
+
+  def eval_link(type, string)
+    if string.index('-') == 0
+      @metadata.remove_link type, string[1..-1]
+      log_change "removed #{type} link"
+      return
+    end
+
+    link = @metadata.push_link type, *string.split('=', 2)
+
+    if link.is_new?
+      log_change "new #{type} link"
+    elsif link.modified?
+      log_change "modified #{type} link"
+    end
+  end
+
   def source_pattern=(pattern)
     if pattern.nil?
       raise ArgumentError, 'Cannot use nil as a source pattern'
@@ -215,11 +237,9 @@ class ReaPack::Index
       list << "#{count} #{count != 1 ? plural : type}"
     }
 
-    if list.empty?
-      @is_new ? 'empty index' : nil
-    else
-      list.join(', ')
-    end
+    list << 'empty index' if @is_new && Category.find_all(@doc.root).empty?
+
+    list.join ', '
   end
 
 private
