@@ -6,6 +6,7 @@ require 'io/console'
 require 'metaheader'
 require 'nokogiri'
 require 'optparse'
+require 'pandoc-ruby'
 require 'pathname'
 require 'rugged'
 require 'shellwords'
@@ -185,6 +186,17 @@ class ReaPack::Index
     elsif link.modified?
       log_change "modified #{type} link"
     end
+  end
+
+  def description
+    @metadata.description
+  end
+
+  def description=(content)
+    old = @metadata.description
+    @metadata.description = content
+
+    log_change 'modified metadata' if old != @metadata.description
   end
 
   def source_pattern=(pattern)

@@ -26,7 +26,7 @@ class ReaPack::Index::CLI
 
     @opts = DEFAULTS.merge @opts
 
-    log @opts.inspect if @exit.nil?
+    log Hash[@opts.sort].inspect if @exit.nil?
   rescue Rugged::OSError, Rugged::RepositoryError => e
     $stderr.puts e.message
     @exit = false
@@ -43,10 +43,16 @@ class ReaPack::Index::CLI
       return true
     end
 
+    if @opts[:dump_about]
+      print @db.description
+      return true
+    end
+
     if remote = @git.remotes['origin']
       @db.source_pattern = ReaPack::Index.source_for remote.url
     end
 
+    set_about
     eval_links
     scan_commits
 
@@ -185,6 +191,24 @@ private
     }
   end
 
+  def set_about
+    path = @opts[:about]
+
+    unless path
+      @db.description = String.new if @opts[:rmabout]
+      return
+    end
+
+    log "converting #{path} into RTF..."
+
+    # look for the file in the working directory, not on the repository root
+    @db.description = File.read(path)
+  rescue Errno::ENOENT => e
+    warn '--about: ' + e.message.sub(' @ rb_sysopen', '')
+  rescue ReaPack::Index::Error => e
+    warn e.message
+  end
+
   def commit(changelog)
     return unless case @opts[:commit]
     when false, true
@@ -269,8 +293,20 @@ private
         opts[:links] << [:donation, link]
       end
 
-      op.on '--ls-links', "Display the link list then exit" do |link|
+      op.on '--ls-links', 'Display the link list then exit' do |link|
         opts[:lslinks] = true
+      end
+
+      op.on '-A', '--about=FILE', 'Set the about content from a file' do |file|
+        opts[:about] = file.strip
+      end
+
+      op.on '--remove-about', 'Remove the about content from the index' do
+        opts[:rmabout] = true
+      end
+
+      op.on '--dump-about', 'Dump the raw about content in RTF and exit' do
+        opts[:dump_about] = true
       end
 
       op.on '--[no-]progress', 'Enable or disable progress information' do |bool|

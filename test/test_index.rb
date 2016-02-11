@@ -620,4 +620,22 @@ Invalid metadata in script.lua:
     index.eval_link :website, '-http://test.com'
     assert_equal '1 new website link, 1 removed website link, empty index', index.changelog
   end
+
+  def test_description
+    index = ReaPack::Index.new @dummy_path
+    index.write!
+
+    assert_empty index.description
+    assert_equal false, index.modified?
+
+    index.description = 'Hello World'
+    refute_empty index.description
+    assert_equal true, index.modified?
+    assert_equal '1 modified metadata', index.changelog
+
+    index.write!
+
+    index.description = 'Hello World'
+    assert_equal false, index.modified?
+  end
 end

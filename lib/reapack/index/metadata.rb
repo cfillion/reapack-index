@@ -1,15 +1,12 @@
 class ReaPack::Index
   class Metadata
     TAG = 'metadata'.freeze
+    DESC = 'description'.freeze
 
     def initialize(parent)
       @parent = parent
 
       @root = parent.element_children.find {|node| node.name == TAG }
-    end
-
-    def modified?
-      !!@dirty
     end
 
     def links(type)
@@ -51,8 +48,6 @@ class ReaPack::Index
         node.content = url
       end
 
-      @dirty = true
-
       link
     end
 
@@ -63,8 +58,42 @@ class ReaPack::Index
 
       node.remove
       auto_remove
+    end
 
-      @dirty = true
+    def description
+      cdata = nil
+
+      if @root
+        desc = @root.element_children.find {|node| node.name == DESC }
+        cdata = desc.children.first if desc
+      end
+
+      cdata ? cdata.content : String.new
+    end
+
+    def description=(content)
+      return if content == description
+
+      make_root
+      desc = @root.element_children.find {|node| node.name == DESC }
+
+      if content.empty?
+        desc.remove
+        auto_remove
+        return
+      elsif content.index("{\\rtf") != 0
+        content = make_rtf content
+      end
+
+      if desc
+        desc.children.each {|n| n.remove }
+      else
+        desc = Nokogiri::XML::Node.new DESC, @root.document
+        desc.parent = @root
+      end
+
+      cdata = Nokogiri::XML::CDATA.new desc, content
+      cdata.parent = desc
     end
 
   private
@@ -79,6 +108,16 @@ class ReaPack::Index
 
     def auto_remove
       @root.remove if @root.children.empty?
+    end
+
+    def make_rtf(content)
+      PandocRuby.new(content).to_rtf :standalone
+    rescue Errno::ENOENT
+      raise Error, [
+        "RTF conversion failed because the pandoc executable " \
+          "cannot be found in your PATH.",
+        "Try again after installing pandoc from <http://pandoc.org/>."
+      ].join("\n")
     end
   end
 

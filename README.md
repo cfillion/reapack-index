@@ -36,6 +36,9 @@ Options:
     -l, --link LINK                  Add or remove a website link
         --donation-link LINK         Add or remove a donation link
         --ls-links                   Display the link list then exit
+    -A, --about=FILE                 Set the about content from a file
+        --remove-about               Remove the about content from the index
+        --dump-about                 Dump the raw about content in RTF and exit
         --[no-]progress              Enable or disable progress information
     -V, --[no-]verbose               Activate diagnosis messages
     -c, --[no-]commit                Select whether to commit the modified index

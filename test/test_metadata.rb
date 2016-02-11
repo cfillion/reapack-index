@@ -15,10 +15,8 @@ class TestMetadata < MiniTest::Test
 
     md = ReaPack::Index::Metadata.new before
     assert_empty md.links(:website)
-    assert_equal false, md.modified?
 
     link = md.push_link :website, 'http://cfillion.tk'
-    assert_equal true, md.modified?
     assert_equal true, link.is_new?
     assert_equal true, link.modified?
 
@@ -46,10 +44,8 @@ class TestMetadata < MiniTest::Test
 
     md = ReaPack::Index::Metadata.new before
     assert_empty md.links(:donation)
-    assert_equal false, md.modified?
 
     md.push_link :donation, 'http://cfillion.tk'
-    assert_equal true, md.modified?
 
     links = md.links :donation
     assert_equal 1, links.size
@@ -137,7 +133,6 @@ class TestMetadata < MiniTest::Test
     end
 
     assert_equal 'invalid URL: hello', error.message
-    assert_equal false, md.modified?
     assert_equal after.chomp, before.to_s
   end
 
@@ -155,12 +150,10 @@ class TestMetadata < MiniTest::Test
     after = '<index/>'
 
     md = ReaPack::Index::Metadata.new before
-    assert_equal false, md.modified?
     assert_equal 2, md.links(:website).size
 
     md.remove_link :website, 'http://cfillion.tk'
     assert_equal 1, md.links(:website).size
-    assert_equal true, md.modified?
 
     md.remove_link :website, 'Search'
     assert_equal 0, md.links(:website).size
@@ -180,7 +173,6 @@ class TestMetadata < MiniTest::Test
     end
 
     assert_equal 'no such website link: hello', error.message
-    assert_equal false, md.modified?
   end
 
   def test_replace_link_url
@@ -247,5 +239,165 @@ class TestMetadata < MiniTest::Test
     assert_equal true, link2.modified?
 
     assert_equal after.chomp, before.to_s
+  end
+
+  def test_read_description
+    md = ReaPack::Index::Metadata.new make_node <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[Hello World]]></description>
+  </metadata>
+</index>
+    XML
+
+    assert_equal 'Hello World', md.description
+  end
+
+  def test_read_description_empty
+    md = ReaPack::Index::Metadata.new make_node <<-XML
+<index>
+  <metadata/>
+</index>
+    XML
+
+    assert_empty md.description
+  end
+
+  def test_write_description
+    rtf = <<-RTF
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
+\\widowctrl\\hyphauto
+
+{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 Hello World\\par}
+}
+    RTF
+
+    before = make_node '<index/>'
+    after = <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[#{rtf}]]></description>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+    assert_empty md.description
+
+    md.description = 'Hello World'
+    assert_equal rtf, md.description
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_write_description_rtf
+    rtf = <<-RTF
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
+\\widowctrl\\hyphauto
+
+{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 Hello World\\par}
+}
+    RTF
+
+    before = make_node '<index/>'
+    after = <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[#{rtf}]]></description>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+    assert_empty md.description
+
+    md.description = rtf
+    assert_equal rtf, md.description
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_replace_description
+    rtf = <<-RTF
+    RTF
+
+    before = make_node <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
+\\widowctrl\\hyphauto
+
+{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 Hello World\\par}
+}
+]]></description>
+  </metadata>
+</index>
+    XML
+
+    after = <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
+\\widowctrl\\hyphauto
+
+{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 Chunky Bacon\\par}
+}
+]]></description>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+    md.description = 'Chunky Bacon'
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_remove_description
+    rtf = <<-RTF
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
+\\widowctrl\\hyphauto
+
+{\\pard \\ql \\f0 \\sa180 \\li0 \\fi0 Hello World\\par}
+}
+    RTF
+
+    before = make_node <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[#{rtf}]]></description>
+  </metadata>
+</index>
+    XML
+
+    after = '<index/>'
+
+    md = ReaPack::Index::Metadata.new before
+    refute_empty md.description
+
+    md.description = String.new
+    assert_empty md.description
+
+    assert_equal after, before.to_s
+  end
+
+  def test_pandoc_not_found
+    old_path = ENV['PATH']
+    ENV['PATH'] = String.new
+
+    md = ReaPack::Index::Metadata.new make_node('<index/>')
+
+    error = assert_raises ReaPack::Index::Error do
+      md.description = 'test'
+    end
+
+    assert_match /pandoc executable cannot be found in your PATH/i, error.message
+  ensure
+    ENV['PATH'] = old_path
   end
 end

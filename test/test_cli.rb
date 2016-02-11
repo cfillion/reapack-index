@@ -585,12 +585,6 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_no_git_remote
-    wrapper [], remote: false do
-      assert_output { @indexer.run }
-    end
-  end
-
   def test_list_links
     setup = proc {
       mkfile 'index.xml', <<-XML
@@ -616,6 +610,95 @@ class TestCLI < MiniTest::Test
 
       assert_equal expected, stdin
       assert_empty stderr
+    end
+  end
+
+  def test_no_git_remote
+    wrapper [], remote: false do
+      assert_output { @indexer.run }
+    end
+  end
+
+  def test_about
+    opts = ['--about']
+
+    setup = proc {
+      opts << mkfile('README.md', '# Hello World')
+    }
+
+    wrapper opts, setup: setup do
+      assert_output "1 modified metadata, empty index\n" do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'Hello World', read_index
+    end
+  end
+
+  def test_about_file_not_found
+    # 404.md is read in the working directory
+    wrapper ['--about=404.md'] do
+      assert_output "empty index\n",
+          /warning: --about: no such file or directory - 404.md/i do
+        assert_equal true, @indexer.run
+      end
+    end
+  end
+
+  def test_about_pandoc_not_found
+    old_path = ENV['PATH']
+
+    opts = ['--about']
+
+    setup = proc {
+      opts << mkfile('README.md', '# Hello World')
+    }
+
+    wrapper opts, setup: setup do
+      assert_output "empty index\n", /pandoc executable cannot be found/i do
+        ENV['PATH'] = String.new
+        assert_equal true, @indexer.run
+      end
+    end
+  ensure
+    ENV['PATH'] = old_path
+  end
+
+  def test_about_clear
+    setup = proc {
+      mkfile 'index.xml', <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[Hello World]]></description>
+  </metadata>
+</index>
+      XML
+    }
+
+    wrapper ['--remove-about'], setup: setup do
+      assert_output "1 modified metadata\n" do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match 'Hello World', read_index
+    end
+  end
+
+  def test_about_dump
+    setup = proc {
+      mkfile 'index.xml', <<-XML
+<index>
+  <metadata>
+    <description><![CDATA[Hello World]]></description>
+  </metadata>
+</index>
+      XML
+    }
+
+    wrapper ['--dump-about'], setup: setup do
+      assert_output 'Hello World' do
+        assert_equal true, @indexer.run
+      end
     end
   end
 end
