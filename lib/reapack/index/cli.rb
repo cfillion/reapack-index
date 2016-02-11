@@ -40,8 +40,6 @@ class ReaPack::Index::CLI
       return false
     end
 
-    branch = @git.head.name['refs/heads/'.size..-1]
-
     @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
     @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @opts[:amend]
@@ -239,7 +237,7 @@ private
         opts[:commit] = bool
       end
 
-      op.on '--prompt-commit', 'Ask at runtime whether to commit the index' do |bool|
+      op.on '--prompt-commit', 'Ask at runtime whether to commit the index' do
         opts[:commit] = nil
       end
 
@@ -251,14 +249,14 @@ private
         opts[:warnings] = false
       end
 
-      op.on '-q', '--[no-]quiet', 'Disable almost all output' do |bool|
+      op.on '-q', '--[no-]quiet', 'Disable almost all output' do
         opts[:warnings] = false
         opts[:progress] = false
         opts[:verbose] = false
         opts[:quiet] = true
       end
 
-      op.on '--no-config', 'Bypass the configuration files' do |bool|
+      op.on '--no-config', 'Bypass the configuration files' do
         opts[:noconfig] = true
       end
 
