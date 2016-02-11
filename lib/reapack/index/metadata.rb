@@ -44,7 +44,6 @@ class ReaPack::Index
         node[Link::REL] = type
       end
 
-
       if name
         node[Link::URL] = url
         node.content = name
