@@ -103,7 +103,7 @@ class ReaPack::Index
     def remove_link(type, search)
       node = Link.find type, search, @root
 
-      raise Error, "no such #{type} link in this index: #{search}" unless node
+      raise Error, "no such #{type} link: #{search}" unless node
 
       node.remove
       auto_remove

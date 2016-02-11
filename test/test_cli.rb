@@ -20,17 +20,20 @@ module CLIUtils
     $stdin = stdin
   end
 
-  def wrapper(options = [], setup = nil)
+  def wrapper(args = [], options = {})
     Dir.mktmpdir('test-repository') do |path|
       @git = Git.init path
-      @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
       @git.config('user.name', 'John Doe')
       @git.config('user.email', 'john@doe.com')
 
-      setup[] if setup
+      if options[:remote] != false
+        @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
+      end
+
+      options[:setup].call if options.has_key? :setup
 
       @indexer = ReaPack::Index::CLI.new \
-        ['--no-progress', '--no-commit'] + options + ['--', path]
+        ['--no-progress', '--no-commit'] + args + ['--', path]
 
       yield if block_given?
     end
@@ -81,8 +84,8 @@ class TestCLI < MiniTest::Test
 
   def test_empty_branch
     wrapper do
-      assert_output '', /current branch is empty/i do
-        assert_equal false, @indexer.run
+      assert_output nil, /the current branch does not contains any commit/i do
+        assert_equal true, @indexer.run
       end
     end
   end
@@ -218,7 +221,7 @@ class TestCLI < MiniTest::Test
       mkfile 'index.xml', index
     }
 
-    wrapper [], setup do
+    wrapper [], setup: setup do
       # next line ensures only files in this commit are scanned
       mkfile('test1.lua', '@version 1.1')
 
@@ -253,7 +256,7 @@ class TestCLI < MiniTest::Test
       mkfile 'index.xml', index
     }
 
-    wrapper ['--no-amend'], setup do
+    wrapper ['--no-amend'], setup: setup do
       @git.add mkfile('Test/test.lua', "@version 1.0\n@author cfillion")
       @git.commit 'second commit'
 
@@ -284,7 +287,7 @@ class TestCLI < MiniTest::Test
       mkfile 'index.xml', index
     }
 
-    wrapper ['--amend'], setup do
+    wrapper ['--amend'], setup: setup do
       @git.add mkfile('Test/test.lua', "@version 1.0\n@author cfillion")
       @git.commit 'second commit'
 
@@ -408,22 +411,18 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config
-    setup = proc {
-      mkfile '.reapack-index.conf', '--help'
-    }
-
     assert_output /--help/, '' do
-      wrapper [], setup
+      wrapper [], setup: proc {
+        mkfile '.reapack-index.conf', '--help'
+      }
     end
   end
 
-  def test_config
-    setup = proc {
-      mkfile '.reapack-index.conf', '--help'
-    }
-
+  def test_no_config
     stdout, stderr = capture_io do
-      wrapper ['--no-config'], setup
+      wrapper ['--no-config'], setup: proc {
+        mkfile '.reapack-index.conf', '--help'
+      }
     end
 
     refute_match /--help/, stdout
@@ -435,7 +434,7 @@ class TestCLI < MiniTest::Test
     }
 
     stdout, stderr = capture_io do
-      wrapper ['--warnings'], setup do
+      wrapper ['--warnings'], setup: setup do
         @git.add mkfile('test.lua', 'no version tag in this script!')
         @git.commit 'initial commit'
 
@@ -523,7 +522,7 @@ class TestCLI < MiniTest::Test
       mkfile 'index.xml', index
     }
 
-    wrapper ['--progress'], setup do
+    wrapper ['--progress'], setup: setup do
       assert_output '', "Nothing to do!\n" do
         @indexer.run
       end
@@ -551,4 +550,53 @@ class TestCLI < MiniTest::Test
       end
     end
   end
+
+  def test_website_link
+    wrapper ['-l http://cfillion.tk'] do
+      assert_output "1 new website link, empty index\n", '' do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'rel="website">http://cfillion.tk</link>', read_index
+    end
+  end
+
+  def test_website_link
+    wrapper ['--donation-link', 'Link Label=http://cfillion.tk'] do
+      assert_output "1 new donation link, empty index\n" do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'rel="donation" href="http://cfillion.tk">Link Label</link>',
+        read_index
+    end
+  end
+
+  def test_invalid_link
+    wrapper ['--link', 'shinsekai yori', '--link', 'http://cfillion.tk'] do
+      assert_output "1 new website link, empty index\n",
+          /warning: invalid url: shinsekai yori/i do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'rel="website">http://cfillion.tk</link>', read_index
+    end
+  end
+
+  def test_remove_link
+    wrapper ['--link', 'http://test.com', '--link', '-http://test.com'] do
+      assert_output "1 new website link, 1 removed website link, empty index\n" do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match 'rel="website">http://test.com</link>', read_index
+    end
+  end
+
+  def test_no_git_remote
+    wrapper [], remote: false do
+      assert_output { @indexer.run }
+    end
+  end
+
 end

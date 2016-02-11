@@ -35,15 +35,14 @@ class ReaPack::Index::CLI
   def run
     return @exit unless @exit.nil?
 
-    if @git.empty?
-      $stderr.puts 'Current branch is empty, cannot continue.'
-      return false
-    end
-
     @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
-    @db.source_pattern = ReaPack::Index.source_for @git.remotes['origin'].url
     @db.amend = @opts[:amend]
 
+    if remote = @git.remotes['origin']
+      @db.source_pattern = ReaPack::Index.source_for remote.url
+    end
+
+    eval_links
     scan_commits
 
     unless @db.modified?
@@ -74,6 +73,11 @@ private
   end
 
   def scan_commits
+    if @git.empty?
+      warn 'The current branch does not contains any commit.'
+      return
+    end
+
     walker = Rugged::Walker.new @git
     walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
     walker.push @git.head.target_id
@@ -156,6 +160,16 @@ private
     files
   end
 
+  def eval_links
+    Array(@opts[:links]).each {|link|
+      begin
+        @db.eval_link *link
+      rescue ReaPack::Index::Error => e
+        warn e.message
+      end
+    }
+  end
+
   def commit(changelog)
     return unless case @opts[:commit]
     when false, true
@@ -228,6 +242,16 @@ private
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
         opts[:output] = file.strip
+      end
+
+      op.on '-l', '--link LINK', 'Add or remove a website link' do |link|
+        opts[:links] ||= Array.new
+        opts[:links] << [:website, link.strip]
+      end
+
+      op.on '--donation-link LINK', 'Add or remove a donation link' do |link|
+        opts[:links] ||= Array.new
+        opts[:links] << [:donation, link]
       end
 
       op.on '--[no-]progress', 'Enable or disable progress information' do |bool|

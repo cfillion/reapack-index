@@ -179,7 +179,7 @@ class TestMetadata < MiniTest::Test
       md.remove_link :website, 'hello'
     end
 
-    assert_equal 'no such website link in this index: hello', error.message
+    assert_equal 'no such website link: hello', error.message
     assert_equal false, md.modified?
   end
 

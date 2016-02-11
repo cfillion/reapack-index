@@ -33,6 +33,8 @@ or stored in a configuration file (one option per line):
 Options:
     -a, --[no-]amend                 Reindex existing versions
     -o, --output FILE=./index.xml    Set the output filename and path for the index
+    -l, --link LINK                  Add or remove a website link
+        --donation-link LINK         Add or remove a donation link
         --[no-]progress              Enable or disable progress information
     -V, --[no-]verbose               Activate diagnosis messages
     -c, --[no-]commit                Select whether to commit the modified index
@@ -52,7 +54,7 @@ Options are read from these sources, in order
 - ./.reapack-index.conf (`.` = repository root)
 - command line
 
-## Metadata Documentation
+## Packaging Documentation
 
 This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
