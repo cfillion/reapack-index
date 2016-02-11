@@ -213,12 +213,10 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.commit 'initial commit'
       
-      index = <<-XML
+      mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="#{@git.log(1).last.sha}"/>
       XML
-
-      mkfile 'index.xml', index
     }
 
     wrapper [], setup: setup do
@@ -242,7 +240,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('Test/test.lua', '@version 1.0')
       @git.commit 'initial commit'
       
-      index = <<-XML
+      mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="#{@git.log(1).last.sha}">
   <category name="Test">
@@ -252,8 +250,6 @@ class TestCLI < MiniTest::Test
   </category>
 </index>
       XML
-
-      mkfile 'index.xml', index
     }
 
     wrapper ['--no-amend'], setup: setup do
@@ -273,7 +269,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('Test/test.lua', '@version 1.0')
       @git.commit 'initial commit'
       
-      index = <<-XML
+      mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="#{@git.log(1).last.sha}">
   <category name="Test">
@@ -283,8 +279,6 @@ class TestCLI < MiniTest::Test
   </category>
 </index>
       XML
-
-      mkfile 'index.xml', index
     }
 
     wrapper ['--amend'], setup: setup do
@@ -514,12 +508,10 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.commit 'initial commit'
 
-      index = <<-XML
+      mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="#{@git.log(1).last.sha}"/>
       XML
-
-      mkfile 'index.xml', index
     }
 
     wrapper ['--progress'], setup: setup do
@@ -599,4 +591,31 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_list_links
+    setup = proc {
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <metadata>
+    <link rel="website" href="http://anidb.net/a9002">Shinsekai Yori</link>
+    <link rel="donation" href="http://paypal.com">Donate!</link>
+    <link rel="website">http://cfillion.tk</link>
+      XML
+    }
+
+    wrapper ['--ls-links'], setup: setup do
+      stdin, stderr = capture_io do
+        assert_equal true, @indexer.run
+      end
+
+      expected = <<-OUT
+[website] Shinsekai Yori (http://anidb.net/a9002)
+[website] http://cfillion.tk
+[donation] Donate! (http://paypal.com)
+      OUT
+
+      assert_equal expected, stdin
+      assert_empty stderr
+    end
+  end
 end

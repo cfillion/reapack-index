@@ -38,6 +38,11 @@ class ReaPack::Index::CLI
     @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
     @db.amend = @opts[:amend]
 
+    if @opts[:lslinks]
+      print_links
+      return true
+    end
+
     if remote = @git.remotes['origin']
       @db.source_pattern = ReaPack::Index.source_for remote.url
     end
@@ -170,6 +175,16 @@ private
     }
   end
 
+  def print_links
+    ReaPack::Index::Link::VALID_TYPES.each {|type|
+      prefix = "[#{type}]".bold.light_black
+      @db.links(type).each {|link|
+        display = link.name == link.url ? link.url : '%s (%s)' % [link.name, link.url]
+        puts '%s %s' % [prefix, display]
+      }
+    }
+  end
+
   def commit(changelog)
     return unless case @opts[:commit]
     when false, true
@@ -252,6 +267,10 @@ private
       op.on '--donation-link LINK', 'Add or remove a donation link' do |link|
         opts[:links] ||= Array.new
         opts[:links] << [:donation, link]
+      end
+
+      op.on '--ls-links', "Display the link list then exit" do |link|
+        opts[:lslinks] = true
       end
 
       op.on '--[no-]progress', 'Enable or disable progress information' do |bool|
