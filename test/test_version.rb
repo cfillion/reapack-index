@@ -26,7 +26,7 @@ class TestVersion < MiniTest::Test
     refute ver.modified?, 'version is modified'
   end
 
-  def test_change_author
+  def test_set_author
     before = make_node '<version name="1.0"/>'
     after = '<version name="1.0" author="cfillion"/>'
 
@@ -64,15 +64,42 @@ class TestVersion < MiniTest::Test
     assert_equal after, before.to_s
   end
 
-  def test_set_nil_author
+  def test_set_time
     before = make_node '<version name="1.0"/>'
+    after = '<version name="1.0" time="2016-02-12T01:16:40Z"/>'
+
+    time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
+
+    ver = ReaPack::Index::Version.new before
+    assert_nil ver.time
+
+    ver.time = time
+    assert ver.modified?, 'version is not modified'
+    assert_equal time, ver.time
+
+    assert_equal after, before.to_s
+  end
+
+  def test_set_same_time
+    ver = ReaPack::Index::Version.new \
+      make_node '<version name="1.0" time="2016-02-12T01:16:40Z"/>'
+
+    time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
+
+    assert_equal time, ver.time
+    ver.time = time
+
+    refute ver.modified?, 'version is modified'
+  end
+
+  def test_remove_time
+    before = make_node '<version name="1.0" time="2016-02-12T01:16:40Z"/>'
     after = '<version name="1.0"/>'
 
     ver = ReaPack::Index::Version.new before
-    assert_empty ver.author
 
-    ver.author = nil
-    refute ver.modified?, 'version is modified'
+    ver.time = nil
+    assert ver.modified?, 'version is not modified'
 
     assert_equal after, before.to_s
   end

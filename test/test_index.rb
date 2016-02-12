@@ -561,6 +561,34 @@ Invalid metadata in script.lua:
     assert_equal expected, File.read(@dummy_path)
   end
 
+  def test_version_time
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['Category/script.lua']
+
+    index.time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0" time="2016-02-12T01:16:40Z">
+        <source platform="all">Category/script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
   def test_add_anonymous_link
     index = ReaPack::Index.new @dummy_path
 

@@ -10,6 +10,7 @@ require 'pandoc-ruby'
 require 'pathname'
 require 'rugged'
 require 'shellwords'
+require 'time'
 require 'uri'
 
 require 'reapack/index/cli'
@@ -51,7 +52,7 @@ class ReaPack::Index
   ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :source_pattern
-  attr_accessor :amend, :files
+  attr_accessor :amend, :files, :time
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
@@ -127,6 +128,7 @@ class ReaPack::Index
       next unless ver.is_new? || @amend
 
       ver.author = mh[:author]
+      ver.time = @time if @time
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do

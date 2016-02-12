@@ -3,6 +3,7 @@ class ReaPack::Index
     @tag = 'version'.freeze
 
     AUTHOR = 'author'.freeze
+    TIME = 'time'.freeze
 
     def initialize(node, parent = nil)
       super
@@ -31,6 +32,22 @@ class ReaPack::Index
         @node.remove_attribute AUTHOR
       else
         @node[AUTHOR] = new_author
+      end
+
+      @dirty = true
+    end
+
+    def time
+      Time.parse @node[TIME] if @node.has_attribute? TIME
+    end
+
+    def time=(new_time)
+      return if new_time == time
+
+      if new_time.nil?
+        @node.remove_attribute TIME
+      else
+        @node[TIME] = new_time.utc.iso8601
       end
 
       @dirty = true

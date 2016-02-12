@@ -113,6 +113,7 @@ private
     end
 
     @db.commit = commit.oid
+    @db.time = commit.time
     @db.files = lsfiles commit.tree
 
     parent = commit.parents.first
