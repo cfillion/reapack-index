@@ -560,6 +560,39 @@ Invalid metadata:
     assert_equal expected, File.read(@dummy_path)
   end
 
+  def test_main_platform
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    index.files = [
+      'Category/script.lua',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        [darwin] .
+        [win64] script.lua
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="darwin">Category/script.lua</source>
+        <source platform="win64">Category/script.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
   def test_provides_platform_invalid
     index = ReaPack::Index.new @dummy_path
     index.source_pattern = '$path'

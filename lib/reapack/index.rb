@@ -68,7 +68,7 @@ class ReaPack::Index
     :darwin, :darwin32, :darwin64,
   ].freeze
 
-  Dependency = Struct.new :platform, :filename, :url
+  SourceEntry = Struct.new :platform, :filename, :url
 
   attr_reader :path, :source_pattern
   attr_accessor :amend, :files, :time
@@ -137,7 +137,7 @@ class ReaPack::Index
         [prefix + errors.join(prefix)]
     end
 
-    deps = parse_provides mh[:provides].to_s, dirname(path)
+    sources = make_sources mh[:provides].to_s, path
 
     cat, pkg = find path
     pkg.type = type.to_s
@@ -150,10 +150,8 @@ class ReaPack::Index
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        ver.add_source :all, nil, url_for(path)
-
-        deps.each {|dep|
-          ver.add_source dep.platform, dep.filename, dep.url
+        sources.each {|src|
+          ver.add_source src.platform, src.filename, src.url
         }
       end
     end
@@ -312,21 +310,36 @@ private
       .sub('$commit', commit || 'master')
   end
 
-  def parse_provides(string, base = nil)
-    string.lines.map {|line|
+  def make_sources(provides, base)
+    this_file = File.basename base
+    basedir = dirname base
+
+    sources = provides.lines.map {|line|
       line.chomp!
 
       m = line.match DEPENDENCY_REGEX
-      platform = m[:platform] || :all
+
+      platform, file = m[:platform] || :all, m[:file]
+      file = nil if file == this_file || file == '.'
 
       unless PLATFORMS.include? platform.to_sym
         raise Error, 'invalid platform: %s' % platform
       end
 
-      path = File.expand_path m[:file], ROOT + base.to_s
-      url = url_for path[ROOT.size..-1]
+      if file.nil?
+        url = url_for base
+      else
+        path = File.expand_path file, ROOT + basedir.to_s
+        url = url_for path[ROOT.size..-1]
+      end
 
-      Dependency.new platform, m[:file], url
+      SourceEntry.new platform, file, url
     }
+
+    unless sources.any? {|src| src.filename.nil? }
+      sources.unshift SourceEntry.new :all, nil, url_for(base)
+    end
+
+    sources
   end
 end
