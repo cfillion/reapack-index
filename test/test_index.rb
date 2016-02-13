@@ -512,6 +512,73 @@ Invalid metadata in script.lua:
     assert_equal expected.chomp, error.message
   end
 
+  def test_provides_platform
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    index.files = [
+      'Category/script.lua',
+      'Category/winall.png',
+      'Category/win32bit.png',
+      'Category/win64bit.png',
+      'Category/osxall.png',
+      'Category/osx32bit.png',
+      'Category/osx64bit.png',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        [windows] winall.png
+        [win32] win32bit.png
+        [win64] win64bit.png
+        [darwin] osxall.png
+        [darwin32] osx32bit.png
+        [darwin64] osx64bit.png
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">Category/script.lua</source>
+        <source platform="windows" file="winall.png">Category/winall.png</source>
+        <source platform="win32" file="win32bit.png">Category/win32bit.png</source>
+        <source platform="win64" file="win64bit.png">Category/win64bit.png</source>
+        <source platform="darwin" file="osxall.png">Category/osxall.png</source>
+        <source platform="darwin32" file="osx32bit.png">Category/osx32bit.png</source>
+        <source platform="darwin64" file="osx64bit.png">Category/osx64bit.png</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_provides_platform_invalid
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    index.files = [
+      'Category/script.lua',
+    ]
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @provides
+          [hello] winall.png
+      IN
+    end
+
+    assert_equal 'invalid platform: hello', error.message
+  end
+
   def test_remove
     index = ReaPack::Index.new @real_path
 

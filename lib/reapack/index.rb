@@ -52,6 +52,24 @@ class ReaPack::Index
 
   ROOT = File.expand_path('/').freeze
 
+  DEPENDENCY_REGEX = /
+    \A
+    ( \[ (?<platform> .+? ) \] )?
+    \s*
+    (?<file>
+      .+
+    )
+    \z
+  /x.freeze
+
+  PLATFORMS = [
+    :all,
+    :windows, :win32, :win64,
+    :darwin, :darwin32, :darwin64,
+  ].freeze
+
+  Dependency = Struct.new :platform, :filename, :url
+
   attr_reader :path, :source_pattern
   attr_accessor :amend, :files, :time
 
@@ -119,8 +137,7 @@ class ReaPack::Index
         [path, prefix + errors.join(prefix)]
     end
 
-    basepath = dirname path
-    deps = filelist mh[:provides].to_s, basepath
+    deps = parse_provides mh[:provides].to_s, dirname(path)
 
     cat, pkg = find path
     pkg.type = type.to_s
@@ -135,8 +152,8 @@ class ReaPack::Index
       ver.replace_sources do
         ver.add_source :all, nil, url_for(path)
 
-        deps.each_pair {|filename, dep_path|
-          ver.add_source :all, filename, url_for(dep_path)
+        deps.each {|dep|
+          ver.add_source dep.platform, dep.filename, dep.url
         }
       end
     end
@@ -295,14 +312,21 @@ private
       .sub('$commit', commit || 'master')
   end
 
-  def filelist(list, base)
-    deps = list.lines.map {|line|
+  def parse_provides(string, base = nil)
+    string.lines.map {|line|
       line.chomp!
-      path = File.expand_path line, ROOT + base.to_s
 
-      [line, path[ROOT.size..-1]]
+      m = line.match DEPENDENCY_REGEX
+      platform = m[:platform] || :all
+
+      unless PLATFORMS.include? platform.to_sym
+        raise Error, 'invalid platform: %s' % platform
+      end
+
+      path = File.expand_path m[:file], ROOT + base.to_s
+      url = url_for path[ROOT.size..-1]
+
+      Dependency.new platform, m[:file], url
     }
-
-    Hash[*deps.flatten]
   end
 end
