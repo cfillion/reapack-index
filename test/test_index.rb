@@ -593,25 +593,6 @@ Invalid metadata:
     assert_equal expected, File.read(@dummy_path)
   end
 
-  def test_provides_platform_invalid
-    index = ReaPack::Index.new @dummy_path
-    index.source_pattern = '$path'
-
-    index.files = [
-      'Category/script.lua',
-    ]
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, <<-IN
-        @version 1.0
-        @provides
-          [hello] winall.png
-      IN
-    end
-
-    assert_equal 'invalid platform: hello', error.message
-  end
-
   def test_remove
     index = ReaPack::Index.new @real_path
 

@@ -62,14 +62,6 @@ class ReaPack::Index
     \z
   /x.freeze
 
-  PLATFORMS = [
-    :all,
-    :windows, :win32, :win64,
-    :darwin, :darwin32, :darwin64,
-  ].freeze
-
-  SourceEntry = Struct.new :platform, :filename, :url
-
   attr_reader :path, :source_pattern
   attr_accessor :amend, :files, :time
 
@@ -137,8 +129,6 @@ class ReaPack::Index
         [prefix + errors.join(prefix)]
     end
 
-    sources = make_sources mh[:provides].to_s, path
-
     cat, pkg = find path
     pkg.type = type.to_s
 
@@ -150,9 +140,7 @@ class ReaPack::Index
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        sources.each {|src|
-          ver.add_source src.platform, src.filename, src.url
-        }
+        make_sources(mh[:provides], path).each {|src| ver.add_source src }
       end
     end
 
@@ -314,17 +302,13 @@ private
     this_file = File.basename base
     basedir = dirname base
 
-    sources = provides.lines.map {|line|
+    sources = provides.to_s.lines.map {|line|
       line.chomp!
 
       m = line.match DEPENDENCY_REGEX
 
-      platform, file = m[:platform] || :all, m[:file]
+      platform, file = m[:platform], m[:file]
       file = nil if file == this_file || file == '.'
-
-      unless PLATFORMS.include? platform.to_sym
-        raise Error, 'invalid platform: %s' % platform
-      end
 
       if file.nil?
         url = url_for base
@@ -333,11 +317,11 @@ private
         url = url_for path[ROOT.size..-1]
       end
 
-      SourceEntry.new platform, file, url
+      Source.new platform, file, url
     }
 
-    unless sources.any? {|src| src.filename.nil? }
-      sources.unshift SourceEntry.new :all, nil, url_for(base)
+    unless sources.any? {|src| src.file.nil? }
+      sources.unshift Source.new nil, nil, url_for(base)
     end
 
     sources

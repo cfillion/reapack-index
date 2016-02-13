@@ -110,10 +110,13 @@ class TestVersion < MiniTest::Test
 <version name="1.0">
   <source platform="all" file="test.lua">http://files.cfillion.tk/test.lua</source>
 </version>
-XML
+    XML
+
+    src = ReaPack::Index::Source.new nil, 'test.lua',
+      'http://files.cfillion.tk/test.lua'
 
     ver = ReaPack::Index::Version.new before
-    ver.add_source :all, 'test.lua', 'http://files.cfillion.tk/test.lua'
+    ver.add_source src
 
     assert ver.modified?, 'version is not modified'
 
@@ -126,7 +129,7 @@ XML
 <version name="1.0">
   <source platform="all" file="test.lua">http://files.cfillion.tk/hello%20world.lua</source>
 </version>
-XML
+    XML
 
     ver = ReaPack::Index::Version.new before
     ver.add_source :all, 'test.lua', 'http://files.cfillion.tk/hello world.lua'
@@ -181,5 +184,22 @@ XML
     ver.changelog = 'Refactored the test suite'
 
     assert ver.modified?, 'version is not modified'
+  end
+
+  def test_source_platform
+    src = ReaPack::Index::Source.new
+    assert_equal :all, src.platform
+
+    src.platform = :windows
+    assert_equal :windows, src.platform
+
+    error = assert_raises ReaPack::Index::Error do
+      src.platform = :hello
+    end
+
+    assert_equal 'invalid platform: hello', error.message
+
+    src.platform = nil
+    assert_equal :all, src.platform
   end
 end

@@ -65,18 +65,16 @@ class ReaPack::Index
       @dirty = was_dirty || old_sources != new_sources
     end
 
-    def add_source(platform, file, url)
-      src = Source.new @node
-      src.platform = platform
-      src.file = file
-      src.url = url
+    def add_source(src, file = nil, url = nil)
+      src = Source.new src, file, url unless src.is_a? Source
+      src.make_node @node
 
       @dirty = true
     end
 
   private
-    def hash_sources(sources)
-      sources.map {|src|
+    def hash_sources(nodes)
+      nodes.map {|src|
         [src[Source::PLATFORM], src[Source::FILE], src.content]
       }
     end
@@ -87,21 +85,38 @@ class ReaPack::Index
     PLATFORM = 'platform'.freeze
     FILE = 'file'.freeze
 
-    def initialize(parent)
-      @node = Nokogiri::XML::Node.new TAG, parent.document
-      @node.parent = parent
+    PLATFORMS = [
+      :all,
+      :windows, :win32, :win64,
+      :darwin, :darwin32, :darwin64,
+    ].freeze
+
+
+    def initialize(platform = nil, file = nil, url = nil)
+      self.platform = platform
+      self.file = file
+      self.url = url
     end
 
     def platform=(new_platform)
-      @node[PLATFORM] = new_platform
+      new_platform = :all if new_platform.nil?
+
+      unless PLATFORMS.include? new_platform.to_sym
+        raise Error, 'invalid platform: %s' % new_platform
+      end
+
+      @platform = new_platform
     end
 
-    def file=(new_file)
-      @node[FILE] = new_file if new_file
-    end
+    attr_reader :platform
+    attr_accessor :file, :url
 
-    def url=(new_url)
-      @node.content = URI.escape new_url
+    def make_node(parent)
+      @node = Nokogiri::XML::Node.new TAG, parent.document
+      @node.parent = parent
+      @node[PLATFORM] = @platform
+      @node[FILE] = @file if @file
+      @node.content = URI.escape @url
     end
   end
 
