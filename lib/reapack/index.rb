@@ -26,6 +26,7 @@ class ReaPack::Index
   FILE_TYPES = {
     'lua' => :script,
     'eel' => :script,
+    'py'  => :script,
   }.freeze
 
   HEADER_RULES = {
