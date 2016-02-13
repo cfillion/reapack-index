@@ -530,9 +530,9 @@ Invalid metadata:
       @version 1.0
       @provides
         [windows] winall.png
-        [win32] win32bit.png
-        [win64] win64bit.png
-        [darwin] osxall.png
+        [win32]  win32bit.png
+        [win64]win64bit.png
+         [ darwin ] osxall.png
         [darwin32] osx32bit.png
         [darwin64] osx64bit.png
     IN

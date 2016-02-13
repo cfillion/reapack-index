@@ -54,7 +54,7 @@ class ReaPack::Index
 
   DEPENDENCY_REGEX = /
     \A
-    ( \[ (?<platform> .+? ) \] )?
+    ( \[ \s* (?<platform> .+? ) \s* \] )?
     \s*
     (?<file>
       .+
