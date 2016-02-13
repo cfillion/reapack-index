@@ -133,8 +133,8 @@ class ReaPack::Index
 
     if errors = mh.validate(HEADER_RULES)
       prefix = "\n\x20\x20"
-      raise Error, "Invalid metadata in %s:%s" %
-        [path, prefix + errors.join(prefix)]
+      raise Error, "Invalid metadata:%s" %
+        [prefix + errors.join(prefix)]
     end
 
     deps = parse_provides mh[:provides].to_s, dirname(path)

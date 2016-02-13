@@ -342,7 +342,7 @@ class TestIndex < MiniTest::Test
     end
 
     expected = <<-ERR
-Invalid metadata in test.lua:
+Invalid metadata:
   missing tag "version"
     ERR
 
@@ -362,7 +362,7 @@ Invalid metadata in test.lua:
     end
 
     expected = <<-ERR
-Invalid metadata in test.lua:
+Invalid metadata:
   invalid value for tag "changelog"
     ERR
 
@@ -409,7 +409,7 @@ Invalid metadata in test.lua:
     end
 
     expected = <<-ERR
-Invalid metadata in test.lua:
+Invalid metadata:
   invalid value for tag "author"
     ERR
 
@@ -431,7 +431,7 @@ Invalid metadata in test.lua:
     end
 
     expected = <<-ERR
-Invalid metadata in test.lua:
+Invalid metadata:
   invalid value for tag "author"
     ERR
 
@@ -505,7 +505,7 @@ Invalid metadata in test.lua:
     end
 
     expected = <<-ERROR
-Invalid metadata in script.lua:
+Invalid metadata:
   invalid value for tag "provides": duplicate file (test.png)
     ERROR
 

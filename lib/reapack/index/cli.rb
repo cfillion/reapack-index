@@ -151,7 +151,7 @@ private
       begin
         @db.scan file[:path], blob.content.force_encoding("UTF-8")
       rescue ReaPack::Index::Error => e
-        warn e.message
+        warn "#{file[:path]}: #{e.message}"
       end
     end
   end

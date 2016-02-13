@@ -180,7 +180,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test.lua', 'no version tag in this script!')
       @git.commit 'initial commit'
 
-      assert_output nil, /Warning: Invalid metadata/ do
+      assert_output nil, /Warning: test\.lua: Invalid metadata/ do
         assert_equal true, @indexer.run
       end
     end
@@ -195,7 +195,7 @@ class TestCLI < MiniTest::Test
         assert_equal true, @indexer.run
       end
 
-      refute_match /Warning: Invalid metadata/i, stderr
+      refute_match /Warning: test\.lua: Invalid metadata/i, stderr
     end
   end
 
@@ -204,7 +204,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test.lua', 'no version tag in this script!')
       @git.commit 'initial commit'
 
-      assert_output nil, /Warning: Invalid metadata/ do
+      assert_output nil, /Warning: test\.lua: Invalid metadata/ do
         assert_equal true, @indexer.run
       end
     end
