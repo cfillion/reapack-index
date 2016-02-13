@@ -136,10 +136,11 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @dummy_path
     assert_empty index.files
 
-    index.files = ['script.lua']
+    index.files = ['script.lua', 'Hello/World']
     index.source_pattern = '$path'
     index.scan index.files.first, <<-IN
       @version 1.0
+      @provides Hello/World
     IN
 
     expected = <<-XML
@@ -149,6 +150,7 @@ class TestIndex < MiniTest::Test
     <reapack name="script.lua" type="script">
       <version name="1.0">
         <source platform="all">script.lua</source>
+        <source platform="all" file="Hello/World">Hello/World</source>
       </version>
     </reapack>
   </category>

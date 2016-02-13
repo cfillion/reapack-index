@@ -298,7 +298,7 @@ private
   def filelist(list, base)
     deps = list.lines.map {|line|
       line.chomp!
-      path = File.expand_path line, ROOT + base
+      path = File.expand_path line, ROOT + base.to_s
 
       [line, path[ROOT.size..-1]]
     }
