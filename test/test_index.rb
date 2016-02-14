@@ -755,4 +755,34 @@ class TestIndex < MiniTest::Test
     index.description = 'Hello World'
     assert_equal false, index.modified?
   end
+
+  def test_extension
+    index = ReaPack::Index.new @dummy_path
+
+    index.files = [
+      'Extensions/reapack.ext',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        reaper_reapack.so http://example.com/$path
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Extensions">
+    <reapack name="reapack.ext" type="extension">
+      <version name="1.0">
+        <source platform="all" file="reaper_reapack.so">http://example.com/reaper_reapack.so</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
 end

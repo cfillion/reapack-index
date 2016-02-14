@@ -65,6 +65,11 @@ See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
 Tag not explicitly marked as required are optional.
 
+### Package type by extension:
+
+- `.lua`, `.eel`, `.py`: ReaScripts – the package file itself will be used as a source.
+- `.ext`: For REAPER native extensions
+
 ### Package Tags
 
 These tags affects an entire package. Changes to any of those tags are

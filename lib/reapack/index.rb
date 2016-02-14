@@ -27,6 +27,7 @@ class ReaPack::Index
     'lua' => :script,
     'eel' => :script,
     'py'  => :script,
+    'ext' => :extension,
   }.freeze
 
   HEADER_RULES = {
@@ -52,7 +53,7 @@ class ReaPack::Index
 
   ROOT = File.expand_path('/').freeze
 
-  DEPENDENCY_REGEX = /
+  PROVIDES_REGEX = /
     \A
     ( \[ \s* (?<platform> .+? ) \s* \] )?
     \s*
@@ -60,6 +61,8 @@ class ReaPack::Index
     ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
     \z
   /x.freeze
+
+  WITH_MAIN = [:script].freeze
 
   attr_reader :path, :source_pattern
   attr_accessor :amend, :files, :time
@@ -139,7 +142,14 @@ class ReaPack::Index
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        make_sources(mh[:provides], path).each {|src|
+        sources = parse_provides mh[:provides], path
+
+        if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
+          # add the package itself as a source
+          sources.unshift Source.new nil, nil, url_for(path)
+        end
+
+        sources.each {|src|
           # the $path variable is interpolated elsewhere
           # (in url_for for generated urls and make_sources for explicit urls)
           src.url.sub! '$commit', commit || 'master'
@@ -302,14 +312,14 @@ private
     @source_pattern.sub('$path', path)
   end
 
-  def make_sources(provides, base)
+  def parse_provides(provides, base)
     this_file = File.basename base
     basedir = dirname base
 
-    sources = provides.to_s.lines.map {|line|
+    provides.to_s.lines.map {|line|
       line.chomp!
 
-      m = line.match DEPENDENCY_REGEX
+      m = line.match PROVIDES_REGEX
 
       platform, file, url = m[:platform], m[:file], m[:url]
       file = nil if file == this_file || file == '.'
@@ -328,11 +338,5 @@ private
 
       Source.new platform, file, url
     }
-
-    unless sources.any? {|src| src.file.nil? }
-      sources.unshift Source.new nil, nil, url_for(base)
-    end
-
-    sources
   end
 end
