@@ -119,8 +119,9 @@ Changelog:
 
 **@provides**
 
-Add additional files to the package.
-These files will be installed/updated together with the package.
+Add additional files to the package. This is also used to add platform restrictions
+or set a custom download url (by default the download url is based on the "origin"
+git remote).  These files will be installed/updated together with the package.
 
 ```
 @provides unicode.dat
@@ -129,4 +130,32 @@ Provides:
   Images/background.png
   Images/fader_small.png
   Images/fader_big.png
+
+@provides
+  [windows] reaper_extension.dll http://mysite.com/download/$version/$path
+```
+
+List of supported platform strings:
+- `windows`: All versions of Windows
+- `win32`: Windows 32-bit
+- `win64`: Windows 64-bit
+- `darwin`: All versions of OS X
+- `darwin32`: OS X 32-bit
+- `darwin64`: OS X 64-bit
+
+The following variables will be interpolated if found in the URL:
+- `$path`: The path of the file relative to the package
+- `$commit`: The hash of the commit being indexed or "master" if unavailable
+- `$version`: The version of the package being indexed
+
+Platform restriction and custom url can be set for the package itself,
+either by using its file name or a dot:
+
+```
+-- this is a lua script named `hello_osx.lua`
+-- @provides
+--   [darwin] hello_osx.lua
+
+-- @provides
+--   [darwin] .
 ```
