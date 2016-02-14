@@ -579,7 +579,7 @@ class TestIndex < MiniTest::Test
     index.scan index.files.first, <<-IN
       @version 1.0
       @provides
-        script.lua http://google.com/download/file.lua
+        script.lua http://google.com/download/$commit/$version/$path
     IN
 
     expected = <<-XML
@@ -588,7 +588,7 @@ class TestIndex < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source platform="all">http://google.com/download/file.lua</source>
+        <source platform="all">http://google.com/download/master/1.0/Category/script.lua</source>
       </version>
     </reapack>
   </category>

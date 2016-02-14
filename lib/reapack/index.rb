@@ -139,7 +139,13 @@ class ReaPack::Index
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        make_sources(mh[:provides], path).each {|src| ver.add_source src }
+        make_sources(mh[:provides], path).each {|src|
+          # the $path variable is interpolated elsewhere
+          # (in url_for for generated urls and make_sources for explicit urls)
+          src.url.sub! '$commit', commit || 'master'
+          src.url.sub! '$version', ver.name
+          ver.add_source src
+        }
       end
     end
 
@@ -292,9 +298,8 @@ private
       raise Error, "#{path}: No such file or directory"
     end
 
-    @source_pattern
-      .sub('$path', path)
-      .sub('$commit', commit || 'master')
+    # other variables are interpolated in scan()
+    @source_pattern.sub('$path', path)
   end
 
   def make_sources(provides, base)
@@ -316,6 +321,9 @@ private
           path = File.expand_path file, ROOT + basedir.to_s
           url = url_for path[ROOT.size..-1]
         end
+      else
+        # for explicit urls which don't go through url_for
+        url.sub! '$path', file || base
       end
 
       Source.new platform, file, url
