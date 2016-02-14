@@ -56,9 +56,8 @@ class ReaPack::Index
     \A
     ( \[ \s* (?<platform> .+? ) \s* \] )?
     \s*
-    (?<file>
-      .+
-    )
+    (?<file> .+?)
+    ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
     \z
   /x.freeze
 
@@ -307,14 +306,16 @@ private
 
       m = line.match DEPENDENCY_REGEX
 
-      platform, file = m[:platform], m[:file]
+      platform, file, url = m[:platform], m[:file], m[:url]
       file = nil if file == this_file || file == '.'
 
-      if file.nil?
-        url = url_for base
-      else
-        path = File.expand_path file, ROOT + basedir.to_s
-        url = url_for path[ROOT.size..-1]
+      if url.nil?
+        if file.nil?
+          url = url_for base
+        else
+          path = File.expand_path file, ROOT + basedir.to_s
+          url = url_for path[ROOT.size..-1]
+        end
       end
 
       Source.new platform, file, url

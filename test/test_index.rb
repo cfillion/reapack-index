@@ -593,6 +593,36 @@ Invalid metadata:
     assert_equal expected, File.read(@dummy_path)
   end
 
+  def test_source_custom_url
+    index = ReaPack::Index.new @dummy_path
+
+    index.files = [
+      'Category/script.lua',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        script.lua http://google.com/download/file.lua
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">http://google.com/download/file.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
   def test_remove
     index = ReaPack::Index.new @real_path
 
