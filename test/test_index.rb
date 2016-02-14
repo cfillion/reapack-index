@@ -256,7 +256,7 @@ class TestIndex < MiniTest::Test
      IN
     end
 
-    assert_match /Source pattern is unset/, error.message
+    assert_match /source pattern is unset/i, error.message
   end
 
   def test_source_pattern_no_path
@@ -341,12 +341,7 @@ class TestIndex < MiniTest::Test
       index.scan index.files.first, 'no version tag here'
     end
 
-    expected = <<-ERR
-Invalid metadata:
-  missing tag "version"
-    ERR
-
-    assert_equal expected.chomp, error.message
+    assert_match 'missing tag "version"', error.message
   end
 
   def test_changelog_boolean
@@ -361,12 +356,7 @@ Invalid metadata:
       IN
     end
 
-    expected = <<-ERR
-Invalid metadata:
-  invalid value for tag "changelog"
-    ERR
-
-    assert_equal expected.chomp, error.message
+    assert_match 'invalid value for tag "changelog"', error.message
   end
 
   def test_author
@@ -408,12 +398,7 @@ Invalid metadata:
       IN
     end
 
-    expected = <<-ERR
-Invalid metadata:
-  invalid value for tag "author"
-    ERR
-
-    assert_equal expected.chomp, error.message
+    assert_match 'invalid value for tag "author"', error.message
   end
 
   def test_author_multiline
@@ -430,12 +415,7 @@ Invalid metadata:
       IN
     end
 
-    expected = <<-ERR
-Invalid metadata:
-  invalid value for tag "author"
-    ERR
-
-    assert_equal expected.chomp, error.message
+    assert_equal 'invalid metadata: invalid value for tag "author"', error.message
   end
 
   def test_provides
@@ -504,12 +484,8 @@ Invalid metadata:
      IN
     end
 
-    expected = <<-ERROR
-Invalid metadata:
-  invalid value for tag "provides": duplicate file (test.png)
-    ERROR
-
-    assert_equal expected.chomp, error.message
+    assert_match 'invalid value for tag "provides": duplicate file (test.png)',
+      error.message
   end
 
   def test_provides_platform

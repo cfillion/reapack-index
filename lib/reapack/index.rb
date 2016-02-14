@@ -123,8 +123,8 @@ class ReaPack::Index
     end
 
     if errors = mh.validate(HEADER_RULES)
-      prefix = "\n\x20\x20"
-      raise Error, "Invalid metadata:%s" %
+      prefix = errors.size == 1 ? "\x20" : "\n\x20\x20"
+      raise Error, "invalid metadata:%s" %
         [prefix + errors.join(prefix)]
     end
 
@@ -284,7 +284,7 @@ private
 
   def url_for(path)
     unless @source_pattern
-      raise Error, "Source pattern is unset " \
+      raise Error, "source pattern is unset " \
         "and the package doesn't specify its source url"
     end
 
