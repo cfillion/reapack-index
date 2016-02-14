@@ -95,6 +95,13 @@ class ReaPack::Index
       :darwin, :darwin32, :darwin64,
     ].freeze
 
+    def self.validate_platform(platform)
+      return unless platform # nil platform will be replaced by the default
+
+      unless PLATFORMS.include? platform.to_sym
+        raise Error, 'invalid platform %s' % platform
+      end
+    end
 
     def initialize(platform = nil, file = nil, url = nil)
       self.platform = platform
@@ -105,9 +112,7 @@ class ReaPack::Index
     def platform=(new_platform)
       new_platform = :all if new_platform.nil?
 
-      unless PLATFORMS.include? new_platform.to_sym
-        raise Error, 'invalid platform: %s' % new_platform
-      end
+      self.class.validate_platform new_platform
 
       @platform = new_platform
     end

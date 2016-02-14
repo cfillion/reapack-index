@@ -480,11 +480,40 @@ class TestIndex < MiniTest::Test
        @version 1.0
        @provides
          test.png
-         test.png
+         test.png http://url.com
      IN
     end
 
     assert_match 'invalid value for tag "provides": duplicate file (test.png)',
+      error.message
+  end
+
+  def test_provides_duplicate_platforms
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['script.lua', 'test.png', 'test.png']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        [windows] test.png
+        [darwin] test.png
+    IN
+  end
+
+  def test_invalid_platform
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan 'test.lua', <<-IN
+        @version 1.0
+        @provides
+          [hello] test.png
+      IN
+    end
+
+    assert_match 'invalid value for tag "provides": invalid platform hello',
       error.message
   end
 

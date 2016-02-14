@@ -30,6 +30,20 @@ class ReaPack::Index
     'ext' => :extension,
   }.freeze
 
+  PROVIDES_VALIDATOR = proc {|value|
+    begin
+      files = value.lines.map {|l|
+        m = l.chomp.match PROVIDES_REGEX
+        Source.validate_platform m[:platform]
+        [m[:platform], m[:file]]
+      }
+      dup = files.detect {|f| files.count(f) > 1 }
+      "duplicate file (%s)" % dup[1] if dup
+    rescue Error => e
+      e.message
+    end
+  }.freeze
+
   HEADER_RULES = {
     # package-wide tags
     :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
@@ -37,14 +51,10 @@ class ReaPack::Index
     # version-specific tags
     :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
     :changelog => [MetaHeader::OPTIONAL, /.+/],
-    :provides => [MetaHeader::OPTIONAL, Proc.new {|value|
-      files = value.lines.map {|l| l.chomp }
-      dup = files.detect {|f| files.count(f) > 1 }
-      "duplicate file (%s)" % dup if dup
-    }]
+    :provides => [MetaHeader::OPTIONAL, PROVIDES_VALIDATOR]
   }.freeze
 
-  SOURCE_HOSTS = {
+  SOURCE_PATTERNS = {
     /\Agit@github\.com:([^\/]+)\/(.+)\.git\z/ =>
       'https://github.com/\1/\2/raw/$commit/$path',
     /\Ahttps:\/\/github\.com\/([^\/]+)\/(.+)\.git\z/ =>
@@ -73,7 +83,7 @@ class ReaPack::Index
   end
 
   def self.source_for(url)
-    SOURCE_HOSTS.each_pair {|regex, pattern|
+    SOURCE_PATTERNS.each_pair {|regex, pattern|
       return url.gsub regex, pattern if url =~ regex
     }
 

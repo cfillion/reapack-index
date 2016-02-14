@@ -197,7 +197,7 @@ XML
       src.platform = :hello
     end
 
-    assert_equal 'invalid platform: hello', error.message
+    assert_equal 'invalid platform hello', error.message
 
     src.platform = nil
     assert_equal :all, src.platform
