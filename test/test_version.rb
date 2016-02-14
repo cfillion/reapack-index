@@ -202,4 +202,14 @@ XML
     src.platform = nil
     assert_equal :all, src.platform
   end
+
+  def test_version_without_sources
+    ver = ReaPack::Index::Version.new make_node('<version name="1.0"/>')
+
+    error = assert_raises ReaPack::Index::Error do
+      ver.replace_sources do; end
+    end
+
+    assert_equal 'no sources found. @provides tag missing?', error.message
+  end
 end

@@ -63,6 +63,10 @@ class ReaPack::Index
 
       new_sources = hash_sources children(Source::TAG)
       @dirty = was_dirty || old_sources != new_sources
+
+      if new_sources.empty?
+        raise Error, 'no sources found. @provides tag missing?'
+      end
     end
 
     def add_source(src, file = nil, url = nil)
