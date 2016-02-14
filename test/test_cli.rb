@@ -104,7 +104,7 @@ class TestCLI < MiniTest::Test
       assert_match 'Category/test2.lua', read_index
       assert_match "raw/#{@git.log(1).last.sha}/test1.lua", read_index
 
-      assert_match Time.now.utc.iso8601, read_index
+      assert_match @git.log(1).last.date.utc.iso8601, read_index
     end
   end
 
