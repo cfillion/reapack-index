@@ -106,8 +106,7 @@ class ReaPack::Index
     if File.exist? path
       # noblanks: don't preserve the original white spaces
       # so we always output a neat document
-      setup = proc {|config| config.noblanks }
-      @doc = Nokogiri::XML File.open(path), &setup
+      @doc = Nokogiri::XML File.open(path), &:noblanks
     else
       @dirty = true
       @is_new = true

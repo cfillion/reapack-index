@@ -18,8 +18,7 @@ require 'minitest/autorun'
 
 module XMLHelper
   def make_node(markup)
-    setup = proc {|config| config.noblanks }
-    Nokogiri::XML(markup, &setup).root
+    Nokogiri::XML(markup, &:noblanks).root
   end
 end
 
