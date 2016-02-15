@@ -97,8 +97,9 @@ private
     walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
     walker.push @git.head.target_id
 
-    if Rugged.valid_full_oid? @db.commit.to_s
-      walker.hide @db.commit if @git.include? @db.commit
+    last_commit = @db.commit.to_s
+    if Rugged.valid_full_oid?(last_commit) && last_commit.size <= 40
+      walker.hide last_commit if @git.include? last_commit
     end
 
     commits = walker.each.to_a

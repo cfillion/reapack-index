@@ -258,14 +258,14 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_index_from_inexistent
+  def test_index_from_invalid
     setup = proc {
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.commit 'initial commit'
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="0000000000000000000000000000000000000000"/>
+<index version="1" commit="hello world"/>
       XML
     }
 
@@ -279,6 +279,42 @@ class TestCLI < MiniTest::Test
 
       assert_match 'test1.lua', read_index
       assert_match 'test2.lua', read_index
+    end
+  end
+
+  def test_index_from_inexistent
+    setup = proc {
+      @git.add mkfile('test.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="0000000000000000000000000000000000000000"/>
+      XML
+    }
+
+    wrapper [], setup: setup do
+      assert_output nil, nil do
+        assert_equal true, @indexer.run
+      end
+    end
+  end
+
+  def test_index_from_long_hash
+    setup = proc {
+      @git.add mkfile('test.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="0000000000000000000000000000000000000deadbeef"/>
+      XML
+    }
+
+    wrapper [], setup: setup do
+      assert_output nil, nil do
+        assert_equal true, @indexer.run
+      end
     end
   end
 
