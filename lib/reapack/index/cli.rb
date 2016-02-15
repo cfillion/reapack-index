@@ -38,6 +38,10 @@ class ReaPack::Index::CLI
     @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
     @db.amend = @opts[:amend]
 
+    if @opts[:check]
+      return check
+    end
+
     if @opts[:lslinks]
       print_links
       return true
@@ -210,6 +214,48 @@ private
     warn e.message
   end
 
+  def check
+    failures = []
+    root = @git.workdir
+
+    types = ReaPack::Index::FILE_TYPES.keys
+    files = Dir.glob "#{Regexp.quote(root)}**/*.{#{types.join ','}}"
+
+    files.sort.each {|file|
+      errors = ReaPack::Index.validate_file file
+
+      if errors
+        $stderr.print 'F'
+        prefix = "\n  - "
+        file[0..root.size-1] = ''
+
+        failures << "%s contains invalid metadata:#{prefix}%s" %
+          [file, errors.join(prefix)]
+      else
+        $stderr.print '.'
+      end
+
+      @add_nl = true
+    }
+
+    $stderr.puts
+    @add_nl = false
+
+    failures.each {|msg|
+      $stderr.puts
+      warn msg
+    }
+
+    $stderr.puts "\n"
+
+    $stderr.puts "Finished checks for %d package%s with %d failure%s" % [
+      files.size, files.size == 1 ? '' : 's',
+      failures.size, failures.size == 1 ? '' : 's'
+    ]
+
+    failures.empty?
+  end
+
   def commit(changelog)
     return unless case @opts[:commit]
     when false, true
@@ -279,6 +325,10 @@ private
         opts[:amend] = bool
       end
 
+      op.on '-c', '--check', 'Test every package including uncommited changes and exit' do
+        opts[:check] = true
+      end
+
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
         opts[:output] = file.strip
@@ -318,7 +368,7 @@ private
         opts[:verbose] = bool
       end
 
-      op.on '-c', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
+      op.on '-C', '--[no-]commit', 'Select whether to commit the modified index' do |bool|
         opts[:commit] = bool
       end
 

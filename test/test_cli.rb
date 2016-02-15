@@ -703,4 +703,42 @@ class TestCLI < MiniTest::Test
       end
     end
   end
+
+  def test_check_pass
+    expected = <<-STDERR
+..
+
+Finished checks for 2 packages with 0 failures
+    STDERR
+
+    wrapper ['--check'] do
+      mkfile 'test1.lua', '@version 1.0'
+      mkfile 'test2.lua', '@version 1.0'
+
+      assert_output nil, expected do
+        assert_equal true, @indexer.run
+      end
+    end
+  end
+
+  def test_check_failure
+    expected = <<-STDERR
+F.
+
+Warning: test1.lua contains invalid metadata:
+  - missing tag "version"
+  - invalid value for tag "author"
+
+Finished checks for 2 packages with 1 failure
+    STDERR
+
+    wrapper ['--check'] do
+      mkfile 'test1.lua', '@author'
+      mkfile 'test2.lua', '@version 1.0'
+
+      assert_output nil, expected do
+        assert_equal false, @indexer.run
+      end
+    end
+  end
 end

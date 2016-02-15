@@ -27,6 +27,7 @@ bundle exec bin/reascript-indexer [options] [path-to-your-reascript-repository]
 ```
 Options:
     -a, --[no-]amend                 Reindex existing versions
+    -c, --check                      Test every package including uncommited changes and exit
     -o, --output FILE=./index.xml    Set the output filename and path for the index
     -l, --link LINK                  Add or remove a website link
         --donation-link LINK         Add or remove a donation link
@@ -36,7 +37,7 @@ Options:
         --dump-about                 Dump the raw about content in RTF and exit
         --[no-]progress              Enable or disable progress information
     -V, --[no-]verbose               Activate diagnosis messages
-    -c, --[no-]commit                Select whether to commit the modified index
+    -C, --[no-]commit                Select whether to commit the modified index
         --prompt-commit              Ask at runtime whether to commit the index
     -W, --warnings                   Enable warnings
     -w, --no-warnings                Turn off warnings
