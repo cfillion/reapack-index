@@ -1,6 +1,7 @@
 # Package indexer for ReaPack-based repositories
 
-Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)
+Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)  
+Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion/metaheader)
 
 [![Gem Version](https://badge.fury.io/rb/reapack-index.svg)](http://badge.fury.io/rb/reapack-index)
 [![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
@@ -9,19 +10,18 @@ Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillio
 
 ### Installation
 
-Ruby 2 need to be installed on your computer and ready to be used.
-Install the dependencies with these commands:
+Ruby 2 need to be installed on your computer and ready to be used from a command
+prompt. Run the following command from a command prompt (cmd.exe, Terminal.app,
+XTerm) to install reapack-index on your computer:
 
 ```
-cd path-to-this-repository
-gem install bundler
-bundle install
+gem install reapack-index
 ```
 
 ### Usage
 
 ```
-bundle exec bin/reascript-indexer [options] [path-to-your-reascript-repository]
+reascript-indexer [options] [path-to-your-reascript-repository]
 ```
 
 ```
