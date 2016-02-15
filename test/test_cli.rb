@@ -725,7 +725,7 @@ Finished checks for 2 packages with 0 failures
     expected = <<-STDERR
 F.
 
-Warning: test1.lua contains invalid metadata:
+test1.lua contains invalid metadata:
   - missing tag "version"
   - invalid value for tag "author"
 
@@ -735,6 +735,27 @@ Finished checks for 2 packages with 1 failure
     wrapper ['--check'] do
       mkfile 'test1.lua', '@author'
       mkfile 'test2.lua', '@version 1.0'
+
+      assert_output nil, expected do
+        assert_equal false, @indexer.run
+      end
+    end
+  end
+
+  def test_check_quiet
+    expected = <<-STDERR
+test1.lua contains invalid metadata:
+  - missing tag "version"
+  - invalid value for tag "author"
+
+test2.lua contains invalid metadata:
+  - missing tag "version"
+    STDERR
+
+    wrapper ['--check', '--quiet'] do
+      mkfile 'test1.lua', '@author'
+      mkfile 'test2.lua'
+      mkfile 'test3.lua', '@version 1.0'
 
       assert_output nil, expected do
         assert_equal false, @indexer.run

@@ -225,33 +225,32 @@ private
       errors = ReaPack::Index.validate_file file
 
       if errors
-        $stderr.print 'F'
+        $stderr.print 'F' unless @opts[:quiet]
         prefix = "\n  - "
         file[0..root.size-1] = ''
 
         failures << "%s contains invalid metadata:#{prefix}%s" %
           [file, errors.join(prefix)]
       else
-        $stderr.print '.'
+        $stderr.print '.' unless @opts[:quiet]
       end
-
-      @add_nl = true
     }
 
-    $stderr.puts
-    @add_nl = false
+    $stderr.puts "\n" unless @opts[:quiet]
 
-    failures.each {|msg|
-      $stderr.puts
-      warn msg
+    failures.each_with_index {|msg, index|
+      $stderr.puts unless @opts[:quiet] && index == 0
+      $stderr.puts msg.yellow
     }
 
-    $stderr.puts "\n"
+    unless @opts[:quiet]
+      $stderr.puts "\n"
 
-    $stderr.puts "Finished checks for %d package%s with %d failure%s" % [
-      files.size, files.size == 1 ? '' : 's',
-      failures.size, failures.size == 1 ? '' : 's'
-    ]
+      $stderr.puts "Finished checks for %d package%s with %d failure%s" % [
+        files.size, files.size == 1 ? '' : 's',
+        failures.size, failures.size == 1 ? '' : 's'
+      ]
+    end
 
     failures.empty?
   end
