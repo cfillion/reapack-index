@@ -96,7 +96,10 @@ private
     walker = Rugged::Walker.new @git
     walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
     walker.push @git.head.target_id
-    walker.hide @db.commit if @db.commit
+
+    if Rugged.valid_full_oid? @db.commit.to_s
+      walker.hide @db.commit if @git.include? @db.commit
+    end
 
     commits = walker.each.to_a
 

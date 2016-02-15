@@ -214,7 +214,7 @@ class TestCLI < MiniTest::Test
     setup = proc {
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.commit 'initial commit'
-      
+
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" commit="#{@git.log(1).last.sha}"/>
@@ -222,9 +222,6 @@ class TestCLI < MiniTest::Test
     }
 
     wrapper [], setup: setup do
-      # next line ensures only files in this commit are scanned
-      mkfile('test1.lua', '@version 1.1')
-
       @git.add mkfile('test2.lua', '@version 1.0')
       @git.commit 'second commit'
 
@@ -233,6 +230,54 @@ class TestCLI < MiniTest::Test
       end
 
       refute_match 'test1.lua', read_index
+      assert_match 'test2.lua', read_index
+    end
+  end
+
+  def test_index_from_invalid
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="hello world"/>
+      XML
+    }
+
+    wrapper [], setup: setup do
+      @git.add mkfile('test2.lua', '@version 1.0')
+      @git.commit 'second commit'
+
+      assert_output nil, '' do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'test1.lua', read_index
+      assert_match 'test2.lua', read_index
+    end
+  end
+
+  def test_index_from_inexistent
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" commit="0000000000000000000000000000000000000000"/>
+      XML
+    }
+
+    wrapper [], setup: setup do
+      @git.add mkfile('test2.lua', '@version 1.0')
+      @git.commit 'second commit'
+
+      assert_output nil, '' do
+        assert_equal true, @indexer.run
+      end
+
+      assert_match 'test1.lua', read_index
       assert_match 'test2.lua', read_index
     end
   end
