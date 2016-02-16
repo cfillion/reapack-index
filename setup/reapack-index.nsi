@@ -16,7 +16,7 @@
 
 !define RUGGED_FILE "rugged-0.24.0b12-x86-mingw32.gem"
 !define RUGGED_URL \
-  "http://files.cfillion.tk/reapack/${RUGGED_FILE}"
+  "https://github.com/cfillion/reapack-index/releases/download/v${VERSION}/${RUGGED_FILE}"
 
 Name "${NAME}"
 OutFile "reapack-index-${VERSION}.exe"
