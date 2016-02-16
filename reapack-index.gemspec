@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["cfillion"]
   spec.email         = ["reapack-index@cfillion.tk"]
   spec.summary       = %q{Package indexer for ReaPack-based repositories}
-  spec.homepage      = "https://github.com/cfillion/reapack-indexer"
+  spec.homepage      = "https://github.com/cfillion/reapack-index"
   spec.license       = "LGPL-3.0+"
 
   spec.files         = `git ls-files -z`.split("\x0")
