@@ -4,7 +4,7 @@ class ReaPack::Index::CLI
     '.',
   ].freeze
 
-  PROGRAM_NAME = 'reapack-indexer'.freeze
+  PROGRAM_NAME = 'reapack-index'.freeze
 
   DEFAULTS = {
     verbose: false,
