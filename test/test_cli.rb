@@ -76,7 +76,7 @@ class TestCLI < MiniTest::Test
   end
 
   def test_invalid_option
-    assert_output '', /reapack-indexer: invalid option: --hello-world/i do
+    assert_output '', /reapack-index: invalid option: --hello-world/i do
       i = ReaPack::Index::CLI.new ['--hello-world']
       assert_equal false, i.run # does nothing
     end
