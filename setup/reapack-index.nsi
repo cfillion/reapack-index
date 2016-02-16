@@ -1,7 +1,7 @@
 !include MUI2.nsh
 !include Sections.nsh
 
-!define VERSION "1.0-beta1"
+!define VERSION "1.0beta1"
 !define NAME "ReaPack Index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
