@@ -42,11 +42,11 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2016  Christian Fillion"
 !insertmacro MUI_LANGUAGE "English"
 
 !macro DOWNLOAD url file
-  NSISdl::download /TIMEOUT=30000 "${url}" "${file}"
-  Pop $R0
-  StrCmp $R0 "success" +4
-    DetailPrint "Error while downloading ${url}:"
-    DetailPrint "  $R0"
+  inetc::get /CONNECTTIMEOUT=30000 "${url}" "${file}" /END
+  Pop $0
+  StrCmp $0 "OK" +4
+    DetailPrint "Error while downloading ${url} to ${file}:"
+    DetailPrint "  $0"
     Abort "${ABORT_MSG}"
 !macroend
 
@@ -70,33 +70,33 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2016  Christian Fillion"
 
 Section /o "Ruby for Windows" InstallRuby
   InitPluginsDir
-  StrCpy $0 "$PLUGINSDIR\${RUBYINSTALLER_FILE}"
-  !insertmacro DOWNLOAD "${RUBYINSTALLER_URL}" $0
+  StrCpy $R0 "$PLUGINSDIR\${RUBYINSTALLER_FILE}"
+  !insertmacro DOWNLOAD "${RUBYINSTALLER_URL}" $R0
 
   DetailPrint "Installing Ruby ${RUBY_VERSION}..."
-  !insertmacro EXEC_GUI '"$0" /VERYSILENT /TASKS=MODPATH' ${RUBYINSTALLER_FILE}
+  !insertmacro EXEC_GUI '"$R0" /VERYSILENT /TASKS=MODPATH' ${RUBYINSTALLER_FILE}
 
   ; reload the path to use the one freshly set by the ruby installer
-  ReadRegStr $R0 HKCU "Environment" "Path"
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("Path", R0).r2'
+  ReadRegStr $R1 HKCU "Environment" "Path"
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("Path", R1).r2'
 SectionEnd
 
 Section /o "Rugged (libgit2)" InstallRugged
   InitPluginsDir
-  StrCpy $0 "$PLUGINSDIR\${RUGGED_FILE}"
-  !insertmacro DOWNLOAD "${RUGGED_URL}" $0
+  StrCpy $R0 "$PLUGINSDIR\${RUGGED_FILE}"
+  !insertmacro DOWNLOAD "${RUGGED_URL}" $R0
 
   DetailPrint "Installing rugged/libgit2 with pre-built C extensions..."
-  !insertmacro EXEC_CLI '"cmd" /C gem install $0' "gem install ${RUGGED_FILE}"
+  !insertmacro EXEC_CLI '"cmd" /C gem install $R0' "gem install ${RUGGED_FILE}"
 SectionEnd
 
 Section /o "Pandoc" InstallPandoc
   InitPluginsDir
-  StrCpy $0 "$PLUGINSDIR\${PANDOC_FILE}"
-  !insertmacro DOWNLOAD "${PANDOC_URL}" $0
+  StrCpy $R0 "$PLUGINSDIR\${PANDOC_FILE}"
+  !insertmacro DOWNLOAD "${PANDOC_URL}" $R0
 
   DetailPrint "Installing Pandoc..."
-  !insertmacro EXEC_GUI '"msiexec" /i $0 /passive' ${PANDOC_FILE}
+  !insertmacro EXEC_GUI '"msiexec" /i $R0 /passive' ${PANDOC_FILE}
 SectionEnd
 
 Section "ReaPack-Index" InstallMain
