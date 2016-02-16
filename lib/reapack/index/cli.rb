@@ -410,7 +410,7 @@ private
     end.parse! args
 
     opts
-  rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+  rescue OptionParser::ParseError => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
     $stderr.puts "Try '#{PROGRAM_NAME} --help' for more information."
     @exit = false

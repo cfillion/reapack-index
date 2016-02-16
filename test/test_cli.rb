@@ -78,7 +78,14 @@ class TestCLI < MiniTest::Test
   def test_invalid_option
     assert_output '', /reapack-index: invalid option: --hello-world/i do
       i = ReaPack::Index::CLI.new ['--hello-world']
-      assert_equal false, i.run # does nothing
+      assert_equal false, i.run
+    end
+  end
+
+  def test_ambiguous_option
+    assert_output '', /reapack-index: ambiguous option: --c/i do
+      i = ReaPack::Index::CLI.new ['--c']
+      assert_equal false, i.run
     end
   end
 
