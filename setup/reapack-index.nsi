@@ -99,7 +99,7 @@ Section /o "Pandoc" InstallPandoc
   !insertmacro EXEC_GUI '"msiexec" /i $R0 /passive' ${PANDOC_FILE}
 SectionEnd
 
-Section "ReaPack-Index" InstallMain
+Section "ReaPack Index" InstallMain
   SectionIn RO
 
   DetailPrint "Installing reapack-index... (this can take a while)"
@@ -113,24 +113,31 @@ Function .onInit
   nsExec::ExecToStack '"ruby" -e "require \"rugged\"'
   Pop $0
 
-  StrCmp $0 "error" 0 +5 ; failed to launch ruby
+  StrCmp $0 "error" 0 +6 ; failed to launch ruby
     SectionGetFlags ${InstallRuby} $1
     IntOp $1 $1 | ${SF_SELECTED}
+    IntOp $1 $1 | ${SF_RO}
     SectionSetFlags ${InstallRuby} $1
     Goto +2 ; also install rugged
 
-  StrCmp $0 "1" 0 +4 ; rugged is not installed
+  StrCmp $0 "1" 0 +5 ; rugged is not installed
     SectionGetFlags ${InstallRugged} $1
     IntOp $1 $1 | ${SF_SELECTED}
+    IntOp $1 $1 | ${SF_RO}
     SectionSetFlags ${InstallRugged} $1
 
   nsExec::ExecToStack '"pandoc" --version'
   Pop $0
 
-  StrCmp $0 "error" 0 +4 ; failed to launch pandoc
+  StrCmp $0 "error" 0 +5 ; failed to launch pandoc
     SectionGetFlags ${InstallPandoc} $1
     IntOp $1 $1 | ${SF_SELECTED}
+    IntOp $1 $1 | ${SF_RO}
     SectionSetFlags ${InstallPandoc} $1
+
+  SectionGetFlags ${InstallMain} $1
+    IntOp $1 $1 | ${SF_PSELECTED}
+    SectionSetFlags ${InstallMain} $1
 FunctionEnd
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
