@@ -19,17 +19,14 @@ class WordpressChangelog < MetaHeader::Parser
   def read(line)
     if line =~ VERSION
       @current = $1 == header[:version]
-      line = $2.to_s
+    elsif @current
+      if header[:changelog]
+        header[:changelog] += "\n"
+      else
+        header[:changelog] = String.new
+      end
+
+      header[:changelog] += line.chomp
     end
-
-    return unless @current
-
-    if header[:changelog]
-      header[:changelog] += "\n"
-    else
-      header[:changelog] = String.new
-    end
-
-    header[:changelog] += line.chomp
   end
 end

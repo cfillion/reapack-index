@@ -24,7 +24,6 @@ class TestParsers < MiniTest::Test
     IN
 
     changelog = <<-LOG
-(2011-01-01)
 + Line 3
 + Line 4
     LOG
@@ -57,7 +56,6 @@ v1.0 (2012-01-01)
     IN
 
     changelog = <<-LOG
-(2011-01-01)
 + Line 3
 + Line 4
     LOG
