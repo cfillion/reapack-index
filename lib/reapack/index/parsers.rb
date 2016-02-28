@@ -5,7 +5,7 @@ class WordpressChangelog < MetaHeader::Parser
     ((?:--)?\]\]|\*\/)
   /xm.freeze
 
-  VERSION = /\A[\s\*]+v([\d\.]+)(?:\s+(.+))?\Z/.freeze
+  VERSION = /\A[\s\*]*v([\d\.]+)(?:\s+(.+))?\Z/.freeze
 
   def parse(input)
     input.encode! Encoding::UTF_8, invalid: :replace
