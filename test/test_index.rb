@@ -787,10 +787,7 @@ class TestIndex < MiniTest::Test
 
   def test_extension
     index = ReaPack::Index.new @dummy_path
-
-    index.files = [
-      'Extensions/reapack.ext',
-    ]
+    index.files = ['Extensions/reapack.ext']
 
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -805,6 +802,32 @@ class TestIndex < MiniTest::Test
     <reapack name="reapack.ext" type="extension">
       <version name="1.0">
         <source platform="all" file="reaper_reapack.so">http://example.com/reaper_reapack.so</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_effect
+    index = ReaPack::Index.new @dummy_path
+    index.source_pattern = '$path'
+    index.files = ['Dynamics/super_compressor.jsfx']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Dynamics">
+    <reapack name="super_compressor.jsfx" type="effect">
+      <version name="1.0">
+        <source platform="all">Dynamics/super_compressor.jsfx</source>
       </version>
     </reapack>
   </category>

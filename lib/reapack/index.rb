@@ -24,11 +24,14 @@ class ReaPack::Index
   Error = Class.new RuntimeError
 
   FILE_TYPES = {
-    'lua' => :script,
-    'eel' => :script,
-    'py'  => :script,
-    'ext' => :extension,
+    'lua'  => :script,
+    'eel'  => :script,
+    'py'   => :script,
+    'ext'  => :extension,
+    'jsfx' => :effect,
   }.freeze
+
+  WITH_MAIN = [:script, :effect].freeze
 
   PROVIDES_VALIDATOR = proc {|value|
     begin
@@ -71,8 +74,6 @@ class ReaPack::Index
     ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
     \z
   /x.freeze
-
-  WITH_MAIN = [:script].freeze
 
   attr_reader :path, :source_pattern
   attr_accessor :amend, :files, :time
