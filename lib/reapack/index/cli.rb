@@ -13,6 +13,7 @@ class ReaPack::Index::CLI
     quiet: false,
     commit: nil,
     output: './index.xml',
+    ignore: [],
   }.freeze
 
   def initialize(argv = [])
@@ -35,7 +36,7 @@ class ReaPack::Index::CLI
   def run
     return @exit unless @exit.nil?
 
-    @db = ReaPack::Index.new File.expand_path(@opts[:output], @git.workdir)
+    @db = ReaPack::Index.new expand_path(@opts[:output])
     @db.amend = @opts[:amend]
 
     if @opts[:check]
@@ -76,17 +77,6 @@ class ReaPack::Index::CLI
   end
 
 private
-  def prompt(question, &block)
-    $stderr.print "#{question} [y/N] "
-    answer = $stdin.getch
-    $stderr.puts answer
-
-    yes = answer.downcase == 'y'
-    block[] if block_given? && yes
-
-    yes
-  end
-
   def scan_commits
     if @git.empty?
       warn 'The current branch does not contains any commit.'
@@ -147,6 +137,7 @@ private
       file = delta.new_file
     end
 
+    return if ignored? expand_path(file[:path])
     return unless ReaPack::Index.type_of file[:path]
 
     log "-> indexing #{status} file #{file[:path]}"
@@ -224,9 +215,13 @@ private
 
     types = ReaPack::Index::FILE_TYPES.keys
     files = Dir.glob "#{Regexp.quote(root)}**/*.{#{types.join ','}}"
+    count = 0
 
     files.sort.each {|file|
+      next if ignored? file
+
       errors = ReaPack::Index.validate_file file
+      count += 1
 
       if errors
         $stderr.print 'F' unless @opts[:quiet]
@@ -251,7 +246,7 @@ private
       $stderr.puts "\n"
 
       $stderr.puts "Finished checks for %d package%s with %d failure%s" % [
-        files.size, files.size == 1 ? '' : 's',
+        count, count == 1 ? '' : 's',
         failures.size, failures.size == 1 ? '' : 's'
       ]
     end
@@ -288,6 +283,17 @@ private
     $stderr.puts 'commit created'
   end
 
+  def prompt(question, &block)
+    $stderr.print "#{question} [y/N] "
+    answer = $stdin.getch
+    $stderr.puts answer
+
+    yes = answer.downcase == 'y'
+    block[] if block_given? && yes
+
+    yes
+  end
+
   def log(line)
     $stderr.puts line if @opts[:verbose]
   end
@@ -313,6 +319,20 @@ private
     @add_nl = true
   end
 
+  def ignored?(path)
+    @opts[:ignore].each {|pattern|
+      return true if path.start_with? pattern
+    }
+
+    false
+  end
+
+  def expand_path(path)
+    # expand from the repository root or from the current directory if
+    # the repository is not yet initialized
+    File.expand_path path, @git ? @git.workdir : Dir.pwd
+  end
+
   def parse_options(args)
     opts = Hash.new
 
@@ -330,6 +350,11 @@ private
 
       op.on '-c', '--check', 'Test every package including uncommited changes and exit' do
         opts[:check] = true
+      end
+
+      op.on '-i', '--ignore PATH', "Don't check or index any file starting with PATH" do |path|
+        opts[:ignore] ||= []
+        opts[:ignore] << expand_path(path)
       end
 
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
@@ -419,7 +444,7 @@ private
 
   def read_config
     CONFIG_SEARCH.map {|dir|
-      dir = File.expand_path dir, @git.workdir
+      dir = expand_path dir
       path = File.expand_path '.reapack-index.conf', dir
 
       log 'reading configuration from %s' % path

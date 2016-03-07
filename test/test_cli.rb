@@ -850,4 +850,80 @@ test2.lua contains invalid metadata:
       end
     end
   end
+
+  def test_check_ignore
+    pwd = Dir.pwd
+    setup = proc { Dir.chdir @git.dir.to_s }
+
+    expected = <<-STDERR
+.
+
+Finished checks for 1 package with 0 failures
+    STDERR
+
+    wrapper ['--check', '--ignore=Hello',
+             '--ignore=Chunky/Bacon.lua', '--ignore=test2.lua'], setup: setup do
+      mkfile 'Hello/World.lua', 'konnichiwa'
+      mkfile 'Chunky/Bacon.lua', 'konnichiwa'
+      mkfile 'Directory/test2.lua', '@version 1.0'
+
+      assert_output nil, expected do
+        @indexer.run
+      end
+    end
+  ensure
+    Dir.chdir pwd
+  end
+
+  def test_ignore_config
+    expected = <<-STDERR
+.
+
+Finished checks for 1 package with 0 failures
+    STDERR
+
+    setup = proc {
+      mkfile '.reapack-index.conf', <<-CONFIG
+--ignore=Hello
+--ignore=Chunky/Bacon.lua
+--ignore=test2.lua
+      CONFIG
+    }
+
+    wrapper ['--check'], setup: setup do
+      mkfile 'Hello/World.lua', 'konnichiwa'
+      mkfile 'Chunky/Bacon.lua', 'konnichiwa'
+      mkfile 'Directory/test2.lua', '@version 1.0'
+
+      assert_output nil, expected do
+        @indexer.run
+      end
+    end
+  end
+
+  def test_scan_ignore
+    pwd = Dir.pwd
+    setup = proc { Dir.chdir @git.dir.to_s }
+
+    wrapper ['--ignore=Hello', '--ignore=Chunky/Bacon.lua',
+             '--ignore=test2.lua'], setup: setup do
+      @git.add mkfile('README.md', '# Hello World')
+      @git.commit 'initial commit'
+
+      @git.add mkfile('Hello/World.lua', 'konnichiwa')
+      @git.add mkfile('Chunky/Bacon.lua', 'konnichiwa')
+      @git.add mkfile('Directory/test2.lua', '@version 1.0')
+      @git.commit 'second commit'
+
+      assert_output "1 new category, 1 new package, 1 new version\n", '' do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match 'Hello/World.lua', read_index
+      refute_match 'Chunky/Bacon.lua', read_index
+      assert_match 'Directory/test2.lua', read_index
+    end
+  ensure
+    Dir.chdir pwd
+  end
 end
