@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["reapack-index@cfillion.tk"]
   spec.summary       = %q{Package indexer for ReaPack-based repositories}
   spec.homepage      = "https://github.com/cfillion/reapack-index"
-  spec.license       = "LGPL-3.0+"
+  spec.license       = "GPL-3.0+"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
