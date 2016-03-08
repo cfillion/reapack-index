@@ -426,11 +426,13 @@ private
       op.on_tail '-v', '--version', 'Display version information' do
         puts op.ver
         @exit = true
+        return opts
       end
 
       op.on_tail '-h', '--help', 'Prints this help' do
         puts op
         @exit = true
+        return opts
       end
     end.parse! args
 

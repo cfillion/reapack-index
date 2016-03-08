@@ -75,6 +75,15 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_help_version
+    stdout, stderr = capture_io do
+      i = ReaPack::Index::CLI.new ['--help', '--version']
+      assert_equal true, i.run # does nothing
+    end
+
+    refute_match ReaPack::Index::VERSION.to_s, stdout
+  end
+
   def test_invalid_option
     assert_output '', /reapack-index: invalid option: --hello-world/i do
       i = ReaPack::Index::CLI.new ['--hello-world']
