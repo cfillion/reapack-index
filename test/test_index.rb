@@ -837,4 +837,26 @@ class TestIndex < MiniTest::Test
     index.write!
     assert_equal expected, File.read(@dummy_path)
   end
+
+  def test_name
+    index = ReaPack::Index.new @dummy_path
+    assert_empty index.name
+
+    index.name = 'Hello World'
+    assert_equal '1 modified metadata, empty index', index.changelog
+
+    error = assert_raises ReaPack::Index::Error do index.name = '.'; end
+    assert_raises ReaPack::Index::Error do index.name = 'hello/world'; end
+    assert_equal "Invalid name: '.'", error.message
+
+    assert_equal 'Hello World', index.name
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="Hello World"/>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(@dummy_path)
+  end
 end

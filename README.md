@@ -29,6 +29,7 @@ Options:
     -a, --[no-]amend                 Reindex existing versions
     -c, --check                      Test every package including uncommited changes and exit
     -i, --ignore PATH                Don't check or index any file starting with PATH
+    -n, --name NAME                  Set the name shown in ReaPack for this repository
     -o, --output FILE=./index.xml    Set the output filename and path for the index
     -l, --link LINK                  Add or remove a website link
         --donation-link LINK         Add or remove a donation link

@@ -57,7 +57,8 @@ class ReaPack::Index::CLI
       @db.source_pattern = ReaPack::Index.source_for remote.url
     end
 
-    set_about
+    do_name
+    do_about
     eval_links
     scan_commits
 
@@ -191,7 +192,19 @@ private
     }
   end
 
-  def set_about
+  def do_name
+    @db.name = @opts[:name] if @opts[:name]
+
+    if @db.name.empty?
+      warn "The name of this index is unset. " \
+        "Run the following command with a name of your choice:" \
+        "\n  #{$0} --name 'FooBar Scripts'"
+    end
+  rescue ReaPack::Index::Error => e
+    warn '--name: ' + e.message
+  end
+
+  def do_about
     path = @opts[:about]
 
     unless path
@@ -355,6 +368,10 @@ private
       op.on '-i', '--ignore PATH', "Don't check or index any file starting with PATH" do |path|
         opts[:ignore] ||= []
         opts[:ignore] << expand_path(path)
+      end
+
+      op.on '-n', '--name NAME', 'Set the name shown in ReaPack for this repository' do |name|
+        opts[:name] = name
       end
 
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",

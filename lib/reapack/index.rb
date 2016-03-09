@@ -244,6 +244,20 @@ class ReaPack::Index
     @doc.root[:version].to_i
   end
 
+  def name
+    @doc.root[:name].to_s
+  end
+
+  def name=(newName)
+    if !/\A[^~#%&*{}\\:<>?\/+|"]+\Z/.match(newName) || /\A\.+\Z/.match(newName)
+      raise Error, "Invalid name: '#{newName}'"
+    end
+
+    oldName = name
+    @doc.root['name'] = newName
+    log_change 'modified metadata' if oldName != newName
+  end
+
   def commit
     @doc.root[:commit]
   end

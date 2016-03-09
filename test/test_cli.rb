@@ -113,7 +113,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('Category/Sub/test3.lua', '@version 1.0')
       @git.commit 'initial commit'
 
-      assert_output /3 new packages/, '' do
+      assert_output /3 new packages/ do
         assert_equal true, @indexer.run
       end
 
@@ -134,7 +134,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('Category/Sub/test3.lua', '@version 1.0')
       @git.commit 'second commit'
 
-      assert_output "3 new categories, 3 new packages, 3 new versions\n", '' do
+      assert_output "3 new categories, 3 new packages, 3 new versions\n" do
         assert_equal true, @indexer.run
       end
 
@@ -151,7 +151,7 @@ class TestCLI < MiniTest::Test
       Dir.mkdir pwd
       Dir.chdir pwd
 
-      assert_output /1 new package/, '' do
+      assert_output /1 new package/ do
         assert_equal true, @indexer.run
       end
 
@@ -233,7 +233,7 @@ class TestCLI < MiniTest::Test
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@git.log(1).last.sha}"/>
+<index version="1" name="hello" commit="#{@git.log(1).last.sha}"/>
       XML
     }
 
@@ -257,31 +257,7 @@ class TestCLI < MiniTest::Test
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="hello world"/>
-      XML
-    }
-
-    wrapper [], setup: setup do
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
-
-      assert_output nil, '' do
-        assert_equal true, @indexer.run
-      end
-
-      assert_match 'test1.lua', read_index
-      assert_match 'test2.lua', read_index
-    end
-  end
-
-  def test_index_from_invalid
-    setup = proc {
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.commit 'initial commit'
-
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="hello world"/>
+<index version="1" name="hello" commit="hello world"/>
       XML
     }
 
@@ -370,7 +346,7 @@ class TestCLI < MiniTest::Test
       
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@git.log(1).last.sha}">
+<index version="1" name="hello" commit="#{@git.log(1).last.sha}">
   <category name="Test">
     <reapack name="test.lua" type="script">
       <version name="1.0"/>
@@ -402,7 +378,7 @@ class TestCLI < MiniTest::Test
       @git.remove script
       @git.commit 'second commit'
 
-      assert_output /1 removed package/i, '' do
+      assert_output /1 removed package/i do
         assert_equal true, @indexer.run
       end
 
@@ -415,7 +391,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test.lua', '@version 1.0')
       @git.commit 'initial commit'
 
-      assert_output nil, '' do
+      capture_io do
         assert_equal true, @indexer.run
       end
 
@@ -461,7 +437,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
 
-      assert_output("empty index\n", "commit created\n") { @indexer.run }
+      assert_output("empty index\n", /commit created\n/) { @indexer.run }
       
       commit = @git.log(1).last
       assert_equal 'index: empty index', commit.message
@@ -614,7 +590,7 @@ class TestCLI < MiniTest::Test
     }
 
     wrapper ['--progress'], setup: setup do
-      assert_output '', "Nothing to do!\n" do
+      assert_output '', /Nothing to do!\n/ do
         @indexer.run
       end
     end
@@ -924,7 +900,7 @@ Finished checks for 1 package with 0 failures
       @git.add mkfile('Directory/test2.lua', '@version 1.0')
       @git.commit 'second commit'
 
-      assert_output "1 new category, 1 new package, 1 new version\n", '' do
+      assert_output "1 new category, 1 new package, 1 new version\n" do
         assert_equal true, @indexer.run
       end
 
@@ -934,5 +910,37 @@ Finished checks for 1 package with 0 failures
     end
   ensure
     Dir.chdir pwd
+  end
+
+  def test_noname
+    wrapper do
+      assert_output nil, /The name of this index is unset/i do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match 'name', read_index
+    end
+  end
+
+  def test_set_name
+    wrapper ['--name=Hello World'] do
+      stdin, stderr = capture_io do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match /The name of this index is unset/i, stderr
+      assert_match 'name="Hello World"', read_index
+    end
+  end
+
+  def test_set_name_invalid
+    wrapper ['--name=Hello/World'] do
+      stdin, stderr = capture_io do
+        assert_equal true, @indexer.run
+      end
+
+      refute_match /The name of this index is unset/i, stderr
+      assert_match /invalid name: 'Hello\/World'/i, stderr
+    end
   end
 end
