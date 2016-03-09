@@ -21,7 +21,7 @@ gem install reapack-index
 ### Usage
 
 ```
-reapack-index [options] [path-to-your-reascript-repository]
+reapack-index [options] [path-to-your-repository]
 ```
 
 ```
@@ -65,12 +65,13 @@ This indexer uses metadata found at the start of the files to generate the
 database in ReaPack format.
 See also [MetaHeader](https://github.com/cfillion/metaheader)'s documentation.
 
-Tag not explicitly marked as required are optional.
+All tags are optional unless explicitely marked as required.
 
 ### Package type by extension:
 
-- `.lua`, `.eel`, `.py`: ReaScripts – the package file itself will be used as a source.
-- `.ext`: For REAPER native extensions
+- `.lua`, `.eel`, `.py`: ReaScripts
+- `.jsfx`: JS effects
+- `.ext`: Native extensions (all included files must be explicitely defined)
 
 ### Package Tags
 
