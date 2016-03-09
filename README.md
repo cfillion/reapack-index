@@ -21,7 +21,7 @@ gem install reapack-index
 ### Usage
 
 ```
-reascript-indexer [options] [path-to-your-reascript-repository]
+reapack-index [options] [path-to-your-reascript-repository]
 ```
 
 ```
