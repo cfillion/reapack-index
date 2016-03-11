@@ -125,7 +125,7 @@ class ReaPack::Index
       @node.parent = parent
       @node[PLATFORM] = @platform
       @node[FILE] = @file if @file
-      @node.content = URI.escape @url
+      @node.content = Addressable::URI.encode @url
     end
   end
 

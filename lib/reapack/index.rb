@@ -1,5 +1,6 @@
 require 'reapack/index/gem_version'
 
+require 'addressable/uri'
 require 'colorize'
 require 'fileutils'
 require 'io/console'
@@ -11,7 +12,6 @@ require 'pathname'
 require 'rugged'
 require 'shellwords'
 require 'time'
-require 'uri'
 
 require 'reapack/index/cli'
 require 'reapack/index/metadata'

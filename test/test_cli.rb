@@ -76,7 +76,7 @@ class TestCLI < MiniTest::Test
   end
 
   def test_help_version
-    stdout, stderr = capture_io do
+    stdout, _ = capture_io do
       i = ReaPack::Index::CLI.new ['--help', '--version']
       assert_equal true, i.run # does nothing
     end
@@ -207,7 +207,7 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('test.lua', 'no version tag in this script!')
       @git.commit 'initial commit'
 
-      stdout, stderr = capture_io do
+      _, stderr = capture_io do
         assert_equal true, @indexer.run
       end
 
@@ -452,7 +452,7 @@ class TestCLI < MiniTest::Test
 
       fake_input do |fio|
         fio.getch = 'y'
-        stdin, stderr = capture_io { @indexer.run }
+        _, stderr = capture_io { @indexer.run }
         assert_match /commit created/i, stderr
       end
 
@@ -469,7 +469,7 @@ class TestCLI < MiniTest::Test
 
       fake_input do |fio|
         fio.getch = 'n'
-        stdin, stderr = capture_io { @indexer.run }
+        _, stderr = capture_io { @indexer.run }
         refute_match /commit created/i, stderr
       end
 
@@ -488,7 +488,7 @@ class TestCLI < MiniTest::Test
   end
 
   def test_no_config
-    stdout, stderr = capture_io do
+    stdout, _ = capture_io do
       wrapper ['--no-config'], setup: proc {
         mkfile '.reapack-index.conf', '--help'
       }
@@ -502,7 +502,7 @@ class TestCLI < MiniTest::Test
       mkfile '.reapack-index.conf', "--verbose\n--no-warnings"
     }
 
-    stdout, stderr = capture_io do
+    _, stderr = capture_io do
       wrapper ['--warnings'], setup: setup do
         @git.add mkfile('test.lua', 'no version tag in this script!')
         @git.commit 'initial commit'
@@ -620,7 +620,7 @@ class TestCLI < MiniTest::Test
 
   def test_website_link
     wrapper ['-l http://cfillion.tk'] do
-      assert_output "1 new website link, empty index\n", '' do
+      assert_output "1 new website link, empty index\n" do
         assert_equal true, @indexer.run
       end
 
@@ -628,7 +628,7 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_website_link
+  def test_donation_link
     wrapper ['--donation-link', 'Link Label=http://cfillion.tk'] do
       assert_output "1 new donation link, empty index\n" do
         assert_equal true, @indexer.run
@@ -924,7 +924,7 @@ Finished checks for 1 package with 0 failures
 
   def test_set_name
     wrapper ['--name=Hello World'] do
-      stdin, stderr = capture_io do
+      _, stderr = capture_io do
         assert_equal true, @indexer.run
       end
 
@@ -935,7 +935,7 @@ Finished checks for 1 package with 0 failures
 
   def test_set_name_invalid
     wrapper ['--name=Hello/World'] do
-      stdin, stderr = capture_io do
+      _, stderr = capture_io do
         assert_equal true, @indexer.run
       end
 

@@ -13,7 +13,7 @@ class WordpressChangelog < MetaHeader::Parser
     ver, changes = header[:version], header[:changelog]
     return if ver.nil? || changes || CHANGELOG.match(input).nil?
 
-    $1.lines {|line| read line.lstrip }
+    $1.lines.each {|line| read line.lstrip }
   end
 
   def read(line)

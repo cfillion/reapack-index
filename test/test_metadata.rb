@@ -320,9 +320,6 @@ class TestMetadata < MiniTest::Test
   end
 
   def test_replace_description
-    rtf = <<-RTF
-    RTF
-
     before = make_node <<-XML
 <index>
   <metadata>

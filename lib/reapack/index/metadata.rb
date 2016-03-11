@@ -17,7 +17,13 @@ class ReaPack::Index
     def push_link(type, name = nil, url)
       Link.check_type type
 
-      unless url =~ /\A#{URI::regexp(['http', 'https'])}\z/
+      begin
+        uri = Addressable::URI.parse(url)
+
+        unless ['http', 'https'].include? uri.scheme
+          raise Addressable::URI::InvalidURIError
+        end
+      rescue Addressable::URI::InvalidURIError
         raise Error, "invalid URL: #{url}"
       end
 

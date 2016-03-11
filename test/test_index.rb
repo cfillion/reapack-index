@@ -9,7 +9,7 @@ class TestIndex < MiniTest::Test
   end
 
   def teardown
-    File.delete @dummy_path if File.exists? @dummy_path
+    File.delete @dummy_path if File.exist? @dummy_path
   end
 
   def test_type_of
@@ -327,7 +327,7 @@ class TestIndex < MiniTest::Test
   def test_nil_source_pattern
     index = ReaPack::Index.new @dummy_path
 
-    error = assert_raises ArgumentError do
+    assert_raises ArgumentError do
      index.source_pattern = nil
     end
   end

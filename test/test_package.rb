@@ -77,7 +77,7 @@ class TestPackage < MiniTest::Test
 
     pkg = ReaPack::Index::Package.new before
 
-    ver10 = pkg.version '1.0'
+    pkg.version '1.0'
     refute pkg.modified?, 'package is modified'
 
     ver11 = pkg.version '1.1'
