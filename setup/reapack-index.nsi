@@ -1,5 +1,6 @@
 !include MUI2.nsh
 !include Sections.nsh
+!include StrRep.nsh
 
 !define VERSION "1.0beta2"
 !define NAME "ReaPack Index ${VERSION}"
@@ -14,7 +15,7 @@
 !define PANDOC_URL \
   "https://github.com/jgm/pandoc/releases/download/1.16.0.2/${PANDOC_FILE}"
 
-!define RUGGED_FILE "rugged-0.24.0b12-x86-mingw32.gem"
+!define RUGGED_FILE "rugged-0.24.0b12-%PLATFORM%.gem"
 !define RUGGED_URL \
   "https://github.com/cfillion/reapack-index/releases/download/v${VERSION}/${RUGGED_FILE}"
 
@@ -68,6 +69,12 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2016  Christian Fillion"
     Abort "${ABORT_MSG}"
 !macroend
 
+!macro RELOAD_PATH
+  ; reload the path to use the one freshly set by the ruby installer
+  ReadRegStr $R1 HKCU "Environment" "Path"
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("Path", R1).r2'
+!macroend
+
 Section /o "Ruby for Windows" InstallRuby
   InitPluginsDir
   StrCpy $R0 "$PLUGINSDIR\${RUBYINSTALLER_FILE}"
@@ -76,18 +83,22 @@ Section /o "Ruby for Windows" InstallRuby
   DetailPrint "Installing Ruby ${RUBY_VERSION}..."
   !insertmacro EXEC_GUI '"$R0" /VERYSILENT /TASKS=MODPATH' ${RUBYINSTALLER_FILE}
 
-  ; reload the path to use the one freshly set by the ruby installer
-  ReadRegStr $R1 HKCU "Environment" "Path"
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("Path", R1).r2'
+  !insertmacro RELOAD_PATH
 SectionEnd
 
 Section /o "Rugged (libgit2)" InstallRugged
+  nsExec::ExecToStack '"ruby" -e "print Gem::Platform.new(RUBY_PLATFORM)"'
+  Pop $0
+  Pop $1
+  !insertmacro StrRep $R2 "${RUGGED_FILE}" "%PLATFORM%" $1
+  !insertmacro StrRep $R3 "${RUGGED_URL}" "%PLATFORM%" $1
+
   InitPluginsDir
-  StrCpy $R0 "$PLUGINSDIR\${RUGGED_FILE}"
-  !insertmacro DOWNLOAD "${RUGGED_URL}" $R0
+  StrCpy $R0 "$PLUGINSDIR\$R2"
+  !insertmacro DOWNLOAD "$R3" $R0
 
   DetailPrint "Installing rugged/libgit2 with pre-built C extensions..."
-  !insertmacro EXEC_CLI '"cmd" /C gem install $R0' "gem install ${RUGGED_FILE}"
+  !insertmacro EXEC_CLI '"cmd" /C gem install $R0' "gem install $R2"
 SectionEnd
 
 Section /o "Pandoc" InstallPandoc
@@ -110,6 +121,7 @@ Section "ReaPack Index" InstallMain
 SectionEnd
 
 Function .onInit
+  !insertmacro RELOAD_PATH
   nsExec::ExecToStack '"ruby" -e "require \"rugged\"'
   Pop $0
 
