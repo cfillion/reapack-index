@@ -115,9 +115,8 @@ Section "ReaPack Index" InstallMain
 
   DetailPrint "Installing reapack-index... (this can take a while)"
 
-  !insertmacro EXEC_CLI \
-    '"cmd" /C gem install reapack-index --version=${VERSION}' \
-    "gem install reapack-index"
+  StrCpy $R0 "gem install reapack-index --version=${VERSION}"
+  !insertmacro EXEC_CLI '"cmd" /C $R0' "$R0"
 SectionEnd
 
 Function .onInit
