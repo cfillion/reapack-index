@@ -225,7 +225,7 @@ class ReaPack::Index
     if uri.path =~ /\A\/?([^\/]+)\/([^\/]+)\.git\Z/
       uri = uri.to_web_uri
       uri.path += '/raw/$commit/$path'
-    elsif not uri.path.include? '$path'
+    elsif not uri.request_uri.include? '$path'
       raise ArgumentError, '$path cannot be found in this url pattern'
     end
 

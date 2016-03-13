@@ -23,6 +23,9 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @dummy_path
     assert_nil index.url_pattern
 
+    index.url_pattern = 'https://get.cfillion.tk/?v=$version&f=$path'
+    assert_equal 'https://get.cfillion.tk/?v=$version&f=$path', index.url_pattern
+
     index.url_pattern = 'https://google.com/$path'
     assert_equal 'https://google.com/$path', index.url_pattern
 
