@@ -54,7 +54,7 @@ class ReaPack::Index::CLI
     end
 
     if remote = @git.remotes['origin']
-      @db.source_pattern = ReaPack::Index.source_for remote.url
+      @db.url_pattern = remote.url
     end
 
     do_name

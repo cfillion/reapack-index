@@ -5,12 +5,12 @@ $LOAD_PATH.unshift lib unless $LOAD_PATH.include? lib
 require 'reapack/index/gem_version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "reapack-index"
+  spec.name          = 'reapack-index'
   spec.version       = ReaPack::Index::VERSION
-  spec.authors       = ["cfillion"]
-  spec.email         = ["reapack-index@cfillion.tk"]
-  spec.summary       = %q{Package indexer for ReaPack-based repositories}
-  spec.homepage      = "https://github.com/cfillion/reapack-index"
+  spec.authors       = ['cfillion']
+  spec.email         = ['reapack-index@cfillion.tk']
+  spec.summary       = 'Package indexer for ReaPack-based repositories'
+  spec.homepage      = 'https://github.com/cfillion/reapack-index'
   spec.license       = "GPL-3.0+"
 
   spec.files         = `git ls-files -z`.split("\x0")
@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'addressable', '~> 2.4'
   spec.add_runtime_dependency 'colorize', '~> 0.7'
+  spec.add_runtime_dependency 'gitable', '~> 0.3'
   spec.add_runtime_dependency 'metaheader', '~> 1.0'
   spec.add_runtime_dependency 'nokogiri', '~> 1.6'
   spec.add_runtime_dependency 'pandoc-ruby', '~> 1.0'

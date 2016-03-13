@@ -1,8 +1,9 @@
 require 'reapack/index/gem_version'
 
-require 'addressable/uri'
+require 'addressable'
 require 'colorize'
 require 'fileutils'
+require 'gitable'
 require 'io/console'
 require 'metaheader'
 require 'nokogiri'
@@ -33,6 +34,15 @@ class ReaPack::Index
 
   WITH_MAIN = [:script, :effect].freeze
 
+  PROVIDES_REGEX = /
+    \A
+    ( \[ \s* (?<platform> .+? ) \s* \] )?
+    \s*
+    (?<file> .+?)
+    ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
+    \z
+  /x.freeze
+
   PROVIDES_VALIDATOR = proc {|value|
     begin
       files = value.lines.map {|l|
@@ -57,38 +67,14 @@ class ReaPack::Index
     :provides => [MetaHeader::OPTIONAL, PROVIDES_VALIDATOR]
   }.freeze
 
-  SOURCE_PATTERNS = {
-    /\Agit@github\.com:([^\/]+)\/(.+)\.git\z/ =>
-      'https://github.com/\1/\2/raw/$commit/$path',
-    /\Ahttps:\/\/github\.com\/([^\/]+)\/(.+)\.git\z/ =>
-      'https://github.com/\1/\2/raw/$commit/$path',
-  }.freeze
-
   ROOT = File.expand_path('/').freeze
 
-  PROVIDES_REGEX = /
-    \A
-    ( \[ \s* (?<platform> .+? ) \s* \] )?
-    \s*
-    (?<file> .+?)
-    ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
-    \z
-  /x.freeze
-
-  attr_reader :path, :source_pattern
+  attr_reader :path, :url_pattern
   attr_accessor :amend, :files, :time
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
     FILE_TYPES[ext]
-  end
-
-  def self.source_for(url)
-    SOURCE_PATTERNS.each_pair {|regex, pattern|
-      return url.gsub regex, pattern if url =~ regex
-    }
-
-    nil
   end
 
   def self.validate_file(path)
@@ -156,12 +142,12 @@ class ReaPack::Index
 
         if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
           # add the package itself as a source
-          sources.unshift Source.new nil, nil, url_for(path)
+          sources.unshift Source.new nil, nil, make_url(path)
         end
 
         sources.each {|src|
           # the $path variable is interpolated elsewhere
-          # (in url_for for generated urls and make_sources for explicit urls)
+          # (in make_url for generated urls and make_sources for explicit urls)
           src.url.sub! '$commit', commit || 'master'
           src.url.sub! '$version', ver.name
           ver.add_source src
@@ -230,14 +216,20 @@ class ReaPack::Index
     log_change 'modified metadata' if old != @metadata.description
   end
 
-  def source_pattern=(pattern)
-    if pattern.nil?
-      raise ArgumentError, 'Cannot use nil as a source pattern'
-    elsif not pattern.include? '$path'
-      raise ArgumentError, '$path not in source pattern'
+  def url_pattern=(pattern)
+    return @url_pattern = nil if pattern.nil?
+
+    uri = Gitable::URI.parse pattern
+    uri.normalize!
+
+    if uri.path =~ /\A\/?([^\/]+)\/([^\/]+)\.git\Z/
+      uri = uri.to_web_uri
+      uri.path += '/raw/$commit/$path'
+    elsif not uri.path.include? '$path'
+      raise ArgumentError, '$path cannot be found in this url pattern'
     end
 
-    @source_pattern = pattern
+    @url_pattern = uri.to_s.freeze
   end
 
   def version
@@ -322,10 +314,10 @@ private
     [cat, pkg]
   end
 
-  def url_for(path)
-    unless @source_pattern
-      raise Error, "source pattern is unset " \
-        "and the package doesn't specify its source url"
+  def make_url(path)
+    unless @url_pattern
+      raise Error,
+        "unable to create a the download link for #{path}: url pattern is unset"
     end
 
     unless @files.include? path
@@ -333,7 +325,7 @@ private
     end
 
     # other variables are interpolated in scan()
-    @source_pattern.sub('$path', path)
+    @url_pattern.sub('$path', path)
   end
 
   def parse_provides(provides, base)
@@ -350,13 +342,13 @@ private
 
       if url.nil?
         if file.nil?
-          url = url_for base
+          url = make_url base
         else
           path = File.expand_path file, ROOT + basedir.to_s
-          url = url_for path[ROOT.size..-1]
+          url = make_url path[ROOT.size..-1]
         end
       else
-        # for explicit urls which don't go through url_for
+        # for explicit urls which don't go through make_url
         url.sub! '$path', file || base
       end
 
