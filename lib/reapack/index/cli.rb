@@ -58,7 +58,7 @@ class ReaPack::Index::CLI
       tpl = @opts[:url_template]
       is_custom = tpl != DEFAULTS[:url_template]
 
-      @db.url_template = is_custom ? tpl : remote_url
+      @db.url_template = is_custom ? tpl : auto_url_tpl
     rescue ReaPack::Index::Error => e
       warn '--url-template: ' + e.message if is_custom
     end
@@ -180,7 +180,16 @@ private
       begin
         @db.eval_link *link
       rescue ReaPack::Index::Error => e
-        warn e.message
+        opt = case link.first
+        when :website
+          '--link'
+        when :donation
+          '--donation-link'
+        else
+          raise
+        end
+
+        warn "#{opt}: " + e.message
       end
     }
   end
@@ -354,10 +363,17 @@ private
     File.expand_path path, @git ? @git.workdir : Dir.pwd
   end
 
-  def remote_url
-    if remote = @git.remotes['origin']
-      remote.url
-    end
+  def auto_url_tpl
+    remote = @git.remotes['origin']
+    return unless remote
+
+    uri = Gitable::URI.parse remote.url
+    return unless uri.path =~ /\A\/?(?<user>[^\/]+)\/(?<repo>[^\/]+)\.git\Z/
+
+    tpl = uri.to_web_uri
+    tpl.path += '/raw/$commit/$path'
+
+    tpl.to_s
   end
 
   def parse_options(args)

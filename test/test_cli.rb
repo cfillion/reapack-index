@@ -658,12 +658,15 @@ class TestCLI < MiniTest::Test
   end
 
   def test_invalid_link
-    wrapper ['--link', 'shinsekai yori', '--link', 'http://cfillion.tk'] do
-      assert_output "1 new website link, empty index\n",
-          /warning: invalid url or scheme: shinsekai yori/i do
+    wrapper ['--link', 'shinsekai yori', '--donation-link', 'hello world',
+             '--link', 'http://cfillion.tk'] do
+      stdout, stderr = capture_io do
         assert_equal true, @indexer.run
       end
 
+      assert_equal "1 new website link, empty index\n", stdout
+      assert_match /warning: --link: invalid link: shinsekai yori/i, stderr
+      assert_match /warning: --donation-link: invalid link: hello world/i, stderr
       assert_match 'rel="website">http://cfillion.tk</link>', read_index
     end
   end
@@ -707,7 +710,7 @@ class TestCLI < MiniTest::Test
   end
 
   def test_no_git_remote
-    wrapper [], remote: false do
+    wrapper [], remote: '*' do
       # no crash :)
       assert_output { @indexer.run }
     end
@@ -718,6 +721,26 @@ class TestCLI < MiniTest::Test
       _, stderr = capture_io { @indexer.run }
       refute_match /invalid url/i, stderr
       refute_match '$path', stderr
+    end
+  end
+
+  def test_auto_url_template_ssh
+    wrapper [], remote: 'git@github.com:User/Repo.git' do
+      @git.add mkfile('hello.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      assert_output { @indexer.run }
+      assert_match "https://github.com/User/Repo/raw/#{@git.log(1).last.sha}/hello.lua", read_index
+    end
+  end
+
+  def test_auto_url_template_https
+    wrapper [], remote: 'https://github.com/User/Repo.git' do
+      @git.add mkfile('hello.lua', '@version 1.0')
+      @git.commit 'initial commit'
+
+      assert_output { @indexer.run }
+      assert_match "https://github.com/User/Repo/raw/#{@git.log(1).last.sha}/hello.lua", read_index
     end
   end
 

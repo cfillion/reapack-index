@@ -40,22 +40,6 @@ class TestIndex < MiniTest::Test
     assert_nil index.url_template
   end
 
-  def test_url_template_git_ssh
-    index = ReaPack::Index.new @dummy_path
-
-    index.url_template = 'git@github.com:User/Repo.git'
-    assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
-      index.url_template
-  end
-
-  def test_url_template_git_https
-    index = ReaPack::Index.new @dummy_path
-
-    index.url_template = 'https://github.com/User/Repo.git'
-    assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
-      index.url_template
-  end
-
   def test_url_template_unsupported_scheme
     index = ReaPack::Index.new @dummy_path
 

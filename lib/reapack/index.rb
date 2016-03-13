@@ -84,17 +84,6 @@ class ReaPack::Index
     mh.validate HEADER_RULES
   end
 
-  # @private
-  def self.validate_url(url, schemes)
-    uri = Addressable::URI.parse url
-
-    unless schemes.include? uri.scheme
-      raise Addressable::URI::InvalidURIError
-    end
-  rescue Addressable::URI::InvalidURIError
-    raise Error, "invalid URL or scheme: #{url}"
-  end
-
   def initialize(path)
     @amend = false
     @changes = {}
@@ -227,20 +216,20 @@ class ReaPack::Index
   def url_template=(tpl)
     return @url_template = nil if tpl.nil?
 
-    uri = Gitable::URI.parse tpl
+    uri = Addressable::URI.parse tpl
     uri.normalize!
 
-    if uri.path =~ /\A\/?([^\/]+)\/([^\/]+)\.git\Z/
-      uri = uri.to_web_uri
-      uri.path += '/raw/$commit/$path'
-    elsif not (uri.request_uri || uri.path).include? '$path'
+    unless (uri.request_uri || uri.path).include? '$path'
       raise Error, "$path placeholder is missing: #{tpl}"
     end
 
-    tpl = uri.to_s.freeze
-    self.class.validate_url tpl, %w{http https file}
+    unless %w{http https file}.include? uri.scheme
+      raise Addressable::URI::InvalidURIError
+    end
 
-    @url_template = tpl
+    @url_template = uri.to_s.freeze
+  rescue Addressable::URI::InvalidURIError
+    raise Error, "invalid URL or scheme: #{tpl}"
   end
 
   def version
@@ -339,9 +328,9 @@ private
       .sub('$version', @currentVersion || '0.0')
   end
 
-  def parse_provides(provides, base)
-    this_file = File.basename base
-    basedir = dirname base
+  def parse_provides(provides, path)
+    basename = File.basename path
+    basedir = dirname path
 
     provides.to_s.lines.map {|line|
       line.chomp!
@@ -349,13 +338,13 @@ private
       m = line.match PROVIDES_REGEX
 
       platform, file, url_tpl = m[:platform], m[:file], m[:url]
-      file = nil if file == this_file || file == '.'
+      file = nil if file == basename || file == '.'
 
       if file.nil?
-        url = make_url base, url_tpl
+        url = make_url path, url_tpl
       elsif url_tpl.nil?
-        path = File.expand_path file, FS_ROOT + basedir.to_s
-        url = make_url path[FS_ROOT.size..-1]
+        normalized = File.expand_path file, FS_ROOT + basedir.to_s
+        url = make_url normalized[FS_ROOT.size..-1]
       else
         url = make_url file, url_tpl
       end
