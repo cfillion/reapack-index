@@ -15,6 +15,7 @@ require 'shellwords'
 require 'time'
 
 require 'reapack/index/cli'
+require 'reapack/index/cli/options'
 require 'reapack/index/metadata'
 require 'reapack/index/named_node'
 require 'reapack/index/package'
