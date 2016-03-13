@@ -106,7 +106,7 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_initial_commit
+  def test_scan_initial_commit
     wrapper do
       @git.add mkfile('test1.lua', '@version 1.0')
       @git.add mkfile('Category/test2.lua', '@version 1.0')
@@ -124,7 +124,7 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_normal_commit
+  def test_scan_normal_commit
     wrapper do
       @git.add mkfile('README.md', '# Hello World')
       @git.commit 'initial commit'
@@ -437,11 +437,27 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('.gitkeep')
       @git.commit 'initial commit'
 
+      mkfile 'ignored1'
+      @git.add mkfile('ignored2')
+
       assert_output("empty index\n", /commit created\n/) { @indexer.run }
       
       commit = @git.log(1).last
       assert_equal 'index: empty index', commit.message
       assert_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
+    end
+  end
+
+  def test_create_initial_commit
+    wrapper ['--commit'] do
+      mkfile 'ignored1'
+      @git.add mkfile('ignored2')
+
+      assert_output("empty index\n", /commit created\n/) { @indexer.run }
+
+      commit = @git.log(1).last
+      assert_equal 'index: empty index', commit.message
+      assert_equal ['index.xml'], commit.gtree.files.keys
     end
   end
 

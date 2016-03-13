@@ -275,12 +275,17 @@ private
       prompt 'Commit the new index?'
     end
 
-    target = @git.head.target
+    old_index = @git.index
+    target = @git.empty? ? nil : @git.head.target
+
+    if target
+      old_index.read_tree target.tree
+    else
+      old_index.clear
+    end
+
     root = Pathname.new @git.workdir
     file = Pathname.new @db.path
-
-    old_index = @git.index
-    old_index.read_tree target.tree
 
     index = @git.index
     index.add file.relative_path_from(root).to_s
@@ -288,7 +293,7 @@ private
     Rugged::Commit.create @git, \
       tree: index.write_tree(@git),
       message: "index: #{changelog}",
-      parents: [target],
+      parents: [target].compact,
       update_ref: 'HEAD'
 
     old_index.write
