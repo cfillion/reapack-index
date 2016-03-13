@@ -144,6 +144,9 @@ class ReaPack::Index
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
 
+      # store the version name for make_url
+      @currentVersion = ver.name
+
       ver.author = mh[:author]
       ver.time = @time if @time
       ver.changelog = mh[:changelog]
@@ -156,13 +159,7 @@ class ReaPack::Index
           sources.unshift Source.new nil, nil, make_url(path)
         end
 
-        sources.each {|src|
-          # the $path variable is interpolated elsewhere
-          # (in make_url for generated urls and make_sources for explicit urls)
-          src.url.sub! '$commit', commit || 'master'
-          src.url.sub! '$version', ver.name
-          ver.add_source src
-        }
+        sources.each {|src| ver.add_source src }
       end
     end
 
@@ -328,17 +325,18 @@ private
     [cat, pkg]
   end
 
-  def make_url(path)
-    unless @url_template
-      raise Error, 'unable to generate a download link – the url template is unset'
+  def make_url(path, template = nil)
+    if template.nil?
+      raise Error, 'unable to generate a download link' \
+        ' – the url template is unset' unless @url_template
+
+      raise Error, "#{path}: No such file or directory" unless @files.include? path
     end
 
-    unless @files.include? path
-      raise Error, "#{path}: No such file or directory"
-    end
-
-    # other variables are interpolated in scan()
-    @url_template.sub('$path', path)
+    (template || @url_template)
+      .sub('$path', path)
+      .sub('$commit', commit || 'master')
+      .sub('$version', @currentVersion || '0.0')
   end
 
   def parse_provides(provides, base)
@@ -350,19 +348,16 @@ private
 
       m = line.match PROVIDES_REGEX
 
-      platform, file, url = m[:platform], m[:file], m[:url]
+      platform, file, url_tpl = m[:platform], m[:file], m[:url]
       file = nil if file == this_file || file == '.'
 
-      if url.nil?
-        if file.nil?
-          url = make_url base
-        else
-          path = File.expand_path file, FS_ROOT + basedir.to_s
-          url = make_url path[FS_ROOT.size..-1]
-        end
+      if file.nil?
+        url = make_url base, url_tpl
+      elsif url_tpl.nil?
+        path = File.expand_path file, FS_ROOT + basedir.to_s
+        url = make_url path[FS_ROOT.size..-1]
       else
-        # for explicit urls which don't go through make_url
-        url.sub! '$path', file || base
+        url = make_url file, url_tpl
       end
 
       Source.new platform, file, url
