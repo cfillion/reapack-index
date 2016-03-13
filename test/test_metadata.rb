@@ -132,7 +132,7 @@ class TestMetadata < MiniTest::Test
       md.push_link :website, 'hello'
     end
 
-    assert_equal 'invalid URL: hello', error.message
+    assert_equal 'invalid URL or scheme: hello', error.message
     assert_equal after.chomp, before.to_s
   end
 

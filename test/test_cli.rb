@@ -27,7 +27,8 @@ module CLIUtils
       @git.config('user.email', 'john@doe.com')
 
       if options[:remote] != false
-        @git.add_remote 'origin', 'git@github.com:cfillion/test-repository.git'
+        options[:remote] ||= 'git@github.com:cfillion/test-repository.git'
+        @git.add_remote 'origin', options[:remote]
       end
 
       options[:setup].call if options.has_key? :setup
@@ -119,6 +120,7 @@ class TestCLI < MiniTest::Test
 
       assert_match 'Category/test2.lua', read_index
       assert_match "raw/#{@git.log(1).last.sha}/test1.lua", read_index
+      assert_match 'https://github.com/cfillion/test-repository/raw', read_index
 
       assert_match @git.log(1).last.date.utc.iso8601, read_index
     end
@@ -658,7 +660,7 @@ class TestCLI < MiniTest::Test
   def test_invalid_link
     wrapper ['--link', 'shinsekai yori', '--link', 'http://cfillion.tk'] do
       assert_output "1 new website link, empty index\n",
-          /warning: invalid url: shinsekai yori/i do
+          /warning: invalid url or scheme: shinsekai yori/i do
         assert_equal true, @indexer.run
       end
 
@@ -710,12 +712,17 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_weird_git_remote_url
+    wrapper [], remote: 'scp://hello.world/$path' do
+      _, stderr = capture_io { @indexer.run }
+      refute_match /invalid url/i, stderr
+      refute_match '$path', stderr
+    end
+  end
+
   def test_about
     opts = ['--about']
-
-    setup = proc {
-      opts << mkfile('README.md', '# Hello World')
-    }
+    setup = proc { opts << mkfile('README.md', '# Hello World') }
 
     wrapper opts, setup: setup do
       assert_output "1 modified metadata, empty index\n" do

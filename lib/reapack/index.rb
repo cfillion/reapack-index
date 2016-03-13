@@ -67,7 +67,7 @@ class ReaPack::Index
     :provides => [MetaHeader::OPTIONAL, PROVIDES_VALIDATOR]
   }.freeze
 
-  ROOT = File.expand_path('/').freeze
+  FS_ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :url_pattern
   attr_accessor :amend, :files, :time
@@ -82,6 +82,17 @@ class ReaPack::Index
     return if mh[:noindex]
 
     mh.validate HEADER_RULES
+  end
+
+  # @private
+  def self.validate_url(url, schemes)
+    uri = Addressable::URI.parse url
+
+    unless schemes.include? uri.scheme
+      raise Addressable::URI::InvalidURIError
+    end
+  rescue Addressable::URI::InvalidURIError
+    raise Error, "invalid URL or scheme: #{url}"
   end
 
   def initialize(path)
@@ -225,11 +236,14 @@ class ReaPack::Index
     if uri.path =~ /\A\/?([^\/]+)\/([^\/]+)\.git\Z/
       uri = uri.to_web_uri
       uri.path += '/raw/$commit/$path'
-    elsif not uri.request_uri.include? '$path'
-      raise ArgumentError, '$path cannot be found in this url pattern'
+    elsif not (uri.request_uri || uri.path).include? '$path'
+      raise Error, '$path placeholder is missing'
     end
 
-    @url_pattern = uri.to_s.freeze
+    pattern = uri.to_s.freeze
+    self.class.validate_url pattern, %w{http https file}
+
+    @url_pattern = pattern
   end
 
   def version
@@ -316,8 +330,7 @@ private
 
   def make_url(path)
     unless @url_pattern
-      raise Error,
-        "unable to create a the download link for #{path}: url pattern is unset"
+      raise Error, 'unable to generate a download link – the url pattern is unset'
     end
 
     unless @files.include? path
@@ -344,8 +357,8 @@ private
         if file.nil?
           url = make_url base
         else
-          path = File.expand_path file, ROOT + basedir.to_s
-          url = make_url path[ROOT.size..-1]
+          path = File.expand_path file, FS_ROOT + basedir.to_s
+          url = make_url path[FS_ROOT.size..-1]
         end
       else
         # for explicit urls which don't go through make_url

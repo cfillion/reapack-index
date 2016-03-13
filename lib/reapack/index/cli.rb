@@ -54,13 +54,14 @@ class ReaPack::Index::CLI
     end
 
     if remote = @git.remotes['origin']
-      @db.url_pattern = remote.url
+      begin
+        @db.url_pattern = remote.url
+      rescue ReaPack::Index::Error => e
+        warn '--url-pattern: ' + e.message if false
+      end
     end
 
-    do_name
-    do_about
-    eval_links
-    scan_commits
+    do_name; do_about; eval_links; scan_commits
 
     unless @db.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
