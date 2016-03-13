@@ -19,48 +19,48 @@ class TestIndex < MiniTest::Test
     assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.eel')
   end
 
-  def test_url_pattern
+  def test_url_template
     index = ReaPack::Index.new @dummy_path
-    assert_nil index.url_pattern
+    assert_nil index.url_template
 
-    index.url_pattern = 'https://get.cfillion.tk/?v=$version&f=$path'
-    assert_equal 'https://get.cfillion.tk/?v=$version&f=$path', index.url_pattern
+    index.url_template = 'https://get.cfillion.tk/?v=$version&f=$path'
+    assert_equal 'https://get.cfillion.tk/?v=$version&f=$path', index.url_template
 
-    index.url_pattern = 'https://google.com/$path'
-    assert_equal 'https://google.com/$path', index.url_pattern
+    index.url_template = 'https://google.com/$path'
+    assert_equal 'https://google.com/$path', index.url_template
 
     error = assert_raises ReaPack::Index::Error do
-      index.url_pattern = 'no path placeholder!'
+      index.url_template = 'no path placeholder!'
     end
 
     assert_match '$path', error.message
-    assert_equal 'https://google.com/$path', index.url_pattern
+    assert_equal 'https://google.com/$path', index.url_template
 
-    index.url_pattern = nil
-    assert_nil index.url_pattern
+    index.url_template = nil
+    assert_nil index.url_template
   end
 
-  def test_url_pattern_git_ssh
+  def test_url_template_git_ssh
     index = ReaPack::Index.new @dummy_path
 
-    index.url_pattern = 'git@github.com:User/Repo.git'
+    index.url_template = 'git@github.com:User/Repo.git'
     assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
-      index.url_pattern
+      index.url_template
   end
 
-  def test_url_pattern_git_https
+  def test_url_template_git_https
     index = ReaPack::Index.new @dummy_path
 
-    index.url_pattern = 'https://github.com/User/Repo.git'
+    index.url_template = 'https://github.com/User/Repo.git'
     assert_equal 'https://github.com/User/Repo/raw/$commit/$path',
-      index.url_pattern
+      index.url_template
   end
 
-  def test_url_pattern_unsupported_scheme
+  def test_url_template_unsupported_scheme
     index = ReaPack::Index.new @dummy_path
 
     error = assert_raises ReaPack::Index::Error do
-      index.url_pattern = 'scp://cfillion.tk/$path'
+      index.url_template = 'scp://cfillion.tk/$path'
     end
 
     assert_match /invalid url/i, error.message
@@ -138,7 +138,7 @@ class TestIndex < MiniTest::Test
     assert_empty index.files
 
     index.files = ['Category/Path/Instrument Track.lua']
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.scan index.files.first, <<-IN
       @version 1.0
       @changelog Hello World
@@ -174,7 +174,7 @@ class TestIndex < MiniTest::Test
     assert_empty index.files
 
     index.files = ['script.lua', 'Hello/World']
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.scan index.files.first, <<-IN
       @version 1.0
       @provides Hello/World
@@ -201,7 +201,7 @@ class TestIndex < MiniTest::Test
   def test_edit_version_amend_off
     index = ReaPack::Index.new @real_path
     assert_equal false, index.amend
-    index.url_pattern = 'http://google.com/$path'
+    index.url_template = 'http://google.com/$path'
 
     index.files = ['Category Name/Hello World.lua']
     index.scan index.files.first, <<-IN
@@ -218,7 +218,7 @@ class TestIndex < MiniTest::Test
     index.amend = true
     assert_equal true, index.amend
 
-    index.url_pattern = 'http://google.com/$path'
+    index.url_template = 'http://google.com/$path'
     index.files = ['Category Name/Hello World.lua']
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -249,7 +249,7 @@ class TestIndex < MiniTest::Test
   def test_edit_version_amend_unmodified
     index = ReaPack::Index.new @real_path
     index.amend = true
-    index.url_pattern = 'https://google.com/$path'
+    index.url_template = 'https://google.com/$path'
 
     index.files = ['Category Name/Hello World.lua']
     index.scan index.files.first, <<-IN
@@ -264,7 +264,7 @@ class TestIndex < MiniTest::Test
 
   def test_file_unlisted
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://google.com/$path'
+    index.url_template = 'http://google.com/$path'
 
     error = assert_raises ReaPack::Index::Error do
      index.scan 'unlisted.lua', <<-IN
@@ -283,7 +283,7 @@ class TestIndex < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
-  def test_make_url_without_pattern
+  def test_make_url_without_template
     index = ReaPack::Index.new @dummy_path
     index.files = ['script.lua']
 
@@ -293,13 +293,13 @@ class TestIndex < MiniTest::Test
      IN
     end
 
-    assert_match /url pattern is unset/i, error.message
+    assert_match /url template is unset/i, error.message
   end
 
   def test_make_url_defaut_branch
     index = ReaPack::Index.new @dummy_path
     index.files = ['Category/script.lua']
-    index.url_pattern = 'http://host/$commit/$path'
+    index.url_template = 'http://host/$commit/$path'
 
     index.commit = nil
 
@@ -327,7 +327,7 @@ class TestIndex < MiniTest::Test
   def test_make_url_commit
     index = ReaPack::Index.new @dummy_path
     index.files = ['Category/script.lua']
-    index.url_pattern = 'http://host/$commit/$path'
+    index.url_template = 'http://host/$commit/$path'
 
     index.commit = @commit
 
@@ -354,7 +354,7 @@ class TestIndex < MiniTest::Test
 
   def test_missing_version
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['test.lua']
 
     error = assert_raises ReaPack::Index::Error do
@@ -366,7 +366,7 @@ class TestIndex < MiniTest::Test
 
   def test_changelog_boolean
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['test.lua']
 
     error = assert_raises ReaPack::Index::Error do
@@ -381,7 +381,7 @@ class TestIndex < MiniTest::Test
 
   def test_author
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua']
 
     index.scan index.files.first, <<-IN
@@ -408,7 +408,7 @@ class TestIndex < MiniTest::Test
 
   def test_author_boolean
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['test.lua']
 
     error = assert_raises ReaPack::Index::Error do
@@ -423,7 +423,7 @@ class TestIndex < MiniTest::Test
 
   def test_author_multiline
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['test.lua']
 
     error = assert_raises ReaPack::Index::Error do
@@ -440,7 +440,7 @@ class TestIndex < MiniTest::Test
 
   def test_provides
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     index.files = [
       'Category/script.lua',
@@ -476,7 +476,7 @@ class TestIndex < MiniTest::Test
 
   def test_provides_unlisted
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     index.files = ['Category/script.lua']
 
@@ -493,7 +493,7 @@ class TestIndex < MiniTest::Test
 
   def test_provides_duplicate
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     error = assert_raises ReaPack::Index::Error do
      index.scan 'script.lua', <<-IN
@@ -510,7 +510,7 @@ class TestIndex < MiniTest::Test
 
   def test_provides_duplicate_platforms
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['script.lua', 'test.png', 'test.png']
 
     index.scan index.files.first, <<-IN
@@ -523,7 +523,7 @@ class TestIndex < MiniTest::Test
 
   def test_invalid_platform
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     error = assert_raises ReaPack::Index::Error do
       index.scan 'test.lua', <<-IN
@@ -539,7 +539,7 @@ class TestIndex < MiniTest::Test
 
   def test_provides_platform
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     index.files = [
       'Category/script.lua',
@@ -587,7 +587,7 @@ class TestIndex < MiniTest::Test
 
   def test_main_platform
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
 
     index.files = [
       'Category/script.lua',
@@ -701,7 +701,7 @@ class TestIndex < MiniTest::Test
 
   def test_version_time
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua']
 
     index.time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
@@ -834,7 +834,7 @@ class TestIndex < MiniTest::Test
 
   def test_effect
     index = ReaPack::Index.new @dummy_path
-    index.url_pattern = 'http://host/$path'
+    index.url_template = 'http://host/$path'
     index.files = ['Dynamics/super_compressor.jsfx']
 
     index.scan index.files.first, <<-IN

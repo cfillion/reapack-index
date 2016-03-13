@@ -14,6 +14,7 @@ class ReaPack::Index::CLI
     commit: nil,
     output: './index.xml',
     ignore: [],
+    url_template: 'auto',
   }.freeze
 
   def initialize(argv = [])
@@ -53,12 +54,13 @@ class ReaPack::Index::CLI
       return true
     end
 
-    if remote = @git.remotes['origin']
-      begin
-        @db.url_pattern = remote.url
-      rescue ReaPack::Index::Error => e
-        warn '--url-pattern: ' + e.message if false
-      end
+    begin
+      tpl = @opts[:url_template]
+      is_custom = tpl != DEFAULTS[:url_template]
+
+      @db.url_template = is_custom ? tpl : remote_url
+    rescue ReaPack::Index::Error => e
+      warn '--url-template: ' + e.message if is_custom
     end
 
     do_name; do_about; eval_links; scan_commits
@@ -352,6 +354,12 @@ private
     File.expand_path path, @git ? @git.workdir : Dir.pwd
   end
 
+  def remote_url
+    if remote = @git.remotes['origin']
+      remote.url
+    end
+  end
+
   def parse_options(args)
     opts = Hash.new
 
@@ -377,7 +385,12 @@ private
       end
 
       op.on '-n', '--name NAME', 'Set the name shown in ReaPack for this repository' do |name|
-        opts[:name] = name
+        opts[:name] = name.strip
+      end
+
+      op.on '-U', "--url-template TEMPLATE=#{DEFAULTS[:url_template]}",
+          'Set the template for implicit download links' do |tpl|
+        opts[:url_template] = tpl.strip
       end
 
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
@@ -392,10 +405,10 @@ private
 
       op.on '--donation-link LINK', 'Add or remove a donation link' do |link|
         opts[:links] ||= Array.new
-        opts[:links] << [:donation, link]
+        opts[:links] << [:donation, link.strip]
       end
 
-      op.on '--ls-links', 'Display the link list then exit' do |link|
+      op.on '--ls-links', 'Display the link list then exit' do
         opts[:lslinks] = true
       end
 

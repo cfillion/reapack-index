@@ -69,7 +69,7 @@ class ReaPack::Index
 
   FS_ROOT = File.expand_path('/').freeze
 
-  attr_reader :path, :url_pattern
+  attr_reader :path, :url_template
   attr_accessor :amend, :files, :time
 
   def self.type_of(path)
@@ -227,23 +227,23 @@ class ReaPack::Index
     log_change 'modified metadata' if old != @metadata.description
   end
 
-  def url_pattern=(pattern)
-    return @url_pattern = nil if pattern.nil?
+  def url_template=(tpl)
+    return @url_template = nil if tpl.nil?
 
-    uri = Gitable::URI.parse pattern
+    uri = Gitable::URI.parse tpl
     uri.normalize!
 
     if uri.path =~ /\A\/?([^\/]+)\/([^\/]+)\.git\Z/
       uri = uri.to_web_uri
       uri.path += '/raw/$commit/$path'
     elsif not (uri.request_uri || uri.path).include? '$path'
-      raise Error, '$path placeholder is missing'
+      raise Error, "$path placeholder is missing: #{tpl}"
     end
 
-    pattern = uri.to_s.freeze
-    self.class.validate_url pattern, %w{http https file}
+    tpl = uri.to_s.freeze
+    self.class.validate_url tpl, %w{http https file}
 
-    @url_pattern = pattern
+    @url_template = tpl
   end
 
   def version
@@ -329,8 +329,8 @@ private
   end
 
   def make_url(path)
-    unless @url_pattern
-      raise Error, 'unable to generate a download link – the url pattern is unset'
+    unless @url_template
+      raise Error, 'unable to generate a download link – the url template is unset'
     end
 
     unless @files.include? path
@@ -338,7 +338,7 @@ private
     end
 
     # other variables are interpolated in scan()
-    @url_pattern.sub('$path', path)
+    @url_template.sub('$path', path)
   end
 
   def parse_provides(provides, base)

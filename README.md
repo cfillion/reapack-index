@@ -30,6 +30,7 @@ Options:
     -c, --check                      Test every package including uncommited changes and exit
     -i, --ignore PATH                Don't check or index any file starting with PATH
     -n, --name NAME                  Set the name shown in ReaPack for this repository
+    -U, --url-template TEMPLATE=auto Set the template for implicit download links
     -o, --output FILE=./index.xml    Set the output filename and path for the index
     -l, --link LINK                  Add or remove a website link
         --donation-link LINK         Add or remove a donation link
