@@ -50,6 +50,14 @@ class TestIndex < MiniTest::Test
     assert_match /invalid url/i, error.message
   end
 
+  def test_files
+    index = ReaPack::Index.new @dummy_path
+    assert_empty index.files
+
+    index.files = ['a', 'b/c']
+    assert_equal ['a', 'b/c'], index.files
+  end
+
   def test_validate_standalone
     refute_nil ReaPack::Index.validate_file @real_path # not a valid script
   end
@@ -119,10 +127,9 @@ class TestIndex < MiniTest::Test
 
   def test_new_package
     index = ReaPack::Index.new @dummy_path
-    assert_empty index.files
-
     index.files = ['Category/Path/Instrument Track.lua']
     index.url_template = 'http://host/$path'
+
     index.scan index.files.first, <<-IN
       @version 1.0
       @changelog Hello World
@@ -155,10 +162,9 @@ class TestIndex < MiniTest::Test
 
   def test_default_category
     index = ReaPack::Index.new @dummy_path
-    assert_empty index.files
-
     index.files = ['script.lua', 'Hello/World']
     index.url_template = 'http://host/$path'
+
     index.scan index.files.first, <<-IN
       @version 1.0
       @provides Hello/World
@@ -185,9 +191,10 @@ class TestIndex < MiniTest::Test
   def test_edit_version_amend_off
     index = ReaPack::Index.new @real_path
     assert_equal false, index.amend
-    index.url_template = 'http://google.com/$path'
 
+    index.url_template = 'http://google.com/$path'
     index.files = ['Category Name/Hello World.lua']
+
     index.scan index.files.first, <<-IN
       @version 1.0
       @changelog New Changelog!
@@ -204,6 +211,7 @@ class TestIndex < MiniTest::Test
 
     index.url_template = 'http://google.com/$path'
     index.files = ['Category Name/Hello World.lua']
+
     index.scan index.files.first, <<-IN
       @version 1.0
       @changelog New Changelog!
@@ -233,9 +241,10 @@ class TestIndex < MiniTest::Test
   def test_edit_version_amend_unmodified
     index = ReaPack::Index.new @real_path
     index.amend = true
-    index.url_template = 'https://google.com/$path'
 
+    index.url_template = 'https://google.com/$path'
     index.files = ['Category Name/Hello World.lua']
+
     index.scan index.files.first, <<-IN
       @version 1.0
       @author cfillion
@@ -461,7 +470,6 @@ class TestIndex < MiniTest::Test
   def test_provides_unlisted
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-
     index.files = ['Category/script.lua']
 
     error = assert_raises ReaPack::Index::Error do
@@ -572,10 +580,7 @@ class TestIndex < MiniTest::Test
   def test_main_platform
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-
-    index.files = [
-      'Category/script.lua',
-    ]
+    index.files = ['Category/script.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -602,12 +607,9 @@ class TestIndex < MiniTest::Test
     assert_equal expected, File.read(@dummy_path)
   end
 
-  def test_source_custom_url
+  def test_provides_custom_url
     index = ReaPack::Index.new @dummy_path
-
-    index.files = [
-      'Category/script.lua',
-    ]
+    index.files = ['Category/script.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
