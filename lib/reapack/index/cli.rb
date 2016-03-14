@@ -167,8 +167,6 @@ private
           '--link'
         when :donation
           '--donation-link'
-        else
-          raise
         end
 
         warn "#{opt}: " + e.message
