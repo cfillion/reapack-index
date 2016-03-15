@@ -21,25 +21,28 @@ module CLIUtils
   end
 
   def wrapper(args = [], options = {})
-    Dir.mktmpdir('test-repository') do |path|
-      @git = Git.init path
-      @git.config('user.name', 'John Doe')
-      @git.config('user.email', 'john@doe.com')
+    path = Dir.mktmpdir 'test-repository'
+    old_pwd = Dir.pwd
 
-      if options[:remote] != false
-        options[:remote] ||= 'git@github.com:cfillion/test-repository.git'
-        @git.add_remote 'origin', options[:remote]
-      end
+    @git = Git.init path
+    @git.config('user.name', 'John Doe')
+    @git.config('user.email', 'john@doe.com')
 
-      options[:setup].call if options.has_key? :setup
-
-      @indexer = ReaPack::Index::CLI.new \
-        ['--no-progress', '--no-commit'] + args + ['--', path]
-
-      yield if block_given?
+    if options[:remote] != false
+      options[:remote] ||= 'git@github.com:cfillion/test-repository.git'
+      @git.add_remote 'origin', options[:remote]
     end
+
+    options[:setup].call if options.has_key? :setup
+
+    @indexer = ReaPack::Index::CLI.new \
+      ['--no-progress', '--no-commit'] + args + ['--', path]
+
+    yield if block_given?
   ensure
     @git = @indexer = nil
+    Dir.chdir old_pwd
+    FileUtils.rm_r path
   end
 
   def mkfile(file, content = String.new)
@@ -56,11 +59,6 @@ end
 
 class TestCLI < MiniTest::Test
   include CLIUtils
-
-  def teardown
-    # who is changing the working directory without restoring it?!
-    Dir.chdir File.dirname(__FILE__)
-  end
 
   def test_help
     assert_output /--help/, '' do
@@ -534,8 +532,6 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config_subdirectory
-    pwd = Dir.pwd
-
     wrapper do
       mkfile '.reapack-index.conf', '--help'
       mkfile 'Category/.gitkeep'
@@ -546,8 +542,6 @@ class TestCLI < MiniTest::Test
         ReaPack::Index::CLI.new
       end
     end
-  ensure
-    Dir.chdir pwd
   end
 
   def test_working_directory_with_options
@@ -555,22 +549,23 @@ class TestCLI < MiniTest::Test
       @git.add mkfile('README.md', '# Hello World')
       @git.commit 'initial commit'
 
-      begin
-        pwd = Dir.pwd
-        Dir.chdir @git.dir.to_s
+      Dir.chdir @git.dir.to_s
 
-        assert_output '', '' do
-          i2 = ReaPack::Index::CLI.new ['--no-commit', '--quiet']
-          i2.run
-        end
-      ensure
-        Dir.chdir pwd
+      assert_output '', '' do
+        i2 = ReaPack::Index::CLI.new ['--no-commit', '--quiet']
+        i2.run
       end
     end
   end
 
   def test_no_such_repository
-    assert_output '', /no such file or directory/i do
+    no_such_file = if RUBY_PLATFORM =~ /mingw32/
+      /cannot find the path specified/i
+    else
+      /no such file or directory/i
+    end
+
+    assert_output '', no_such_file do
       i = ReaPack::Index::CLI.new ['/hello/world']
       assert_equal false, i.run
     end
@@ -914,7 +909,6 @@ test2.lua contains invalid metadata:
   end
 
   def test_check_ignore
-    pwd = Dir.pwd
     setup = proc { Dir.chdir @git.dir.to_s }
 
     expected = <<-STDERR
@@ -933,8 +927,6 @@ Finished checks for 1 package with 0 failures
         @indexer.run
       end
     end
-  ensure
-    Dir.chdir pwd
   end
 
   def test_ignore_config
@@ -964,7 +956,6 @@ Finished checks for 1 package with 0 failures
   end
 
   def test_scan_ignore
-    pwd = Dir.pwd
     setup = proc { Dir.chdir @git.dir.to_s }
 
     wrapper ['--ignore=Hello', '--ignore=Chunky/Bacon.lua',
@@ -985,8 +976,6 @@ Finished checks for 1 package with 0 failures
       refute_match 'Chunky/Bacon.lua', read_index
       assert_match 'Directory/test2.lua', read_index
     end
-  ensure
-    Dir.chdir pwd
   end
 
   def test_noname
