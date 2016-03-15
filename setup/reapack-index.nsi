@@ -87,7 +87,7 @@ Section /o "Ruby for Windows" InstallRuby
 SectionEnd
 
 Section /o "Rugged (libgit2)" InstallRugged
-  nsExec::ExecToStack '"ruby" -e "print Gem::Platform.new(RUBY_PLATFORM)"'
+  nsExec::ExecToStack '"ruby" -e "print Gem::Platform.local"'
   Pop $0
   Pop $1
   !insertmacro StrRep $R2 "${RUGGED_FILE}" "%PLATFORM%" $1
