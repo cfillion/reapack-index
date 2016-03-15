@@ -260,9 +260,7 @@ class TestIndex < MiniTest::Test
     index.url_template = 'http://google.com/$path'
 
     error = assert_raises ReaPack::Index::Error do
-     index.scan 'unlisted.lua', <<-IN
-       @version 1.0
-     IN
+     index.scan 'unlisted.lua', '@version 1.0'
     end
 
     assert_equal 'unlisted.lua: No such file or directory', error.message
@@ -281,9 +279,7 @@ class TestIndex < MiniTest::Test
     index.files = ['script.lua']
 
     error = assert_raises ReaPack::Index::Error do
-     index.scan index.files.first, <<-IN
-       @version 1.0
-     IN
+     index.scan index.files.first, '@version 1.0'
     end
 
     assert_match /url template is unset/i, error.message
@@ -296,9 +292,7 @@ class TestIndex < MiniTest::Test
 
     index.commit = nil
 
-    index.scan index.files.first, <<-IN
-      @version 1.0
-    IN
+    index.scan index.files.first, '@version 1.0'
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -324,9 +318,7 @@ class TestIndex < MiniTest::Test
 
     index.commit = @commit
 
-    index.scan index.files.first, <<-IN
-      @version 1.0
-    IN
+    index.scan index.files.first, '@version 1.0'
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -692,9 +684,7 @@ class TestIndex < MiniTest::Test
 
     index.time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
 
-    index.scan index.files.first, <<-IN
-      @version 1.0
-    IN
+    index.scan index.files.first, '@version 1.0'
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -823,9 +813,7 @@ class TestIndex < MiniTest::Test
     index.url_template = 'http://host/$path'
     index.files = ['Dynamics/super_compressor.jsfx']
 
-    index.scan index.files.first, <<-IN
-      @version 1.0
-    IN
+    index.scan index.files.first, '@version 1.0'
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -842,6 +830,43 @@ class TestIndex < MiniTest::Test
 
     index.write!
     assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_sort_tags
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Hello/world.lua']
+
+    index.description = 'hello'
+
+    index.scan index.files.first, '@version 1.0'
+
+    index.write!
+    assert_match /<category.+<metadata>/m, File.read(@dummy_path)
+  end
+
+  def test_sort_categories
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['zebra/agent.lua', 'bee/agent.lua']
+
+    index.scan index.files.first, '@version 1.0'
+    index.scan index.files.last, '@version 1.0'
+
+    index.write!
+    assert_match /bee.+zebra/m, File.read(@dummy_path)
+  end
+
+  def test_sort_packages
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['zebra.lua', 'bee.lua']
+
+    index.scan index.files.first, '@version 1.0'
+    index.scan index.files.last, '@version 1.0'
+
+    index.write!
+    assert_match /bee.+zebra/m, File.read(@dummy_path)
   end
 
   def test_name

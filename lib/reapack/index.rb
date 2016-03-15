@@ -264,6 +264,9 @@ class ReaPack::Index
   end
 
   def write(path)
+    @doc.root.element_children.each {|n| sort n if n.name == 'category' }
+    sort @doc.root
+
     FileUtils.mkdir_p File.dirname(path)
     File.write path, @doc.to_xml
   end
@@ -352,5 +355,10 @@ private
 
       Source.new platform, file, url
     }
+  end
+
+  def sort(node)
+    sorted = node.children.sort_by{|n| n[:name].to_s }.sort_by {|n| n.name }
+    sorted.each {|n| node << n }
   end
 end
