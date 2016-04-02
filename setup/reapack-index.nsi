@@ -16,7 +16,8 @@
 !define PANDOC_URL \
   "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${PANDOC_FILE}"
 
-!define RUGGED_FILE "rugged-0.24.0b12-%PLATFORM%.gem"
+!define RUGGED_VERSION "0.24.0"
+!define RUGGED_FILE "rugged-${RUGGED_VERSION}-%PLATFORM%.gem"
 !define RUGGED_URL \
   "https://github.com/cfillion/reapack-index/releases/download/v${VERSION}/${RUGGED_FILE}"
 
@@ -122,7 +123,10 @@ SectionEnd
 
 Function .onInit
   !insertmacro RELOAD_PATH
-  nsExec::ExecToStack '"ruby" -e "require \"rugged\"'
+  nsExec::ExecToStack '"ruby" -e " \
+    spec = Gem::Specification.find_all_by_name(\"rugged\").first; \
+    req = Gem::Requirement.new(\"~> ${RUGGED_VERSION}\"); \
+    raise unless spec && req =~ spec.version'
   Pop $0
 
   StrCmp $0 "error" 0 +6 ; failed to launch ruby
