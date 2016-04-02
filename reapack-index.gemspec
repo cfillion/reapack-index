@@ -30,6 +30,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'gitable', '~> 0.3'
   spec.add_runtime_dependency 'metaheader', '~> 1.0'
   spec.add_runtime_dependency 'nokogiri', '~> 1.6'
-  spec.add_runtime_dependency 'pandoc-ruby', '~> 1.0'
+  spec.add_runtime_dependency 'pandoc-ruby', '~> 2.0'
   spec.add_runtime_dependency 'rugged', '~> 0.24'
 end
