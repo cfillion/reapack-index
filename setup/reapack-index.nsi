@@ -11,9 +11,10 @@
 !define RUBYINSTALLER_URL \
   "http://dl.bintray.com/oneclick/rubyinstaller/${RUBYINSTALLER_FILE}"
 
-!define PANDOC_FILE "pandoc-1.16.0.2-windows.msi"
+!define PANDOC_VERSION "1.17.0.2"
+!define PANDOC_FILE "pandoc-${PANDOC_VERSION}-windows.msi"
 !define PANDOC_URL \
-  "https://github.com/jgm/pandoc/releases/download/1.16.0.2/${PANDOC_FILE}"
+  "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${PANDOC_FILE}"
 
 !define RUGGED_FILE "rugged-0.24.0b12-%PLATFORM%.gem"
 !define RUGGED_URL \
