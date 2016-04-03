@@ -138,7 +138,7 @@ class ReaPack::Index
       @currentVersion = ver.name
 
       ver.author = mh[:author]
-      ver.time = @time if @time
+      ver.time = @time if @time && ver.is_new?
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do

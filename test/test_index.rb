@@ -209,6 +209,7 @@ class TestIndex < MiniTest::Test
     index.amend = true
     assert_equal true, index.amend
 
+    index.time = Time.now # must not be used
     index.url_template = 'http://google.com/$path'
     index.files = ['Category Name/Hello World.lua']
 
