@@ -125,6 +125,12 @@ Author: Christian Fillion
 
 Changelog:
   Added an alternate syntax for metadata tags
+
+/**
+ * Changelog:
+ * v1.0 (2015-12-22)
+  + Support Wordpress-like changelog syntax
+ */
 ```
 
 **@provides**
