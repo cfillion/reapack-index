@@ -25,8 +25,11 @@ module CLIUtils
     old_pwd = Dir.pwd
 
     @git = Git.init path
-    @git.config('user.name', 'John Doe')
-    @git.config('user.email', 'john@doe.com')
+    @git.config 'user.name', 'John Doe'
+    @git.config 'user.email', 'john@doe.com'
+
+    # improves performance a lot when gpgsign is enabled in the global git config
+    @git.config 'commit.gpgsign', 'false'
 
     if options[:remote] != false
       options[:remote] ||= 'git@github.com:cfillion/test-repository.git'
