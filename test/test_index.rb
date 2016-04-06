@@ -627,6 +627,23 @@ class TestIndex < MiniTest::Test
     assert_equal expected, File.read(@dummy_path)
   end
 
+  def test_provides_spaces
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/hello world.lua']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        hello world.lua
+    IN
+
+    index.write!
+
+    result = File.read @dummy_path
+    assert_match 'hello world.lua', result
+  end
+
   def test_provides_empty
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
