@@ -122,7 +122,7 @@ class TestIndex < MiniTest::Test
 <index version="1"/>
     XML
 
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_new_package
@@ -170,22 +170,10 @@ class TestIndex < MiniTest::Test
       @provides Hello/World
     IN
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Other">
-    <reapack name="script.lua" type="script">
-      <version name="1.0">
-        <source platform="all">http://host/script.lua</source>
-        <source platform="all" file="Hello/World">http://host/Hello/World</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(index.path)
+    result = File.read index.path
+    assert_match '<category name="Other">', result
+    assert_match 'file="Hello/World"', result
   end
 
   def test_edit_version_amend_off
@@ -295,47 +283,21 @@ class TestIndex < MiniTest::Test
 
     index.scan index.files.first, '@version 1.0'
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0">
-        <source platform="all">http://host/master/Category/script.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_match 'http://host/master/Category/script.lua', File.read(index.path)
   end
 
   def test_make_url_commit
     index = ReaPack::Index.new @dummy_path
     index.files = ['Category/script.lua']
     index.url_template = 'http://host/$commit/$path'
-
     index.commit = @commit
 
     index.scan index.files.first, '@version 1.0'
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@commit}">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0">
-        <source platform="all">http://host/#{@commit}/Category/script.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_match "http://host/#{@commit}/Category/script.lua",
+      File.read(index.path)
   end
 
   def test_missing_version
@@ -375,21 +337,8 @@ class TestIndex < MiniTest::Test
       @author cfillion
     IN
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0" author="cfillion">
-        <source platform="all">http://host/Category/script.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(index.path)
+    assert_match '<version name="1.0" author="cfillion">', File.read(index.path)
   end
 
   def test_author_boolean
@@ -457,7 +406,7 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_provides_not_found
@@ -567,7 +516,7 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_main_platform
@@ -597,7 +546,7 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_provides_custom_url
@@ -610,21 +559,9 @@ class TestIndex < MiniTest::Test
         script.lua http://google.com/download/$commit/$version/$path
     IN
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0">
-        <source platform="all">http://google.com/download/master/1.0/Category/script.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_match 'http://google.com/download/master/1.0/Category/script.lua',
+      File.read(index.path)
   end
 
   def test_provides_spaces
@@ -710,26 +647,13 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua']
-
     index.time = Time.new 2016, 2, 11, 20, 16, 40, -5 * 3600
 
     index.scan index.files.first, '@version 1.0'
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0" time="2016-02-12T01:16:40Z">
-        <source platform="all">http://host/Category/script.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write!
-    assert_equal expected, File.read(index.path)
+    assert_match '<version name="1.0" time="2016-02-12T01:16:40Z">',
+      File.read(index.path)
   end
 
   def test_add_anonymous_link
@@ -763,12 +687,13 @@ class TestIndex < MiniTest::Test
 </index>
     XML
 
-    index.write @dummy_path
-    assert_equal expected, File.read(@dummy_path)
+    index.write!
+    assert_equal expected, File.read(index.path)
   end
 
   def test_edit_link
     index = ReaPack::Index.new @dummy_path
+
     index.eval_link :website, 'Test=http://test.com'
     index.eval_link :website, 'Test=http://test.com'
     assert_equal '1 new website link, empty index', index.changelog
@@ -782,13 +707,16 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @dummy_path
     index.eval_link :website, 'Test=http://test.com'
     index.eval_link :website, '-Test'
+
     assert_equal '1 new website link, 1 removed website link, empty index', index.changelog
   end
 
   def test_remove_link_by_url
     index = ReaPack::Index.new @dummy_path
+
     index.eval_link :website, 'Test=http://test.com'
     index.eval_link :website, '-http://test.com'
+
     assert_equal '1 new website link, 1 removed website link, empty index', index.changelog
   end
 
@@ -834,7 +762,7 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_effect
@@ -858,7 +786,7 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 
   def test_sort_tags
@@ -871,7 +799,7 @@ class TestIndex < MiniTest::Test
     index.scan index.files.first, '@version 1.0'
 
     index.write!
-    assert_match /<category.+<metadata>/m, File.read(@dummy_path)
+    assert_match /<category.+<metadata>/m, File.read(index.path)
   end
 
   def test_sort_categories
@@ -883,7 +811,7 @@ class TestIndex < MiniTest::Test
     index.scan index.files.last, '@version 1.0'
 
     index.write!
-    assert_match /bee.+zebra/m, File.read(@dummy_path)
+    assert_match /bee.+zebra/m, File.read(index.path)
   end
 
   def test_sort_packages
@@ -895,7 +823,7 @@ class TestIndex < MiniTest::Test
     index.scan index.files.last, '@version 1.0'
 
     index.write!
-    assert_match /bee.+zebra/m, File.read(@dummy_path)
+    assert_match /bee.+zebra/m, File.read(index.path)
   end
 
   def test_name
@@ -917,6 +845,6 @@ class TestIndex < MiniTest::Test
     XML
 
     index.write!
-    assert_equal expected, File.read(@dummy_path)
+    assert_equal expected, File.read(index.path)
   end
 end
