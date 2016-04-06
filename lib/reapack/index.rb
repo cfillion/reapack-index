@@ -336,7 +336,9 @@ private
     basename = File.basename path
     basedir = dirname path
 
-    provides.to_s.lines.map {|line|
+    return [] unless provides.is_a? String
+
+    provides.lines.map {|line|
       line.chomp!
 
       m = line.match PROVIDES_REGEX

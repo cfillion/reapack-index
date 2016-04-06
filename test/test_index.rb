@@ -460,7 +460,7 @@ class TestIndex < MiniTest::Test
     assert_equal expected, File.read(@dummy_path)
   end
 
-  def test_provides_unlisted
+  def test_provides_not_found
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua']
@@ -625,6 +625,17 @@ class TestIndex < MiniTest::Test
 
     index.write!
     assert_equal expected, File.read(@dummy_path)
+  end
+
+  def test_provides_empty
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/hello.lua']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+    IN
   end
 
   def test_remove
