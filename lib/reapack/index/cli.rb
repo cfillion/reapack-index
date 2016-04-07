@@ -93,7 +93,7 @@ private
     if @opts[:verbose]
       sha = commit.oid[0..6]
       message = commit.message.lines.first.chomp
-      log "processing %s: %s" % [sha, message]
+      log 'processing %s: %s' % [sha, message]
     end
 
     @db.commit = commit.oid
@@ -134,7 +134,7 @@ private
       blob = @git.lookup file[:oid]
 
       begin
-        @db.scan file[:path], blob.content.force_encoding("UTF-8")
+        @db.scan file[:path], blob.content.force_encoding('UTF-8')
       rescue ReaPack::Index::Error => e
         warn "#{file[:path]}: #{e.message}"
       end
@@ -188,8 +188,8 @@ private
     @db.name = @opts[:name] if @opts[:name]
 
     if @db.name.empty?
-      warn "The name of this index is unset. " \
-        "Run the following command with a name of your choice:" \
+      warn 'The name of this index is unset. ' \
+        'Run the following command with a name of your choice:' \
         "\n  #{$0} --name 'FooBar Scripts'"
     end
   rescue ReaPack::Index::Error => e
@@ -250,7 +250,7 @@ private
     unless @opts[:quiet]
       $stderr.puts "\n"
 
-      $stderr.puts "Finished checks for %d package%s with %d failure%s" % [
+      $stderr.puts 'Finished checks for %d package%s with %d failure%s' % [
         count, count == 1 ? '' : 's',
         failures.size, failures.size == 1 ? '' : 's'
       ]
