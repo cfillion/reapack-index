@@ -859,7 +859,9 @@ class TestCLI < MiniTest::Test
 Finished checks for 2 packages with 0 failures
     STDERR
 
-    wrapper ['--check'] do
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    wrapper ['--check'], setup: setup do
       mkfile 'test1.lua', '@version 1.0'
       mkfile 'test2.lua', '@version 1.0'
 
@@ -880,7 +882,9 @@ test1.lua contains invalid metadata:
 Finished checks for 2 packages with 1 failure
     STDERR
 
-    wrapper ['--check'] do
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    wrapper ['--check'], setup: setup do
       mkfile 'test1.lua', '@author'
       mkfile 'test2.lua', '@version 1.0'
 
@@ -900,7 +904,9 @@ test2.lua contains invalid metadata:
   - missing tag "version"
     STDERR
 
-    wrapper ['--check', '--quiet'] do
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    wrapper ['--check', '--quiet'], setup: setup do
       mkfile 'test1.lua', '@author'
       mkfile 'test2.lua'
       mkfile 'test3.lua', '@version 1.0'
@@ -912,7 +918,10 @@ test2.lua contains invalid metadata:
   end
 
   def test_check_ignore
-    setup = proc { Dir.chdir @git.dir.to_s }
+    setup = proc {
+      Dir.chdir @git.dir.to_s
+      mkfile 'index.xml', '<index name="test"/>'
+    }
 
     expected = <<-STDERR
 .
@@ -932,7 +941,7 @@ Finished checks for 1 package with 0 failures
     end
   end
 
-  def test_ignore_config
+  def test_check_ignore_from_config
     expected = <<-STDERR
 .
 
@@ -945,6 +954,8 @@ Finished checks for 1 package with 0 failures
 --ignore=Chunky/Bacon.lua
 --ignore=test2.lua
       CONFIG
+
+      mkfile 'index.xml', '<index name="test"/>'
     }
 
     wrapper ['--check'], setup: setup do
@@ -953,6 +964,14 @@ Finished checks for 1 package with 0 failures
       mkfile 'Directory/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
+        @indexer.run
+      end
+    end
+  end
+
+  def test_check_unset_name
+    wrapper ['--check'] do
+      assert_output nil, /The name of this index is unset/i do
         @indexer.run
       end
     end
@@ -981,7 +1000,7 @@ Finished checks for 1 package with 0 failures
     end
   end
 
-  def test_noname
+  def test_unset_name_warning
     wrapper do
       _, stderr = capture_io do
         assert_equal true, @indexer.run

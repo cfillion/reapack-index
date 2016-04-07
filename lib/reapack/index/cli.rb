@@ -186,14 +186,17 @@ private
 
   def do_name
     @db.name = @opts[:name] if @opts[:name]
+    check_name
+  rescue ReaPack::Index::Error => e
+    warn '--name: ' + e.message
+  end
 
+  def check_name
     if @db.name.empty?
       warn 'The name of this index is unset. ' \
         'Run the following command with a name of your choice:' \
         "\n  #{File.basename $0} --name 'FooBar Scripts'"
     end
-  rescue ReaPack::Index::Error => e
-    warn '--name: ' + e.message
   end
 
   def do_about
@@ -215,6 +218,8 @@ private
   end
 
   def check
+    check_name
+
     failures = []
     root = @git.workdir
 
