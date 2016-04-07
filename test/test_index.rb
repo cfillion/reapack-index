@@ -206,8 +206,8 @@ class TestIndex < MiniTest::Test
       @changelog Intermediate Changelog!
     IN
 
-    # index the same file a second time, the changelog is expected to
-    # only have been bumped a single time
+    # when reindexing the same file a second time,
+    # the changelog is expected to only have been bumped a single time
     index.scan index.files.first, <<-IN
       @version 1.0
       @changelog New Changelog!
