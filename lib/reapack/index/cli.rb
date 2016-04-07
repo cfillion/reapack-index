@@ -369,8 +369,10 @@ private
   end
 
   def ignored?(path)
+    path = path + '/'
+
     @opts[:ignore].each {|pattern|
-      return true if path.start_with? pattern
+      return true if path.start_with? pattern + '/'
     }
 
     false

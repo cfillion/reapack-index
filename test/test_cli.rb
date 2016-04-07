@@ -905,10 +905,11 @@ test2.lua contains invalid metadata:
 Finished checks for 1 package with 0 failures
     STDERR
 
-    wrapper ['--check', '--ignore=Hello',
-             '--ignore=Chunky/Bacon.lua', '--ignore=test2.lua'], setup: setup do
+    wrapper ['--check', '--ignore=Hello', '--ignore=Chunky/Bacon.lua',
+             '--ignore=test2.lua', '--ignore=Directory/test'], setup: setup do
       mkfile 'Hello/World.lua', 'konnichiwa'
       mkfile 'Chunky/Bacon.lua', 'konnichiwa'
+      mkfile 'Directory/test/1.lua', 'konnichiwa'
       mkfile 'Directory/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
