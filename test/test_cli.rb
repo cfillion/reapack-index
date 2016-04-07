@@ -1090,4 +1090,18 @@ Finished checks for 2 packages with 1 failure
   def test_scan_no_arguments
     wrapper ['--scan'] do; end
   end
+
+  def test_scan_check_mutally_exclusive
+    wrapper ['--check', '--scan'] do
+      _, stderr = capture_io { @indexer.run }
+      refute_match /finished checks/i, stderr
+      read_index # index exists
+    end
+
+    wrapper ['--scan', '--check'] do
+      _, stderr = capture_io { @indexer.run }
+      assert_match /finished checks/i, stderr
+      assert_raises(Errno::ENOENT) { read_index }
+    end
+  end
 end

@@ -7,6 +7,7 @@ class ReaPack::Index::CLI
   ].freeze
 
   DEFAULTS = {
+    check: false,
     verbose: false,
     warnings: true,
     progress: true,
@@ -51,6 +52,7 @@ class ReaPack::Index::CLI
       end
 
       op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or a specific commit' do |commit|
+        opts[:check] = false
         opts[:scan] = commit.strip if commit
       end
 
