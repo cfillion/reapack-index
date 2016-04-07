@@ -88,6 +88,7 @@ class ReaPack::Index
   def initialize(path)
     @amend = false
     @changes = {}
+    @changed_nodes = []
     @files = []
     @path = path
 
@@ -155,17 +156,15 @@ class ReaPack::Index
 
     log_change 'new category', 'new categories' if cat.is_new?
 
-    if pkg.is_new?
-      log_change 'new package'
-    elsif pkg.modified?
-      log_change 'modified package'
+    if pkg.modified? && !@changed_nodes.include?(pkg.node)
+      log_change "#{pkg.is_new? ? 'new' : 'modified'} package"
+      @changed_nodes << pkg.node
     end
 
     pkg.versions.each {|ver|
-      if ver.is_new?
-        log_change 'new version'
-      elsif ver.modified?
-        log_change 'modified version'
+      if ver.modified? && !@changed_nodes.include?(ver.node)
+        log_change "#{ver.is_new? ? 'new' : 'modified'} version"
+        @changed_nodes << ver.node
       end
     }
   rescue Error
