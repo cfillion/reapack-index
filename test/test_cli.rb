@@ -977,6 +977,32 @@ Finished checks for 1 package with 0 failures
     end
   end
 
+  def test_check_verbose
+    expected = <<-STDERR
+Path/To/test1.lua: failed
+test2.lua: passed
+
+Path/To/test1.lua contains invalid metadata:
+  - missing tag "version"
+  - invalid value for tag "author"
+
+Finished checks for 2 packages with 1 failure
+    STDERR
+
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    _, stderr = capture_io do
+      wrapper ['--check', '--verbose'], setup: setup do
+        mkfile 'Path/To/test1.lua', '@author'
+        mkfile 'test2.lua', '@version 1.0'
+
+        assert_equal false, @indexer.run
+      end
+    end
+
+    assert_match expected, stderr
+  end
+
   def test_scan_ignore
     setup = proc { Dir.chdir @git.dir.to_s }
 

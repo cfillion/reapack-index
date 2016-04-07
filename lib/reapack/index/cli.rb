@@ -234,18 +234,26 @@ private
       count += 1
 
       if errors
-        $stderr.print 'F' unless @opts[:quiet]
+        if @opts[:verbose]
+          $stderr.puts '%s: failed' % relative_path(file)
+        elsif !@opts[:quiet]
+          $stderr.print 'F'
+        end
+
         prefix = "\n  - "
-        file[0..root.size-1] = ''
 
         failures << "%s contains invalid metadata:#{prefix}%s" %
-          [file, errors.join(prefix)]
+          [relative_path(file), errors.join(prefix)]
       else
-        $stderr.print '.' unless @opts[:quiet]
+        if @opts[:verbose]
+          $stderr.puts '%s: passed' % relative_path(file)
+        elsif !@opts[:quiet]
+          $stderr.print '.'
+        end
       end
     }
 
-    $stderr.puts "\n" unless @opts[:quiet]
+    $stderr.puts "\n" unless @opts[:quiet] || @opts[:verbose]
 
     failures.each_with_index {|msg, index|
       $stderr.puts unless @opts[:quiet] && index == 0
@@ -281,11 +289,8 @@ private
       old_index.clear
     end
 
-    root = Pathname.new @git.workdir
-    file = Pathname.new @db.path
-
     index = @git.index
-    index.add file.relative_path_from(root).to_s
+    index.add relative_path(@db.path)
 
     Rugged::Commit.create @git, \
       tree: index.write_tree(@git),
@@ -346,6 +351,13 @@ private
     # expand from the repository root or from the current directory if
     # the repository is not yet initialized
     File.expand_path path, @git ? @git.workdir : Dir.pwd
+  end
+
+  def relative_path(path)
+    root = Pathname.new @git.workdir
+    file = Pathname.new path
+
+    file.relative_path_from(root).to_s
   end
 
   def auto_url_tpl
