@@ -253,64 +253,36 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_index_from_invalid
-    setup = proc {
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.commit 'initial commit'
+  def test_index_from_invalid_commit
+    # ensures that the indexer doesn't crash if it encounters
+    # an invalid commit marker in the index file
 
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hello" commit="hello world"/>
-      XML
-    }
+    [
+      'hello world', '0000000000000000000000000000000000000000',
+      '0000000000000000000000000000000000000deadbeef'
+    ].each {|hash|
+      setup = proc {
+        @git.add mkfile('test1.lua', '@version 1.0')
+        @git.commit 'initial commit'
 
-    wrapper [], setup: setup do
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
+        mkfile 'index.xml', <<-XML
+  <?xml version="1.0" encoding="utf-8"?>
+  <index version="1" name="hello" commit="#{hash}"/>
+        XML
+      }
 
-      assert_output nil, '' do
-        assert_equal true, @indexer.run
+      wrapper [], setup: setup do
+        @git.add mkfile('test2.lua', '@version 1.0')
+        @git.commit 'second commit'
+
+        assert_output nil, '' do
+          assert_equal true, @indexer.run
+        end
+
+        assert_match 'test1.lua', read_index
+        assert_match 'test2.lua', read_index
       end
-
-      assert_match 'test1.lua', read_index
-      assert_match 'test2.lua', read_index
-    end
-  end
-
-  def test_index_from_inexistent
-    setup = proc {
-      @git.add mkfile('test.lua', '@version 1.0')
-      @git.commit 'initial commit'
-
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="0000000000000000000000000000000000000000"/>
-      XML
     }
-
-    wrapper [], setup: setup do
-      assert_output nil, nil do
-        assert_equal true, @indexer.run
-      end
-    end
-  end
-
-  def test_index_from_long_hash
-    setup = proc {
-      @git.add mkfile('test.lua', '@version 1.0')
-      @git.commit 'initial commit'
-
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="0000000000000000000000000000000000000deadbeef"/>
-      XML
-    }
-
-    wrapper [], setup: setup do
-      assert_output nil, nil do
-        assert_equal true, @indexer.run
-      end
-    end
   end
 
   def test_no_amend
@@ -1058,5 +1030,45 @@ Finished checks for 2 packages with 1 failure
       refute_match /The name of this index is unset/i, stderr
       assert_match /invalid name: 'Hello\/World'/i, stderr
     end
+  end
+
+  def test_scan_specific_commit
+    options = ['--scan']
+
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 2.0')
+      @git.commit 'initial commit'
+
+      @git.add mkfile('test2.lua', '@version 1.0')
+      @git.commit 'second commit'
+      options << @git.log(1).last.sha
+
+      @git.add mkfile('test3.lua', '@version 1.1')
+      @git.commit 'third commit'
+    }
+
+    wrapper options, setup: setup do
+      capture_io { assert_equal true, @indexer.run }
+
+      refute_match 'test1.lua', read_index, 'The initial commit was scanned'
+      assert_match 'test2.lua', read_index
+      refute_match 'test3.lua', read_index, 'The third commit was scanned'
+    end
+  end
+
+  def test_scan_invalid_hashs
+    [
+      'hello world', '0000000000000000000000000000000000000000',
+      '0000000000000000000000000000000000000deadbeef'
+    ].each {|hash|
+      wrapper ['--scan', hash] do
+        @git.add mkfile('README.md')
+        @git.commit 'initial commit'
+
+        assert_output nil, /--scan: bad revision: #{Regexp.escape hash}/i do
+          assert_equal false, @indexer.run
+        end
+      end
+    }
   end
 end

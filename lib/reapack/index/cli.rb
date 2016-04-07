@@ -1,5 +1,7 @@
 class ReaPack::Index::CLI
   def initialize(argv = [])
+    @done = @total = 0
+
     @opts = parse_options(argv)
     path = argv.last || Dir.pwd
 
@@ -49,7 +51,7 @@ class ReaPack::Index::CLI
 
     unless @db.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
-      return true
+      return success_code
     end
 
     # changelog will be cleared by Index#write!
@@ -59,13 +61,27 @@ class ReaPack::Index::CLI
     @db.write!
     commit changelog
 
-    true
+    success_code
   end
 
 private
+  def success_code
+    @exit.nil? ? true : @exit
+  end
+
   def scan_commits
     if @git.empty?
       warn 'The current branch does not contains any commit.'
+      return
+    elsif @opts[:scan]
+      if has_commit? @opts[:scan]
+        commit = @git.lookup @opts[:scan]
+        process commit
+      else
+        $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
+        @exit = false
+      end
+
       return
     end
 
@@ -74,9 +90,7 @@ private
     walker.push @git.head.target_id
 
     last_commit = @db.commit.to_s
-    if Rugged.valid_full_oid?(last_commit) && last_commit.size <= 40
-      walker.hide last_commit if @git.include? last_commit
-    end
+    walker.hide last_commit if has_commit? last_commit
 
     commits = walker.each.to_a
 
@@ -89,9 +103,13 @@ private
     end
   end
 
+  def has_commit?(hash)
+    hash.size <= 40 && Rugged.valid_full_oid?(hash) && @git.include?(hash)
+  end
+
   def process(commit)
     if @opts[:verbose]
-      sha = commit.oid[0..6]
+      sha = commit.oid[0...7]
       message = commit.message.lines.first.chomp
       log 'processing %s: %s' % [sha, message]
     end

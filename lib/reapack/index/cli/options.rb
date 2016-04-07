@@ -54,6 +54,10 @@ class ReaPack::Index::CLI
         opts[:check] = true
       end
 
+      op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or a specific commit' do |commit|
+        opts[:scan] = commit.strip
+      end
+
       op.on '-i', '--ignore PATH', "Don't check or index any file starting with PATH" do |path|
         opts[:ignore] ||= []
         opts[:ignore] << expand_path(path)
