@@ -72,8 +72,7 @@ private
       warn 'The current branch does not contains any commit.'
       return
     elsif @opts[:scan]
-      if has_commit? @opts[:scan]
-        commit = @git.lookup @opts[:scan]
+      if commit = find_commit(@opts[:scan])
         progress_wrapper(1) { process commit }
       else
         $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
@@ -88,7 +87,7 @@ private
     walker.push @git.head.target_id
 
     last_commit = @db.commit.to_s
-    walker.hide last_commit if has_commit? last_commit
+    walker.hide last_commit if find_commit last_commit
 
     commits = walker.each.to_a
 
@@ -101,8 +100,13 @@ private
     end
   end
 
-  def has_commit?(hash)
-    hash.size <= 40 && Rugged.valid_full_oid?(hash) && @git.include?(hash)
+  def find_commit(hash)
+    if hash.size.between?(7, 40) && @git.include?(hash)
+      object = @git.lookup hash
+      object if object.is_a? Rugged::Commit
+    end
+  rescue Rugged::InvalidError
+    nil
   end
 
   def process(commit)

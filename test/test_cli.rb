@@ -1057,6 +1057,20 @@ Finished checks for 2 packages with 1 failure
     end
   end
 
+  def test_scan_short_hash
+    options = ['--scan']
+
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 2.0')
+      @git.commit 'initial commit'
+      options << @git.log(1).last.sha[0..7]
+    }
+
+    wrapper options, setup: setup do
+      capture_io { assert_equal true, @indexer.run }
+    end
+  end
+
   def test_scan_invalid_hashs
     [
       'hello world', '0000000000000000000000000000000000000000',
