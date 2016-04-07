@@ -1033,7 +1033,8 @@ Finished checks for 2 packages with 1 failure
   end
 
   def test_scan_specific_commit
-    options = ['--scan']
+    # --progress to check for FloatDomainError: Infinity errors
+    options = ['--progress', '--scan']
 
     setup = proc {
       @git.add mkfile('test1.lua', '@version 2.0')

@@ -1,7 +1,5 @@
 class ReaPack::Index::CLI
   def initialize(argv = [])
-    @done = @total = 0
-
     @opts = parse_options(argv)
     path = argv.last || Dir.pwd
 
@@ -76,7 +74,7 @@ private
     elsif @opts[:scan]
       if has_commit? @opts[:scan]
         commit = @git.lookup @opts[:scan]
-        process commit
+        progress_wrapper(1) { process commit }
       else
         $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
         @exit = false
@@ -97,9 +95,9 @@ private
     @done, @total = 0, commits.size
 
     unless commits.empty?
-      print_progress
-      commits.each {|commit| process commit }
-      $stderr.print "\n" if @add_nl
+      progress_wrapper commits.size do
+        commits.each {|commit| process commit }
+      end
     end
   end
 
@@ -345,6 +343,13 @@ private
     end
 
     $stderr.puts "Warning: #{line}".yellow
+  end
+
+  def progress_wrapper(total, &block)
+    @done, @total = 0, total
+    print_progress
+    block[]
+    $stderr.print "\n" if @add_nl
   end
 
   def print_progress
