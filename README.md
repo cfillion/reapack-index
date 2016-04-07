@@ -1,4 +1,4 @@
-# Package indexer for ReaPack-based repositories
+# Package indexer for git-based ReaPack repositories
 
 Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillion/reapack)  
 Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion/metaheader)

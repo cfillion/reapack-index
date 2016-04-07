@@ -41,7 +41,7 @@ class ReaPack::Index::CLI
     OptionParser.new do |op|
       op.program_name = PROGRAM_NAME
       op.version = ReaPack::Index::VERSION
-      op.banner = "Package indexer for ReaPack-based repositories\n" +
+      op.banner = 'Package indexer for git-based ReaPack repositories' +
         "Usage: #{PROGRAM_NAME} [options] [directory]"
 
       op.separator 'Options:'
