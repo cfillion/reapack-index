@@ -27,7 +27,7 @@ reapack-index [options] [path-to-your-repository]
 ```
 Modes:
     -c, --check                      Test every package including uncommited changes and exit
-    -s, --scan [COMMIT]              Scan new commits (default) or a specific commit
+    -s, --scan [COMMIT]              Scan new commits (default) or specific commits
 Indexer options:
     -a, --[no-]amend                 Reindex existing versions
     -i, --ignore PATH                Don't check or index any file starting with PATH

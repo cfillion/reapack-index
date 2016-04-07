@@ -71,27 +71,25 @@ private
     if @git.empty?
       warn 'The current branch does not contains any commit.'
       return
-    elsif @opts[:scan]
-      if commit = find_commit(@opts[:scan])
-        progress_wrapper(1) { process commit }
-      else
-        $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
-        @exit = false
-      end
-
-      return
     end
+    if @opts[:scan]
+      commits = @opts[:scan].map {|hash|
+        find_commit hash or begin
+          $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
+          @exit = false
+          nil
+        end
+      }.compact
+    else
+      walker = Rugged::Walker.new @git
+      walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
+      walker.push @git.head.target_id
 
-    walker = Rugged::Walker.new @git
-    walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
-    walker.push @git.head.target_id
+      last_commit = @db.commit.to_s
+      walker.hide last_commit if find_commit last_commit
 
-    last_commit = @db.commit.to_s
-    walker.hide last_commit if find_commit last_commit
-
-    commits = walker.each.to_a
-
-    @done, @total = 0, commits.size
+      commits = walker.each.to_a
+    end
 
     unless commits.empty?
       progress_wrapper commits.size do
@@ -130,8 +128,7 @@ private
 
     diff.each_delta {|delta| index delta, parent.nil? }
   ensure
-    @done += 1
-    print_progress
+    bump_progress
   end
 
   def index(delta, is_initial)
@@ -354,6 +351,11 @@ private
     print_progress
     block[]
     $stderr.print "\n" if @add_nl
+  end
+
+  def bump_progress
+    @done += 1
+    print_progress
   end
 
   def print_progress

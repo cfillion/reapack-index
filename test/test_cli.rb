@@ -1061,6 +1061,31 @@ Finished checks for 2 packages with 1 failure
     end
   end
 
+  def test_repeat_scan
+    options = ['--scan', nil, '--scan', nil]
+
+    setup = proc {
+      @git.add mkfile('test1.lua', '@version 2.0')
+      @git.commit 'initial commit'
+
+      @git.add mkfile('test2.lua', '@version 1.0')
+      @git.commit 'second commit'
+      options[1] = @git.log(1).last.sha
+
+      @git.add mkfile('test3.lua', '@version 1.1')
+      @git.commit 'third commit'
+      options[3] = @git.log(1).last.sha
+    }
+
+    wrapper options, setup: setup do
+      capture_io { assert_equal true, @indexer.run }
+
+      refute_match 'test1.lua', read_index, 'The initial commit was scanned'
+      assert_match 'test2.lua', read_index
+      assert_match 'test3.lua', read_index
+    end
+  end
+
   def test_scan_short_hash
     options = ['--scan']
 

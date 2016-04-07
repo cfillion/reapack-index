@@ -51,9 +51,13 @@ class ReaPack::Index::CLI
         opts[:check] = true
       end
 
-      op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or a specific commit' do |commit|
+      op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or specific commits' do |commit|
         opts[:check] = false
-        opts[:scan] = commit.strip if commit
+
+        if commit
+          opts[:scan] ||= []
+          opts[:scan] << commit.strip
+        end
       end
 
       op.separator 'Indexer options:'
