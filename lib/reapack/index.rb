@@ -167,6 +167,8 @@ class ReaPack::Index
         @changed_nodes << ver.node
       end
     }
+
+    bump_commit
   rescue Error
     @doc.root = backup
     raise
@@ -179,6 +181,7 @@ class ReaPack::Index
     pkg.remove
     cat.remove if cat.empty?
 
+    bump_commit
     log_change 'removed package'
   end
 
@@ -251,16 +254,10 @@ class ReaPack::Index
   end
 
   def commit
-    @doc.root[:commit]
+    @commit ||= @doc.root[:commit]
   end
 
-  def commit=(sha1)
-    if sha1.nil?
-      @doc.root.remove_attribute 'commit'
-    else
-      @doc.root['commit'] = sha1
-    end
-  end
+  attr_writer :commit
 
   def write(path)
     @doc.root.element_children.each {|n| sort n if n.name == 'category' }
@@ -361,5 +358,15 @@ private
   def sort(node)
     sorted = node.children.sort_by{|n| n[:name].to_s }.sort_by {|n| n.name }
     sorted.each {|n| node << n }
+  end
+
+  def bump_commit
+    sha1 = commit()
+
+    if sha1.nil?
+      @doc.root.remove_attribute 'commit'
+    else
+      @doc.root['commit'] = sha1
+    end
   end
 end

@@ -71,7 +71,7 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @real_path
 
     assert_equal 1, index.version
-    assert_equal @commit, index.commit
+    assert_equal 'f572d396fae9206628714fb2ce00f72e94f2258f', index.commit
   end
 
   def test_new
@@ -194,12 +194,13 @@ class TestIndex < MiniTest::Test
 
   def test_edit_version_amend_on
     index = ReaPack::Index.new @real_path
+    index.commit = @commit
+    index.files = ['Category Name/Hello World.lua']
+    index.time = Time.now # must not be added to the index in amend mode
+    index.url_template = 'http://google.com/$path'
+
     index.amend = true
     assert_equal true, index.amend
-
-    index.time = Time.now # must not be used
-    index.url_template = 'http://google.com/$path'
-    index.files = ['Category Name/Hello World.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -253,6 +254,7 @@ class TestIndex < MiniTest::Test
 
   def test_file_unlisted
     index = ReaPack::Index.new @dummy_path
+    index.commit = @commit
     index.url_template = 'http://google.com/$path'
 
     error = assert_raises ReaPack::Index::Error do
@@ -601,6 +603,7 @@ class TestIndex < MiniTest::Test
 
   def test_remove
     index = ReaPack::Index.new @real_path
+    index.commit = @commit
 
     index.remove 'Category Name/Hello World.lua'
 
@@ -635,6 +638,7 @@ class TestIndex < MiniTest::Test
 
   def test_noindex_remove
     index = ReaPack::Index.new @real_path
+    index.commit = @commit
 
     index.scan 'Category Name/Hello World.lua', '@noindex'
 
