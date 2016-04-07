@@ -1072,4 +1072,8 @@ Finished checks for 2 packages with 1 failure
       end
     }
   end
+
+  def test_scan_no_arguments
+    wrapper ['--scan'] do; end
+  end
 end
