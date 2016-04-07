@@ -190,7 +190,7 @@ private
     if @db.name.empty?
       warn 'The name of this index is unset. ' \
         'Run the following command with a name of your choice:' \
-        "\n  #{$0} --name 'FooBar Scripts'"
+        "\n  #{File.basename $0} --name 'FooBar Scripts'"
     end
   rescue ReaPack::Index::Error => e
     warn '--name: ' + e.message

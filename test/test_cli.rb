@@ -983,10 +983,12 @@ Finished checks for 1 package with 0 failures
 
   def test_noname
     wrapper do
-      assert_output nil, /The name of this index is unset/i do
+      _, stderr = capture_io do
         assert_equal true, @indexer.run
       end
 
+      assert_match /The name of this index is unset/i, stderr
+      refute_match File.dirname($0), stderr
       refute_match 'name', read_index
     end
   end
