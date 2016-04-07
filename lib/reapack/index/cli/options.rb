@@ -8,6 +8,7 @@ class ReaPack::Index::CLI
 
   DEFAULTS = {
     check: false,
+    scan: [],
     verbose: false,
     warnings: true,
     progress: true,
@@ -53,10 +54,12 @@ class ReaPack::Index::CLI
 
       op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or specific commits' do |commit|
         opts[:check] = false
+        opts[:scan] ||= []
 
         if commit
-          opts[:scan] ||= []
           opts[:scan] << commit.strip
+        else
+          opts[:scan].clear
         end
       end
 

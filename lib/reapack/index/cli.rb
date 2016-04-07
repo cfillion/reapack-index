@@ -72,15 +72,7 @@ private
       warn 'The current branch does not contains any commit.'
       return
     end
-    if @opts[:scan]
-      commits = @opts[:scan].map {|hash|
-        find_commit hash or begin
-          $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
-          @exit = false
-          nil
-        end
-      }.compact
-    else
+    if @opts[:scan].empty?
       walker = Rugged::Walker.new @git
       walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
       walker.push @git.head.target_id
@@ -89,6 +81,14 @@ private
       walker.hide last_commit if find_commit last_commit
 
       commits = walker.each.to_a
+    else
+      commits = @opts[:scan].map {|hash|
+        find_commit hash or begin
+          $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
+          @exit = false
+          nil
+        end
+      }.compact
     end
 
     unless commits.empty?
