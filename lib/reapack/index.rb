@@ -125,7 +125,7 @@ class ReaPack::Index
 
     if errors = mh.validate(HEADER_RULES)
       prefix = errors.size == 1 ? "\x20" : "\n\x20\x20"
-      raise Error, "invalid metadata:%s" %
+      raise Error, 'invalid metadata:%s' %
         [prefix + errors.join(prefix)]
     end
 
@@ -319,7 +319,9 @@ private
       raise Error, 'unable to generate a download link' \
         ' – the url template is unset' unless @url_template
 
-      raise Error, "#{path}: No such file or directory" unless @files.include? path
+      unless @files.include? path
+        raise Error, "#{path}: No such file or directory"
+      end
     end
 
     (template || @url_template)
