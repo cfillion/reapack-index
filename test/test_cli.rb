@@ -63,6 +63,13 @@ end
 class TestCLI < MiniTest::Test
   include CLIUtils
 
+  def setup
+    @invalid_hashes = [
+      'hello world', '0000000000000000000000000000000000000000',
+      '0000000000000000000000000000000000000deadbeef',
+    ].freeze
+  end
+
   def test_help
     assert_output /--help/, '' do
       i = ReaPack::Index::CLI.new ['--help']
@@ -257,10 +264,7 @@ class TestCLI < MiniTest::Test
     # ensures that the indexer doesn't crash if it encounters
     # an invalid commit marker in the index file
 
-    [
-      'hello world', '0000000000000000000000000000000000000000',
-      '0000000000000000000000000000000000000deadbeef'
-    ].each {|hash|
+    @invalid_hashes.each {|hash|
       setup = proc {
         @git.add mkfile('test1.lua', '@version 1.0')
         @git.commit 'initial commit'
@@ -1072,10 +1076,7 @@ Finished checks for 2 packages with 1 failure
   end
 
   def test_scan_invalid_hashs
-    [
-      'hello world', '0000000000000000000000000000000000000000',
-      '0000000000000000000000000000000000000deadbeef'
-    ].each {|hash|
+    @invalid_hashes.each {|hash|
       wrapper ['--scan', hash] do
         @git.add mkfile('README.md')
         @git.commit 'initial commit'
