@@ -41,14 +41,10 @@ class ReaPack::Index::CLI
     OptionParser.new do |op|
       op.program_name = PROGRAM_NAME
       op.version = ReaPack::Index::VERSION
-      op.banner = 'Package indexer for git-based ReaPack repositories' +
+      op.banner = "Package indexer for git-based ReaPack repositories\n" +
         "Usage: #{PROGRAM_NAME} [options] [directory]"
 
-      op.separator 'Options:'
-
-      op.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
-        opts[:amend] = bool
-      end
+      op.separator 'Modes:'
 
       op.on '-c', '--check', 'Test every package including uncommited changes and exit' do
         opts[:check] = true
@@ -58,13 +54,15 @@ class ReaPack::Index::CLI
         opts[:scan] = commit.strip if commit
       end
 
+      op.separator 'Indexer options:'
+
+      op.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
+        opts[:amend] = bool
+      end
+
       op.on '-i', '--ignore PATH', "Don't check or index any file starting with PATH" do |path|
         opts[:ignore] ||= []
         opts[:ignore] << expand_path(path)
-      end
-
-      op.on '-n', '--name NAME', 'Set the name shown in ReaPack for this repository' do |name|
-        opts[:name] = name.strip
       end
 
       op.on '-U', "--url-template TEMPLATE=#{DEFAULTS[:url_template]}",
@@ -75,6 +73,12 @@ class ReaPack::Index::CLI
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
         opts[:output] = file.strip
+      end
+
+      op.separator 'Repository metadata:'
+
+      op.on '-n', '--name NAME', 'Set the name shown in ReaPack for this repository' do |name|
+        opts[:name] = name.strip
       end
 
       op.on '-l', '--link LINK', 'Add or remove a website link' do |link|
@@ -102,6 +106,8 @@ class ReaPack::Index::CLI
       op.on '--dump-about', 'Dump the raw about content in RTF and exit' do
         opts[:dump_about] = true
       end
+
+      op.separator 'Misc options:'
 
       op.on '--[no-]progress', 'Enable or disable progress information' do |bool|
         opts[:progress] = bool

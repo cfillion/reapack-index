@@ -25,19 +25,23 @@ reapack-index [options] [path-to-your-repository]
 ```
 
 ```
-Options:
-    -a, --[no-]amend                 Reindex existing versions
+Modes:
     -c, --check                      Test every package including uncommited changes and exit
+    -s, --scan [COMMIT]              Scan new commits (default) or a specific commit
+Indexer options:
+    -a, --[no-]amend                 Reindex existing versions
     -i, --ignore PATH                Don't check or index any file starting with PATH
-    -n, --name NAME                  Set the name shown in ReaPack for this repository
     -U, --url-template TEMPLATE=auto Set the template for implicit download links
     -o, --output FILE=./index.xml    Set the output filename and path for the index
+Repository metadata:
+    -n, --name NAME                  Set the name shown in ReaPack for this repository
     -l, --link LINK                  Add or remove a website link
         --donation-link LINK         Add or remove a donation link
         --ls-links                   Display the link list then exit
     -A, --about=FILE                 Set the about content from a file
         --remove-about               Remove the about content from the index
         --dump-about                 Dump the raw about content in RTF and exit
+Misc options:
         --[no-]progress              Enable or disable progress information
     -V, --[no-]verbose               Activate diagnosis messages
     -C, --[no-]commit                Select whether to commit the modified index
