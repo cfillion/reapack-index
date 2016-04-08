@@ -464,7 +464,7 @@ class TestIndex < MiniTest::Test
     IN
   end
 
-  def test_invalid_platform
+  def test_provides_invalid_platform
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
 
@@ -528,7 +528,7 @@ class TestIndex < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
-  def test_main_platform
+  def test_provides_mainfile_platform
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua']
@@ -599,6 +599,44 @@ class TestIndex < MiniTest::Test
       @version 1.0
       @provides
     IN
+  end
+
+  def test_provides_glob
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = [
+      'Category/script.lua',
+      'Category/Data/a.dat',
+      'Category/Data/b.dat',
+      'Category/test.txt',
+      'Category/test/d.dat', # should not be matched by test*
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        [windows] Data/*
+        test*
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source platform="all">http://host/Category/script.lua</source>
+        <source platform="windows" file="Data/a.dat">http://host/Category/Data/a.dat</source>
+        <source platform="windows" file="Data/b.dat">http://host/Category/Data/b.dat</source>
+        <source platform="all" file="test.txt">http://host/Category/test.txt</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
   end
 
   def test_remove

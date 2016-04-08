@@ -316,8 +316,10 @@ private
 
   def make_url(path, template = nil)
     if template.nil?
-      raise Error, 'unable to generate a download link' \
-        ' – the url template is unset' unless @url_template
+      unless @url_template
+        raise Error, 'unable to generate a download link' \
+          ' – the url template is unset'
+      end
 
       unless @files.include? path
         raise Error, "#{path}: No such file or directory"
@@ -331,30 +333,46 @@ private
   end
 
   def parse_provides(provides, path)
-    basename = File.basename path
-    basedir = dirname path
-
     return [] unless provides.is_a? String
 
-    provides.lines.map {|line|
+    basename = File.basename path
+    basedir = dirname(path).to_s
+    pathdir = Pathname.new basedir
+
+    sources = provides.lines.map {|line|
       line.chomp!
 
       m = line.match PROVIDES_REGEX
+      platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
-      platform, file, url_tpl = m[:platform], m[:file], m[:url]
-      file = nil if file == basename || file == '.'
+      pattern = basename if pattern == '.'
 
-      if file.nil?
-        url = make_url path, url_tpl
+      absolute = File.expand_path pattern, FS_ROOT + basedir
+      absolute[0...FS_ROOT.size] = ''
+
+      if absolute == path
+        # always resolve path even when an url template is set
+        files = [absolute]
       elsif url_tpl.nil?
-        normalized = File.expand_path file, FS_ROOT + basedir.to_s
-        url = make_url normalized[FS_ROOT.size..-1]
+        files = @files.select {|f| File.fnmatch absolute, f, File::FNM_PATHNAME }
+        raise Error, "#{absolute}: No such file or directory" if files.empty?
       else
-        url = make_url file, url_tpl
+        # use the relative path for external urls
+        files = [pattern]
       end
 
-      Source.new platform, file, url
-    }
+      files.map {|file|
+        url = make_url file, url_tpl
+
+        if file == path
+          file = nil
+        elsif url_tpl.nil?
+          file = Pathname.new(file).relative_path_from(pathdir).to_s
+        end
+
+        Source.new platform, file, url
+      }
+    }.flatten
   end
 
   def sort(node)
