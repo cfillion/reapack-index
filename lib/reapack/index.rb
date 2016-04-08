@@ -329,7 +329,7 @@ private
     (template || @url_template)
       .sub('$path', path)
       .sub('$commit', commit || 'master')
-      .sub('$version', @currentVersion || '0.0')
+      .sub('$version', @currentVersion)
   end
 
   def parse_provides(provides, path)
