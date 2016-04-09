@@ -291,6 +291,24 @@ class ReaPack::Index
     list.join ', '
   end
 
+  def make_url(path, template = nil)
+    if template.nil?
+      unless @url_template
+        raise Error, 'unable to generate a download link' \
+          ' – the url template is unset'
+      end
+
+      unless @files.include? path
+        raise Error, "#{path}: No such file or directory"
+      end
+    end
+
+    (template || @url_template)
+      .sub('$path', path)
+      .sub('$commit', commit || 'master')
+      .sub('$version', @currentVersion.to_s)
+  end
+
 private
   def log_change(desc, plural = nil)
     @dirty = true
@@ -312,24 +330,6 @@ private
     pkg = Package.get pkg_name, cat && cat.node, create
 
     [cat, pkg]
-  end
-
-  def make_url(path, template = nil)
-    if template.nil?
-      unless @url_template
-        raise Error, 'unable to generate a download link' \
-          ' – the url template is unset'
-      end
-
-      unless @files.include? path
-        raise Error, "#{path}: No such file or directory"
-      end
-    end
-
-    (template || @url_template)
-      .sub('$path', path)
-      .sub('$commit', commit || 'master')
-      .sub('$version', @currentVersion)
   end
 
   def parse_provides(provides, path)

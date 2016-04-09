@@ -72,6 +72,7 @@ private
       warn 'The current branch does not contains any commit.'
       return
     end
+
     if @opts[:scan].empty?
       walker = Rugged::Walker.new @git
       walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
