@@ -21,10 +21,10 @@ class TestIndex < MiniTest::Test
     assert_equal 'https://google.com/$path', index.url_template
 
     error = assert_raises ReaPack::Index::Error do
-      index.url_template = 'no path placeholder!'
+      index.url_template = 'test' # no path placeholder!
     end
 
-    assert_match '$path', error.message
+    assert_match "missing $path placeholder in 'test'", error.message
     assert_equal 'https://google.com/$path', index.url_template
 
     index.url_template = nil
@@ -38,7 +38,7 @@ class TestIndex < MiniTest::Test
       index.url_template = 'scp://cfillion.tk/$path'
     end
 
-    assert_match /invalid url/i, error.message
+    assert_match /invalid template/i, error.message
   end
 
   def test_file_list
@@ -138,7 +138,7 @@ class TestIndex < MiniTest::Test
      index.make_url 'unlisted.lua'
     end
 
-    assert_equal 'unlisted.lua: No such file or directory', error.message
+    assert_equal "file not found 'unlisted.lua'", error.message
   end
 
   def test_remove

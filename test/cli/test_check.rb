@@ -53,7 +53,7 @@ Finished checks for 2 packages with 1 failure
 F
 
 1) Hello/World.lua failed:
-  background.png: No such file or directory
+  file not found 'background.png'
 
 Finished checks for 1 package with 1 failure
     STDERR

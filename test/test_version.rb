@@ -197,7 +197,7 @@ XML
       src.platform = :hello
     end
 
-    assert_equal 'invalid platform hello', error.message
+    assert_equal "invalid platform 'hello'", error.message
 
     src.platform = nil
     assert_equal :all, src.platform
@@ -210,6 +210,6 @@ XML
       ver.replace_sources do; end
     end
 
-    assert_equal 'no sources found. @provides tag missing?', error.message
+    assert_equal 'no files provided', error.message
   end
 end

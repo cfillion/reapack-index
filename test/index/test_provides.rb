@@ -54,7 +54,7 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_equal 'test.png: No such file or directory', error.message
+    assert_equal "file not found 'test.png'", error.message
   end
 
   def test_platform
@@ -147,7 +147,7 @@ class TestIndex::Provides < MiniTest::Test
       IN
     end
 
-    assert_match 'invalid value for tag "provides": invalid platform hello',
+    assert_match %q{invalid value for tag "provides": invalid platform 'hello'},
       error.message
   end
 
@@ -237,9 +237,10 @@ class TestIndex::Provides < MiniTest::Test
   def test_duplicate
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
+    index.files = ['script.lua', 'test.png']
 
     error = assert_raises ReaPack::Index::Error do
-     index.scan 'script.lua', <<-IN
+     index.scan index.files.first, <<-IN
        @version 1.0
        @provides
          test.png

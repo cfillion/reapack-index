@@ -214,7 +214,7 @@ class ReaPack::Index
     uri.normalize!
 
     unless (uri.request_uri || uri.path).include? '$path'
-      raise Error, "#{tpl}: missing $path placeholder"
+      raise Error, "missing $path placeholder in '#{tpl}'"
     end
 
     unless %w{http https file}.include? uri.scheme
@@ -223,7 +223,7 @@ class ReaPack::Index
 
     @url_template = uri.to_s.freeze
   rescue Addressable::URI::InvalidURIError
-    raise Error, "invalid URL or scheme: #{tpl}"
+    raise Error, "invalid template '#{tpl}'"
   end
 
   def version
@@ -236,7 +236,7 @@ class ReaPack::Index
 
   def name=(newName)
     if !/\A[^~#%&*{}\\:<>?\/+|"]+\Z/.match(newName) || /\A\.+\Z/.match(newName)
-      raise Error, "Invalid name: '#{newName}'"
+      raise Error, "invalid name '#{newName}'"
     end
 
     oldName = name
@@ -288,7 +288,7 @@ class ReaPack::Index
       end
 
       unless @files.include? path
-        raise Error, "#{path}: No such file or directory"
+        raise Error, "file not found '#{path}'"
       end
     end
 
@@ -340,7 +340,7 @@ private
         files = [absolute]
       elsif url_tpl.nil?
         files = @files.select {|f| File.fnmatch absolute, f, File::FNM_PATHNAME }
-        raise Error, "#{pattern}: No such file or directory" if files.empty?
+        raise Error, "file not found '#{pattern}'" if files.empty?
       else
         # use the relative path for external urls
         files = [pattern]

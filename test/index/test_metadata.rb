@@ -96,7 +96,7 @@ class TestIndex::Metadata < MiniTest::Test
 
     error = assert_raises ReaPack::Index::Error do index.name = '.'; end
     assert_raises ReaPack::Index::Error do index.name = 'hello/world'; end
-    assert_equal "Invalid name: '.'", error.message
+    assert_equal "invalid name '.'", error.message
 
     assert_equal 'Hello World', index.name
 

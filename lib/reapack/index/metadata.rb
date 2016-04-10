@@ -24,7 +24,7 @@ class ReaPack::Index
           raise Addressable::URI::InvalidURIError
         end
       rescue Addressable::URI::InvalidURIError
-        raise Error, "invalid link: #{url}"
+        raise Error, "invalid link '#{url}'"
       end
 
       make_root
@@ -60,7 +60,7 @@ class ReaPack::Index
     def remove_link(type, search)
       node = Link.find type, search, @root
 
-      raise Error, "no such #{type} link: #{search}" unless node
+      raise Error, "no such #{type} link '#{search}'" unless node
 
       node.remove
       auto_remove

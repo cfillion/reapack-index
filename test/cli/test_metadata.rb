@@ -34,8 +34,8 @@ class TestCLI::Metadata < MiniTest::Test
       end
 
       assert_equal "1 new website link, empty index\n", stdout
-      assert_match /warning: --link: invalid link: shinsekai yori/i, stderr
-      assert_match /warning: --donation-link: invalid link: hello world/i, stderr
+      assert_match /warning: --link: invalid link 'shinsekai yori'/i, stderr
+      assert_match /warning: --donation-link: invalid link 'hello world'/i, stderr
       assert_match 'rel="website">http://cfillion.tk</link>', read_index
     end
   end
@@ -188,7 +188,7 @@ class TestCLI::Metadata < MiniTest::Test
       end
 
       refute_match /The name of this index is unset/i, stderr
-      assert_match /invalid name: 'Hello\/World'/i, stderr
+      assert_match /invalid name 'Hello\/World'/i, stderr
     end
   end
 end

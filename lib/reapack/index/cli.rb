@@ -348,7 +348,7 @@ private
       @add_nl = false
     end
 
-    $stderr.puts "Warning: #{line}".yellow
+    $stderr.puts "warning: #{line}".yellow
   end
 
   def progress_wrapper(total, &block)

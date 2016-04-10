@@ -132,7 +132,7 @@ class TestMetadata < MiniTest::Test
       md.push_link :website, 'hello'
     end
 
-    assert_equal 'invalid link: hello', error.message
+    assert_equal "invalid link 'hello'", error.message
     assert_equal after.chomp, before.to_s
   end
 
@@ -172,7 +172,7 @@ class TestMetadata < MiniTest::Test
       md.remove_link :website, 'hello'
     end
 
-    assert_equal 'no such website link: hello', error.message
+    assert_equal "no such website link 'hello'", error.message
   end
 
   def test_replace_link_url
