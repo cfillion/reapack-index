@@ -20,15 +20,16 @@ require 'reapack/index/metadata'
 require 'reapack/index/named_node'
 require 'reapack/index/package'
 require 'reapack/index/parsers'
+require 'reapack/index/source'
 require 'reapack/index/version'
 
 class ReaPack::Index
   Error = Class.new RuntimeError
 
   PKG_TYPES = {
-    :script    => %w{lua eel py},
-    :extension => %w{ext},
-    :effect    => %w{jsfx}
+    script: %w{lua eel py},
+    extension: %w{ext},
+    effect: %w{jsfx},
   }.freeze
 
   WITH_MAIN = [:script, :effect].freeze
@@ -44,13 +45,13 @@ class ReaPack::Index
 
   PROVIDES_VALIDATOR = proc {|value|
     begin
-      files = value.lines.map {|l|
-        m = l.chomp.match PROVIDES_REGEX
-        Source.validate_platform m[:platform]
-        [m[:platform], m[:file]]
+      collection = SourceCollection.new
+      value.lines.each {|l|
+        m = l.chomp.match(PROVIDES_REGEX) or next
+        src = Source.new m[:platform], m[:file], m[:url]
+        collection << src
       }
-      dup = files.detect {|f| files.count(f) > 1 }
-      "duplicate file (%s)" % dup[1] if dup
+      collection.conflicts&.join "\n"
     rescue Error => e
       e.message
     end
@@ -73,7 +74,7 @@ class ReaPack::Index
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
-    PKG_TYPES.find {|k, v| v.include? ext }&.first
+    PKG_TYPES.find {|_, v| v.include? ext }&.first
   end
 
   def initialize(path)
@@ -308,7 +309,7 @@ private
 
   def dirname(path)
     name = File.dirname path
-    name == '.' ? nil : name
+    name unless name == '.'
   end
 
   def find(path, create = true)

@@ -248,20 +248,7 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_match 'invalid value for tag "provides": duplicate file (test.png)',
+    assert_match %q{invalid value for tag "provides": duplicate file 'test.png'},
       error.message
-  end
-
-  def test_duplicate_different_platforms
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['script.lua', 'test.png', 'test.png']
-
-    index.scan index.files.first, <<-IN
-      @version 1.0
-      @provides
-        [windows] test.png
-        [darwin] test.png
-    IN
   end
 end
