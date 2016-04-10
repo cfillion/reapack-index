@@ -75,6 +75,14 @@ class TestSourceCollection < MiniTest::Test
     assert_equal ["duplicate file 'file.lua'"], sc.conflicts
   end
 
+  def test_duplicate_same_platform
+    sc = ReaPack::Index::SourceCollection.new
+    sc << ReaPack::Index::Source.new(:windows, 'file.lua')
+    sc << ReaPack::Index::Source.new(:windows, 'file.lua', 'http://test/')
+
+    assert_equal ["duplicate file 'file.lua' on windows"], sc.conflicts
+  end
+
   def test_duplicate_different_platform
     sc = ReaPack::Index::SourceCollection.new
     sc << ReaPack::Index::Source.new(:darwin, 'file.lua')

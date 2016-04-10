@@ -63,18 +63,21 @@ class ReaPack::Index
       dups = @elements.group_by {|e| e.source.file }.select {|_, a| a.size > 1 }
 
       errors = dups.map {|f, a|
+        msg = "duplicate file '#{a.first.source.file}'"
+
         a.group_by {|e| e.id }.map {
           platforms = a.group_by {|e| e.source.platform }.keys
 
           if platforms.size > 1
-            dup_p = platforms.find {|p|
+            platform = platforms.find {|p|
+              # if this file is also available for the parent platform
               platforms.include? ReaPack::Index::Source::PLATFORMS[p]
-            }
-
-            "duplicate file '#{a.first.source.file}' on #{dup_p}" if dup_p
+            } or next
           else
-            "duplicate file '#{a.first.source.file}'"
+            platform = platforms.first
           end
+
+          platform == :all ? msg : "#{msg} on #{platform}"
         }
       }.flatten.compact
 
