@@ -78,13 +78,6 @@ class ReaPack::Index
     FILE_TYPES[ext]
   end
 
-  def self.validate_file(path)
-    mh = MetaHeader.from_file path
-    return if mh[:noindex]
-
-    mh.validate HEADER_RULES
-  end
-
   def initialize(path)
     @amend = false
     @changes = {}

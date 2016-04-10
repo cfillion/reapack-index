@@ -49,15 +49,6 @@ class TestIndex < MiniTest::Test
     assert_equal ['a', 'b/c'], index.files
   end
 
-  def test_validate_standalone
-    refute_nil ReaPack::Index.validate_file @real_path # not a valid script
-  end
-
-  def test_validate_noindex
-    assert_nil ReaPack::Index.validate_file \
-      File.expand_path '../data/noindex.lua', __FILE__
-  end
-
   def test_read
     index = ReaPack::Index.new @real_path
 
