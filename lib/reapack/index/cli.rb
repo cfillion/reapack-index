@@ -213,8 +213,8 @@ private
 
   def check_name
     if @db.name.empty?
-      warn 'The name of this index is unset. ' \
-        'Run the following command with a name of your choice:' \
+      warn 'This index is unnamed. ' \
+        'Run the following command to set a name of your choice:' \
         "\n  #{File.basename $0} --name 'FooBar Scripts'"
     end
   end

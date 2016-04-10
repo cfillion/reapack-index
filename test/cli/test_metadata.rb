@@ -164,7 +164,7 @@ class TestCLI::Metadata < MiniTest::Test
         assert_equal true, @indexer.run
       end
 
-      assert_match /The name of this index is unset/i, stderr
+      assert_match /index is unnamed/i, stderr
       refute_match File.dirname($0), stderr
       refute_match 'name', read_index
     end
@@ -176,7 +176,7 @@ class TestCLI::Metadata < MiniTest::Test
         assert_equal true, @indexer.run
       end
 
-      refute_match /The name of this index is unset/i, stderr
+      refute_match /index is unnamed/i, stderr
       assert_match 'name="Hello World"', read_index
     end
   end

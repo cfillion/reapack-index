@@ -158,7 +158,7 @@ Finished checks for 1 package with 0 failures
 
   def test_unset_name_warning
     wrapper ['--check'] do
-      assert_output nil, /The name of this index is unset/i do
+      assert_output nil, /index is unnamed/i do
         @indexer.run
       end
     end
