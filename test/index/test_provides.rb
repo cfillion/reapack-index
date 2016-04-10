@@ -54,7 +54,7 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_equal 'Category/test.png: No such file or directory', error.message
+    assert_equal 'test.png: No such file or directory', error.message
   end
 
   def test_platform

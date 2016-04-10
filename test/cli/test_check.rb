@@ -53,7 +53,7 @@ Finished checks for 2 packages with 1 failure
 F
 
 1) Hello/World.lua failed:
-  Hello/test: No such file or directory
+  background.png: No such file or directory
 
 Finished checks for 1 package with 1 failure
     STDERR
@@ -71,7 +71,7 @@ Finished checks for 1 package with 1 failure
     }
 
     wrapper ['--check'], setup: setup do
-      mkfile 'Hello/World.lua', "@version 1.0\n@provides test"
+      mkfile 'Hello/World.lua', "@version 1.0\n@provides background.png"
 
       assert_output nil, expected do
         assert_equal false, @indexer.run

@@ -353,7 +353,7 @@ private
         files = [absolute]
       elsif url_tpl.nil?
         files = @files.select {|f| File.fnmatch absolute, f, File::FNM_PATHNAME }
-        raise Error, "#{absolute}: No such file or directory" if files.empty?
+        raise Error, "#{pattern}: No such file or directory" if files.empty?
       else
         # use the relative path for external urls
         files = [pattern]
