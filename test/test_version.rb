@@ -131,9 +131,27 @@ class TestVersion < MiniTest::Test
 </version>
     XML
 
-    ver = ReaPack::Index::Version.new before
-    ver.add_source :all, 'test.lua', 'http://files.cfillion.tk/hello world.lua'
+    src = ReaPack::Index::Source.new \
+      :all, 'test.lua', 'http://files.cfillion.tk/hello world.lua'
+    assert_equal 'http://files.cfillion.tk/hello world.lua', src.url
 
+    src.make_node before
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_invalid_source_url
+    after = '<version name="1.0"/>'
+    before = make_node after
+
+    src = ReaPack::Index::Source.new :all, 'test.lua', 'http://hello world/'
+    assert_equal 'http://hello world/', src.url
+
+    error = assert_raises ReaPack::Index::Error do
+      src.make_node before
+    end
+
+    refute_empty error.message
     assert_equal after.chomp, before.to_s
   end
 

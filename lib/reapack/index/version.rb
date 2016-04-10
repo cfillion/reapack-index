@@ -120,10 +120,12 @@ class ReaPack::Index
 
     def make_node(parent)
       @node = Nokogiri::XML::Node.new TAG, parent.document
-      @node.parent = parent
       @node[PLATFORM] = @platform
       @node[FILE] = @file if @file
       @node.content = Addressable::URI.encode @url
+      @node.parent = parent
+    rescue Addressable::URI::InvalidURIError => e
+      raise Error, e.message
     end
   end
 
