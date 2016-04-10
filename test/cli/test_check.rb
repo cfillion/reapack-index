@@ -28,9 +28,9 @@ Finished checks for 2 packages with 0 failures
     expected = <<-STDERR
 F.
 
-test1.lua contains invalid metadata:
-  - missing tag "version"
-  - invalid value for tag "author"
+1) test1.lua failed:
+  missing tag "version"
+  invalid value for tag "author"
 
 Finished checks for 2 packages with 1 failure
     STDERR
@@ -49,12 +49,12 @@ Finished checks for 2 packages with 1 failure
 
   def test_quiet
     expected = <<-STDERR
-test1.lua contains invalid metadata:
-  - missing tag "version"
-  - invalid value for tag "author"
+1) test1.lua failed:
+  missing tag "version"
+  invalid value for tag "author"
 
-test2.lua contains invalid metadata:
-  - missing tag "version"
+2) test2.lua failed:
+  missing tag "version"
     STDERR
 
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
@@ -136,9 +136,9 @@ Finished checks for 1 package with 0 failures
 Path/To/test1.lua: failed
 test2.lua: passed
 
-Path/To/test1.lua contains invalid metadata:
-  - missing tag "version"
-  - invalid value for tag "author"
+1) Path/To/test1.lua failed:
+  missing tag "version"
+  invalid value for tag "author"
 
 Finished checks for 2 packages with 1 failure
     STDERR

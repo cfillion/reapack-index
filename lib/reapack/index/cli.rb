@@ -239,11 +239,11 @@ private
     check_name
 
     failures = []
-    root = @git.workdir
-
-    types = ReaPack::Index::FILE_TYPES.keys
-    files = Dir.glob "#{Regexp.quote(root)}**/*.{#{types.join ','}}"
     count = 0
+
+    root = Pathname.new @git.workdir
+    types = ReaPack::Index::FILE_TYPES.keys
+    files = Dir.glob "#{Regexp.quote(root.to_s)}**/*.{#{types.join ','}}"
 
     files.sort.each {|file|
       next if ignored? file
@@ -258,10 +258,10 @@ private
           $stderr.print 'F'
         end
 
-        prefix = "\n  - "
+        prefix = "\n  "
 
-        failures << "%s contains invalid metadata:#{prefix}%s" %
-          [relative_path(file), errors.join(prefix)]
+        failures << "%s failed:#{prefix}%s" %
+          [relative_path(file), errors.join(prefix).yellow]
       else
         if @opts[:verbose]
           $stderr.puts '%s: passed' % relative_path(file)
@@ -275,7 +275,7 @@ private
 
     failures.each_with_index {|msg, index|
       $stderr.puts unless @opts[:quiet] && index == 0
-      $stderr.puts msg.yellow
+      $stderr.puts '%d) %s' % [index + 1, msg]
     }
 
     unless @opts[:quiet]

@@ -123,7 +123,7 @@ class TestIndex < MiniTest::Test
       index.make_url 'script.lua'
     end
 
-    assert_match /url template is unset/i, error.message
+    assert_match /url template/i, error.message
   end
 
   def test_make_url_commit

@@ -294,8 +294,8 @@ class ReaPack::Index
   def make_url(path, template = nil)
     if template.nil?
       unless @url_template
-        raise Error, 'unable to generate a download link' \
-          ' – the url template is unset'
+        raise Error, 'unable to generate download links: ' \
+          'no url template set'
       end
 
       unless @files.include? path
@@ -340,9 +340,7 @@ private
     pathdir = Pathname.new basedir
 
     sources = provides.lines.map {|line|
-      line.chomp!
-
-      m = line.match PROVIDES_REGEX
+      m = line.chomp.match PROVIDES_REGEX
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
       pattern = basename if pattern == '.'
