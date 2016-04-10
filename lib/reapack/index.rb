@@ -25,12 +25,10 @@ require 'reapack/index/version'
 class ReaPack::Index
   Error = Class.new RuntimeError
 
-  FILE_TYPES = {
-    'lua'  => :script,
-    'eel'  => :script,
-    'py'   => :script,
-    'ext'  => :extension,
-    'jsfx' => :effect,
+  PKG_TYPES = {
+    :script    => %w{lua eel py},
+    :extension => %w{ext},
+    :effect    => %w{jsfx}
   }.freeze
 
   WITH_MAIN = [:script, :effect].freeze
@@ -75,7 +73,7 @@ class ReaPack::Index
 
   def self.type_of(path)
     ext = File.extname(path)[1..-1]
-    FILE_TYPES[ext]
+    PKG_TYPES.find {|k, v| v.include? ext }&.first
   end
 
   def initialize(path)
@@ -253,7 +251,6 @@ class ReaPack::Index
   attr_writer :commit
 
   def write(path)
-    @doc.root.element_children.each {|n| sort n if n.name == 'category' }
     sort @doc.root
 
     FileUtils.mkdir_p File.dirname(path)
@@ -285,7 +282,7 @@ class ReaPack::Index
   end
 
   def make_url(path, template = nil)
-    if template.nil?
+    unless template
       unless @url_template
         raise Error, 'unable to generate download links: empty url template'
       end
@@ -364,6 +361,7 @@ private
   end
 
   def sort(node)
+    node.children.each {|n| sort n }
     sorted = node.children.sort_by{|n| n[:name].to_s }.sort_by {|n| n.name }
     sorted.each {|n| node << n }
   end

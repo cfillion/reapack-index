@@ -110,7 +110,7 @@ class ReaPack::Index
     end
 
     def platform=(new_platform)
-      new_platform = :all if new_platform.nil?
+      new_platform ||= :all
 
       self.class.validate_platform new_platform
 
