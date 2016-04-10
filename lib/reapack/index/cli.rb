@@ -22,6 +22,8 @@ class ReaPack::Index::CLI
     @db = ReaPack::Index.new expand_path(@opts[:output])
     @db.amend = @opts[:amend]
 
+    set_url_template
+
     if @opts[:check]
       return check
     end
@@ -34,15 +36,6 @@ class ReaPack::Index::CLI
     if @opts[:dump_about]
       print @db.description
       return true
-    end
-
-    begin
-      tpl = @opts[:url_template]
-      is_custom = tpl != DEFAULTS[:url_template]
-
-      @db.url_template = is_custom ? tpl : auto_url_tpl
-    rescue ReaPack::Index::Error => e
-      warn '--url-template: ' + e.message if is_custom
     end
 
     do_name; do_about; eval_links; scan_commits
@@ -65,6 +58,15 @@ class ReaPack::Index::CLI
 private
   def success_code
     @exit.nil? ? true : @exit
+  end
+
+  def set_url_template
+    tpl = @opts[:url_template]
+    is_custom = tpl != DEFAULTS[:url_template]
+
+    @db.url_template = is_custom ? tpl : auto_url_tpl
+  rescue ReaPack::Index::Error => e
+    warn '--url-template: ' + e.message if is_custom
   end
 
   def scan_commits
@@ -236,38 +238,41 @@ private
   end
 
   def check
+    @db.amend = true # enable checks for released versions as well
+
     check_name
 
-    failures = []
-    count = 0
-
     root = Pathname.new @git.workdir
-    types = ReaPack::Index::FILE_TYPES.keys
-    files = Dir.glob "#{Regexp.quote(root.to_s)}**/*.{#{types.join ','}}"
+    failures = []
 
-    files.sort.each {|file|
-      next if ignored? file
+    pkgs = Hash[Pathname.glob("#{Regexp.quote(root.to_s)}**/*").sort.map {|pn|
+      abs, rel = pn.to_s, pn.relative_path_from(root).to_s
+      @db.files << rel
 
-      errors = ReaPack::Index.validate_file file
-      count += 1
+      next if !File.file?(abs) || ignored?(abs) || !ReaPack::Index.type_of(abs)
 
-      if errors
+      [abs, rel]
+    }.compact]
+
+    pkgs.each_pair {|abs, rel|
+      begin
+        @db.scan rel, File.read(abs)
+
         if @opts[:verbose]
-          $stderr.puts '%s: failed' % relative_path(file)
+          $stderr.puts '%s: passed' % rel
+        elsif !@opts[:quiet]
+          $stderr.print '.'
+        end
+      rescue ReaPack::Index::Error => e
+        if @opts[:verbose]
+          $stderr.puts '%s: failed' % rel
         elsif !@opts[:quiet]
           $stderr.print 'F'
         end
 
-        prefix = "\n  "
-
+        prefix = "\n\x20\x20"
         failures << "%s failed:#{prefix}%s" %
-          [relative_path(file), errors.join(prefix).yellow]
-      else
-        if @opts[:verbose]
-          $stderr.puts '%s: passed' % relative_path(file)
-        elsif !@opts[:quiet]
-          $stderr.print '.'
-        end
+          [rel, e.message.gsub("\n", prefix).yellow]
       end
     }
 
@@ -280,10 +285,9 @@ private
 
     unless @opts[:quiet]
       $stderr.puts "\n"
-
       $stderr.puts 'Finished checks for %d package%s with %d failure%s' % [
-        count, count == 1 ? '' : 's',
-        failures.size, failures.size == 1 ? '' : 's'
+        pkgs.size, pkgs.size == 1 ? '' : 's',
+        failures.size, failures.size == 1 ? '' : 's',
       ]
     end
 

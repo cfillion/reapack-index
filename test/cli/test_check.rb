@@ -29,8 +29,9 @@ Finished checks for 2 packages with 0 failures
 F.
 
 1) test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  invalid metadata:
+    missing tag "version"
+    invalid value for tag "author"
 
 Finished checks for 2 packages with 1 failure
     STDERR
@@ -47,14 +48,46 @@ Finished checks for 2 packages with 1 failure
     end
   end
 
+  def test_uses_scan
+    expected = <<-STDERR
+F
+
+1) Hello/World.lua failed:
+  Hello/test: No such file or directory
+
+Finished checks for 1 package with 1 failure
+    STDERR
+
+    setup = proc {
+      mkfile 'index.xml', <<-XML
+<index name="test">
+  <category name="Hello">
+    <reapack name="World.lua" type="script">
+      <version name="1.0"/>
+    </reapack>
+  </category>
+</index>
+      XML
+    }
+
+    wrapper ['--check'], setup: setup do
+      mkfile 'Hello/World.lua', "@version 1.0\n@provides test"
+
+      assert_output nil, expected do
+        assert_equal false, @indexer.run
+      end
+    end
+  end
+
   def test_quiet
     expected = <<-STDERR
 1) test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  invalid metadata:
+    missing tag "version"
+    invalid value for tag "author"
 
 2) test2.lua failed:
-  missing tag "version"
+  invalid metadata: missing tag "version"
     STDERR
 
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
@@ -137,8 +170,9 @@ Path/To/test1.lua: failed
 test2.lua: passed
 
 1) Path/To/test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  invalid metadata:
+    missing tag "version"
+    invalid value for tag "author"
 
 Finished checks for 2 packages with 1 failure
     STDERR
