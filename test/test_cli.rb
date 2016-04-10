@@ -347,7 +347,7 @@ class TestCLI < MiniTest::Test
       @git.commit 'initial commit'
 
       _, stderr = capture_io { @indexer.run }
-      assert_match /--url-template: \$path placeholder is missing/i, stderr
+      assert_match /--url-template: minoshiro: missing \$path placeholder/i, stderr
     end
   end
 

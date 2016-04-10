@@ -216,7 +216,7 @@ class ReaPack::Index
     uri.normalize!
 
     unless (uri.request_uri || uri.path).include? '$path'
-      raise Error, "$path placeholder is missing: #{tpl}"
+      raise Error, "#{tpl}: missing $path placeholder"
     end
 
     unless %w{http https file}.include? uri.scheme
@@ -287,8 +287,7 @@ class ReaPack::Index
   def make_url(path, template = nil)
     if template.nil?
       unless @url_template
-        raise Error, 'unable to generate download links: ' \
-          'no url template set'
+        raise Error, 'unable to generate download links: empty url template'
       end
 
       unless @files.include? path
