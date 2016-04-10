@@ -188,10 +188,12 @@ class TestIndex::Provides < MiniTest::Test
     index.url_template = 'http://host/$path'
     index.files = ['Category/hello.lua']
 
-    index.scan index.files.first, <<-IN
-      @version 1.0
-      @provides
-    IN
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @provides
+      IN
+    end
   end
 
   def test_glob

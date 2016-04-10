@@ -65,7 +65,7 @@ class ReaPack::Index
     # version-specific tags
     :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
     :changelog => [MetaHeader::OPTIONAL, /.+/],
-    :provides => [MetaHeader::OPTIONAL, PROVIDES_VALIDATOR]
+    :provides => [MetaHeader::OPTIONAL, /.+/, PROVIDES_VALIDATOR]
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze
@@ -325,13 +325,11 @@ private
   end
 
   def parse_provides(provides, path)
-    return [] unless provides.is_a? String
-
     basename = File.basename path
     basedir = dirname(path).to_s
     pathdir = Pathname.new basedir
 
-    sources = provides.lines.map {|line|
+    provides.to_s.lines.map {|line|
       m = line.chomp.match PROVIDES_REGEX
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 

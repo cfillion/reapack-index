@@ -158,7 +158,7 @@ class TestIndex::Scan < MiniTest::Test
     assert_match 'missing tag "version"', error.message
   end
 
-  def test_changelog_boolean
+  def test_empty_changelog
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
     index.files = ['test.lua']
