@@ -13,7 +13,7 @@ class ReaPack::Index
     def self.validate_platform(platform)
       return unless platform # nil platform will be replaced by the default
 
-      unless PLATFORMS.has_key? platform.to_sym
+      unless PLATFORMS.has_key? platform
         raise Error, "invalid platform '#{platform}'"
       end
     end
@@ -26,6 +26,7 @@ class ReaPack::Index
 
     def platform=(new_platform)
       new_platform ||= :all
+      new_platform = new_platform.to_sym
 
       self.class.validate_platform new_platform
 
@@ -47,41 +48,78 @@ class ReaPack::Index
   end
 
   class SourceCollection
-    Element = Struct.new :id, :source
+    Element = Struct.new :key, :platform, :file
 
     def initialize
       @elements = []
     end
 
-    def push(source, id = nil)
-      @elements << Element.new(id, source)
+    def push(key, source)
+      @elements << Element.new(key, source.platform, source.file)
     end
 
-    alias :<< :push
+    def <<(source)
+      push nil, source
+    end
 
-    def conflicts
-      dups = @elements.group_by {|e| e.source.file }.select {|_, a| a.size > 1 }
+    def conflicts(key = false)
+      dups = @elements.group_by {|e| e.file }.select {|_, a| a.size > 1 }
 
       errors = dups.map {|f, a|
-        msg = "duplicate file '#{a.first.source.file}'"
+        packages = a.map {|e| e.key }.uniq
+        next unless key == false || packages.include?(key)
 
-        a.group_by {|e| e.id }.map {
-          platforms = a.group_by {|e| e.source.platform }.keys
+        if key == false || packages.size == 1
+          original = sort(a, &:last)
+          msg = "duplicate file '#{original.file}'"
+        else
+          original = sort(a.select {|e| e.key != key }, &:first)
+          msg = "'#{original.file}' conflicts with '#{original.key}'"
+        end
 
-          if platforms.size > 1
-            platform = platforms.find {|p|
-              # if this file is also available for the parent platform
-              platforms.include? ReaPack::Index::Source::PLATFORMS[p]
-            } or next
-          else
-            platform = platforms.first
-          end
+        platforms = a.map {|e| e.platform }.uniq
 
-          platform == :all ? msg : "#{msg} on #{platform}"
-        }
-      }.flatten.compact
+        if platforms.size > 1
+          # check platform inheritance
+          platforms.any? {|p|
+            loop do
+              p = Source::PLATFORMS[p] or break false
+              break true if platforms.include? p
+            end
+          } or next
+        end
+
+        platform = original.platform
+        platform == :all ? msg : "#{msg} on #{platform}"
+      }.compact
 
       errors unless errors.empty?
+    end
+
+  private
+    def sort(set)
+      grouped = set.group_by {|e| levels[e.platform] }
+      level = yield grouped.keys.sort
+
+      grouped[level]
+        .sort_by {|e| Source::PLATFORMS.keys.index e.platform }
+        .first
+    end
+
+    def levels
+      @@levels ||= begin
+        Hash[Source::PLATFORMS.map {|name, parent|
+          levels = 0
+
+          loop do
+            break unless parent
+            levels += 1
+            parent = Source::PLATFORMS[parent]
+          end
+
+          [name, levels]
+        }]
+      end
     end
   end
 end
