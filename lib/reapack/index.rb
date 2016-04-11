@@ -48,7 +48,7 @@ class ReaPack::Index
       collection = SourceCollection.new
       value.lines.each {|l|
         m = l.chomp.match(PROVIDES_REGEX) or next
-        src = Source.new m[:platform], m[:file], m[:url]
+        src = Source.new m[:platform], expand(m[:file]), m[:url]
         collection << src
       }
       collection.conflicts&.join "\n"
@@ -322,6 +322,12 @@ private
     [cat, pkg]
   end
 
+  def self.expand(path, base = String.new)
+      expanded = File.expand_path path, FS_ROOT + base
+      expanded[0...FS_ROOT.size] = ''
+      expanded
+  end
+
   def parse_provides(provides, path)
     basename = File.basename path
     basedir = dirname(path).to_s
@@ -332,15 +338,13 @@ private
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
       pattern = basename if pattern == '.'
+      expanded = self.class.expand pattern, basedir
 
-      absolute = File.expand_path pattern, FS_ROOT + basedir
-      absolute[0...FS_ROOT.size] = ''
-
-      if absolute == path
+      if expanded == path
         # always resolve path even when an url template is set
-        files = [absolute]
+        files = [expanded]
       elsif url_tpl.nil?
-        files = @files.select {|f| File.fnmatch absolute, f, File::FNM_PATHNAME }
+        files = @files.select {|f| File.fnmatch expanded, f, File::FNM_PATHNAME }
         raise Error, "file not found '#{pattern}'" if files.empty?
       else
         # use the relative path for external urls

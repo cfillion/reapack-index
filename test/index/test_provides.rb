@@ -251,4 +251,22 @@ class TestIndex::Provides < MiniTest::Test
     assert_match %q{invalid value for tag "provides": duplicate file 'test.png'},
       error.message
   end
+
+  def test_duplicate_path_expansion
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['script.lua', 'test.png']
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan index.files.first, <<-IN
+       @version 1.0
+       @provides
+         test/../test.png
+         ./test.png
+     IN
+    end
+
+    assert_match %q{invalid value for tag "provides": duplicate file 'test.png'},
+      error.message
+  end
 end
