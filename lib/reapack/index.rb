@@ -43,30 +43,6 @@ class ReaPack::Index
     \z
   /x.freeze
 
-  PROVIDES_VALIDATOR = proc {|value|
-    begin
-      collection = SourceCollection.new
-      value.lines.each {|l|
-        m = l.chomp.match(PROVIDES_REGEX) or next
-        src = Source.new m[:platform], expand(m[:file]), m[:url]
-        collection << src
-      }
-      collection.conflicts&.join "\n"
-    rescue Error => e
-      e.message
-    end
-  }.freeze
-
-  HEADER_RULES = {
-    # package-wide tags
-    :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
-
-    # version-specific tags
-    :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
-    :changelog => [MetaHeader::OPTIONAL, /.+/],
-    :provides => [MetaHeader::OPTIONAL, /.+/, PROVIDES_VALIDATOR]
-  }.freeze
-
   FS_ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :url_template
@@ -107,15 +83,15 @@ class ReaPack::Index
     return unless type
 
     mh = MetaHeader.new contents
-
     backup = @doc.root.dup
+    @basedir = dirname(path).to_s
 
     if mh[:noindex]
       remove path
       return
     end
 
-    if errors = mh.validate(HEADER_RULES)
+    if errors = mh.validate(header_rules)
       prefix = errors.size == 1 ? "\x20" : "\n\x20\x20"
       raise Error, 'invalid metadata:%s' %
         [prefix + errors.join(prefix)]
@@ -322,23 +298,22 @@ private
     [cat, pkg]
   end
 
-  def self.expand(path, base = String.new)
-      expanded = File.expand_path path, FS_ROOT + base
-      expanded[0...FS_ROOT.size] = ''
-      expanded
+  def expand(path)
+    expanded = File.expand_path path, FS_ROOT + @basedir
+    expanded[0...FS_ROOT.size] = ''
+    expanded
   end
 
   def parse_provides(provides, path)
     basename = File.basename path
-    basedir = dirname(path).to_s
-    pathdir = Pathname.new basedir
+    pathdir = Pathname.new @basedir
 
     provides.to_s.lines.map {|line|
       m = line.chomp.match PROVIDES_REGEX
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
       pattern = basename if pattern == '.'
-      expanded = self.class.expand pattern, basedir
+      expanded = expand pattern
 
       if expanded == path
         # always resolve path even when an url template is set
@@ -379,5 +354,31 @@ private
     else
       @doc.root['commit'] = sha1
     end
+  end
+
+  def header_rules
+    @header_rules ||= begin
+      {
+        # package-wide tags
+        :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
+
+        # version-specific tags
+        :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
+        :changelog => [MetaHeader::OPTIONAL, /.+/],
+        :provides => [MetaHeader::OPTIONAL, /.+/, method(:validate_provides).to_proc]
+      }.freeze
+    end
+  end
+
+  def validate_provides(value)
+    collection = SourceCollection.new
+    value.lines.each {|l|
+      m = l.chomp.match(PROVIDES_REGEX) or next
+      src = Source.new m[:platform], expand(m[:file]), m[:url]
+      collection << src
+    }
+    collection.conflicts&.join "\n"
+  rescue Error => e
+    e.message
   end
 end
