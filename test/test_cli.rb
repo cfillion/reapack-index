@@ -49,8 +49,7 @@ class TestCLI < MiniTest::Test
 
   def test_output
     wrapper ['-o output.xml'] do
-      @git.add mkfile('test.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('test.lua', '@version 1.0')]
 
       capture_io do
         assert_equal true, @indexer.run
@@ -60,65 +59,19 @@ class TestCLI < MiniTest::Test
     end
   end
 
-  def test_multibyte_filename
-    wrapper do
-      script = mkfile("\342\200\224.lua")
-
-      @git.add script
-      @git.commit 'initial commit'
-
-      @git.remove script
-      @git.commit 'remove test'
-
-      assert_output { @indexer.run }
-    end
-  end
-
-  def test_invalid_unicode_sequence
-    wrapper do
-      @git.add mkfile('.gitkeep')
-      @git.commit 'initial commit'
-
-      @git.add mkfile('test.lua', "@version 1.0\n\n\x97")
-      @git.commit 'second commit'
-
-      assert_output { @indexer.run }
-    end
-  end
-
   def test_create_commit
     wrapper ['--commit'] do
-      @git.add mkfile('.gitkeep')
-      @git.commit 'initial commit'
-
-      mkfile 'ignored1'
-      @git.add mkfile('ignored2')
-
       assert_output("empty index\n", /commit created\n/) { @indexer.run }
       
-      commit = @git.log(1).last
+      commit = @git.last_commit
       assert_equal 'index: empty index', commit.message
-      assert_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
-    end
-  end
-
-  def test_create_initial_commit
-    wrapper ['--commit'] do
-      mkfile 'ignored1'
-      @git.add mkfile('ignored2')
-
-      assert_output("empty index\n", /commit created\n/) { @indexer.run }
-
-      commit = @git.log(1).last
-      assert_equal 'index: empty index', commit.message
-      assert_equal ['index.xml'], commit.gtree.files.keys
+      assert_equal ['index.xml'], commit.each_diff.map {|d| d.file }
     end
   end
 
   def test_create_commit_accept
     wrapper ['--prompt-commit'] do
-      @git.add mkfile('.gitkeep')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('.gitkeep')]
 
       fake_input do |fio|
         fio.getch = 'y'
@@ -126,16 +79,15 @@ class TestCLI < MiniTest::Test
         assert_match /commit created/i, stderr
       end
 
-      commit = @git.log(1).last
+      commit = @git.last_commit
       assert_equal 'index: empty index', commit.message
-      assert_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
+      assert_equal ['index.xml'], commit.each_diff.map {|d| d.file }
     end
   end
 
   def test_create_commit_decline
     wrapper ['--prompt-commit'] do
-      @git.add mkfile('.gitkeep')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('.gitkeep')]
 
       fake_input do |fio|
         fio.getch = 'n'
@@ -143,9 +95,9 @@ class TestCLI < MiniTest::Test
         refute_match /commit created/i, stderr
       end
 
-      commit = @git.log(1).last
+      commit = @git.last_commit
       refute_equal 'index: empty index', commit.message
-      refute_equal ['index.xml'], commit.diff_parent.map {|d| d.path }
+      refute_equal ['index.xml'], commit.each_diff.map {|d| d.file }
     end
   end
 
@@ -174,8 +126,9 @@ class TestCLI < MiniTest::Test
 
     _, stderr = capture_io do
       wrapper ['--warnings'], setup: setup do
-        @git.add mkfile('test.lua', 'no version tag in this script!')
-        @git.commit 'initial commit'
+        @git.create_commit 'initial commit', [
+          mkfile('test.lua', 'no version tag in this script!')
+        ]
 
         assert_equal true, @indexer.run
       end
@@ -190,7 +143,7 @@ class TestCLI < MiniTest::Test
       mkfile '.reapack-index.conf', '--help'
       mkfile 'Category/.gitkeep'
 
-      Dir.chdir File.join(@git.dir.to_s, 'Category')
+      Dir.chdir File.join(@git.path, 'Category')
 
       assert_output /--help/ do
         ReaPack::Index::CLI.new
@@ -200,10 +153,10 @@ class TestCLI < MiniTest::Test
 
   def test_working_directory_with_options
     wrapper do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('README.md', '# Hello World')]
 
-      Dir.chdir @git.dir.to_s
+      Dir.chdir @git.path
 
       # no error = repository is found
       assert_output '', '' do
@@ -233,8 +186,8 @@ class TestCLI < MiniTest::Test
 
   def test_progress
     wrapper ['--progress'] do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
         assert_equal true, @indexer.run
@@ -248,12 +201,12 @@ class TestCLI < MiniTest::Test
 
   def test_progress_no_new_commit
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test1.lua', '@version 1.0')]
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@git.log(1).last.sha}"/>
+<index version="1" commit="#{@git.last_commit.id}"/>
       XML
     }
 
@@ -266,8 +219,8 @@ class TestCLI < MiniTest::Test
 
   def test_progress_warnings
     wrapper ['--progress'] do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /\nWarning:/i do
         assert_equal true, @indexer.run
@@ -277,8 +230,8 @@ class TestCLI < MiniTest::Test
 
   def test_quiet_mode
     wrapper ['--verbose', '--progress', '--quiet'] do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output '', '' do
         assert_equal true, @indexer.run
@@ -303,28 +256,27 @@ class TestCLI < MiniTest::Test
 
   def test_auto_url_template_ssh
     wrapper [], remote: 'git@github.com:User/Repo.git' do
-      @git.add mkfile('hello.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('hello.lua', '@version 1.0')]
 
       assert_output { @indexer.run }
-      assert_match "https://github.com/User/Repo/raw/#{@git.log(1).last.sha}/hello.lua", read_index
+      assert_match "https://github.com/User/Repo/raw/#{@git.last_commit.id}/hello.lua", read_index
     end
   end
 
   def test_auto_url_template_https
     wrapper [], remote: 'https://github.com/User/Repo.git' do
-      @git.add mkfile('hello.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('hello.lua', '@version 1.0')]
 
       assert_output { @indexer.run }
-      assert_match "https://github.com/User/Repo/raw/#{@git.log(1).last.sha}/hello.lua", read_index
+      assert_match "https://github.com/User/Repo/raw/#{@git.last_commit.id}/hello.lua", read_index
     end
   end
 
   def test_url_template
     wrapper ['--url-template=http://host/$path'], remote: false do
-      @git.add mkfile('hello.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('hello.lua', '@version 1.0')]
 
       assert_output { @indexer.run }
       assert_match 'http://host/hello.lua', read_index
@@ -333,8 +285,8 @@ class TestCLI < MiniTest::Test
 
   def test_url_template_override_git
     wrapper ['--url-template=http://host/$path'] do
-      @git.add mkfile('hello.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('hello.lua', '@version 1.0')]
 
       assert_output { @indexer.run }
       assert_match 'http://host/hello.lua', read_index
@@ -343,8 +295,8 @@ class TestCLI < MiniTest::Test
 
   def test_url_template_invalid
     wrapper ['--url-template=minoshiro'] do
-      @git.add mkfile('hello.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('hello.lua', '@version 1.0')]
 
       _, stderr = capture_io { @indexer.run }
       assert_match /--url-template: .+\$path placeholder/i, stderr

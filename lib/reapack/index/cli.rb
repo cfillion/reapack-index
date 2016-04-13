@@ -1,11 +1,12 @@
-class ReaPack::Index::CLI
+class ReaPack::Index
+  class CLI
   def initialize(argv = [])
     @opts = parse_options(argv)
     path = argv.last || Dir.pwd
 
     return unless @exit.nil?
 
-    @git = Rugged::Repository.discover path
+    @git = Git.new path
     @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
 
     @opts = DEFAULTS.merge @opts
@@ -64,7 +65,7 @@ private
     tpl = @opts[:url_template]
     is_custom = tpl != DEFAULTS[:url_template]
 
-    @db.url_template = is_custom ? tpl : auto_url_tpl
+    @db.url_template = is_custom ? tpl : @git.guess_url_template
   rescue ReaPack::Index::Error => e
     warn '--url-template: ' + e.message if is_custom
   end
@@ -76,17 +77,10 @@ private
     end
 
     if @opts[:scan].empty?
-      walker = Rugged::Walker.new @git
-      walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
-      walker.push @git.head.target_id
-
-      last_commit = @db.commit.to_s
-      walker.hide last_commit if find_commit last_commit
-
-      commits = walker.each.to_a
+      commits = @git.commits_since @db.commit.to_s
     else
       commits = @opts[:scan].map {|hash|
-        find_commit hash or begin
+        @git.get_commit hash or begin
           $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
           @exit = false
           nil
@@ -101,80 +95,35 @@ private
     end
   end
 
-  def find_commit(hash)
-    if hash.size.between?(7, 40) && @git.include?(hash)
-      object = @git.lookup hash
-      object if object.is_a? Rugged::Commit
-    end
-  rescue Rugged::InvalidError
-    nil
-  end
-
   def process(commit)
     if @opts[:verbose]
-      sha = commit.oid[0...7]
-      message = commit.message.lines.first.chomp
-      log 'processing %s: %s' % [sha, message]
+      log 'processing %s: %s' % [commit.short_id, commit.summary]
     end
 
-    @db.commit = commit.oid
+    @db.commit = commit.id
     @db.time = commit.time
-    @db.files = lsfiles commit.tree
+    @db.files = commit.filelist
 
-    parent = commit.parents.first
-
-    if parent
-      diff = parent.diff commit.oid
-    else
-      diff = commit.diff
-    end
-
-    diff.each_delta {|delta| index delta, parent.nil? }
+    commit.each_diff {|diff| index diff }
   ensure
     bump_progress
   end
 
-  def index(delta, is_initial)
-    if is_initial
-      status = 'new'
-      file = delta.old_file
+  def index(diff)
+    return if ignored? expand_path(diff.file)
+    return unless ReaPack::Index.type_of diff.file
+
+    log "-> indexing #{diff.status} file #{diff.file}"
+
+    if diff.status == :deleted
+      @db.remove diff.file
     else
-      status = delta.status
-      file = delta.new_file
-    end
-
-    return if ignored? expand_path(file[:path])
-    return unless ReaPack::Index.type_of file[:path]
-
-    log "-> indexing #{status} file #{file[:path]}"
-
-    if status == :deleted
-      @db.remove file[:path]
-    else
-      blob = @git.lookup file[:oid]
-
       begin
-        @db.scan file[:path], blob.content.force_encoding('UTF-8')
+        @db.scan diff.file, diff.new_content
       rescue ReaPack::Index::Error => e
-        warn "#{file[:path]}: #{e.message}"
+        warn "#{diff.file}: #{e.message}"
       end
     end
-  end
-
-  def lsfiles(tree, base = String.new)
-    files = []
-
-    tree.each {|obj|
-      fullname = base.empty? ? obj[:name] : File.join(base, obj[:name])
-      case obj[:type]
-      when :blob
-        files << fullname
-      when :tree
-        files.concat lsfiles(@git.lookup(obj[:oid]), fullname)
-      end
-    }
-
-    files
   end
 
   def eval_links
@@ -238,15 +187,13 @@ private
   end
 
   def check
-    @db.amend = true # enable checks for released versions as well
-
     check_name
 
-    root = Pathname.new @git.workdir
+    @db.amend = true # enable checks for released versions as well
     failures = []
 
-    pkgs = Hash[Pathname.glob("#{Regexp.quote(root.to_s)}**/*").sort.map {|pn|
-      abs, rel = pn.to_s, pn.relative_path_from(root).to_s
+    pkgs = Hash[Dir.glob("#{Regexp.quote(@git.path)}/**/*").sort.map {|abs|
+      rel = @git.relative_path abs
       @db.files << rel
 
       next if !File.file?(abs) || ignored?(abs) || !ReaPack::Index.type_of(abs)
@@ -302,26 +249,7 @@ private
       prompt 'Commit the new index?'
     end
 
-    old_index = @git.index
-    target = @git.empty? ? nil : @git.head.target
-
-    if target
-      old_index.read_tree target.tree
-    else
-      old_index.clear
-    end
-
-    index = @git.index
-    index.add relative_path(@db.path)
-
-    Rugged::Commit.create @git, \
-      tree: index.write_tree(@git),
-      message: "index: #{changelog}",
-      parents: [target].compact,
-      update_ref: 'HEAD'
-
-    old_index.write
-
+    @git.create_commit "index: #{changelog}", [@db.path]
     $stderr.puts 'commit created'
   end
 
@@ -386,26 +314,7 @@ private
   def expand_path(path)
     # expand from the repository root or from the current directory if
     # the repository is not yet initialized
-    File.expand_path path, @git ? @git.workdir : Dir.pwd
+    File.expand_path path, @git ? @git.path : Dir.pwd
   end
-
-  def relative_path(path)
-    root = Pathname.new @git.workdir
-    file = Pathname.new path
-
-    file.relative_path_from(root).to_s
-  end
-
-  def auto_url_tpl
-    remote = @git.remotes['origin']
-    return unless remote
-
-    uri = Gitable::URI.parse remote.url
-    return unless uri.path =~ /\A\/?(?<user>[^\/]+)\/(?<repo>[^\/]+)\.git\Z/
-
-    tpl = uri.to_web_uri
-    tpl.path += '/raw/$commit/$path'
-
-    tpl.to_s
   end
 end

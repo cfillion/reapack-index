@@ -13,7 +13,6 @@ SimpleCov.start {
   add_filter '/test/'
 }
 
-require 'git'
 require 'reapack/index'
 require 'minitest/autorun'
 
@@ -38,7 +37,25 @@ module IndexHelper
   end
 end
 
+module GitHelper
+  def init_git
+    path = Dir.mktmpdir 'test-repository'
+    repo = Rugged::Repository.init_at path
+    @git = ReaPack::Index::Git.new path
+    [path, repo]
+  end
+
+  def mkfile(file, content = String.new)
+    fn = File.join @git.path, file
+    FileUtils.mkdir_p File.dirname(fn)
+    File.write fn, content
+    fn
+  end
+end
+
 module CLIHelper
+  include GitHelper
+
   INVALID_HASHES = [
     'hello world', '0000000000000000000000000000000000000000',
     '0000000000000000000000000000000000000deadbeef',
@@ -62,19 +79,13 @@ module CLIHelper
   end
 
   def wrapper(args = [], options = {})
-    path = Dir.mktmpdir 'test-repository'
     old_pwd = Dir.pwd
 
-    @git = Git.init path
-    @git.config 'user.name', 'John Doe'
-    @git.config 'user.email', 'john@doe.com'
-
-    # improves performance a lot when gpgsign is enabled in the global git config
-    @git.config 'commit.gpgsign', 'false'
+    path, repo = init_git
 
     if options[:remote] != false
       options[:remote] ||= 'git@github.com:cfillion/test-repository.git'
-      @git.add_remote 'origin', options[:remote]
+      repo.remotes.create 'origin', options[:remote]
     end
 
     options[:setup].call if options.has_key? :setup
@@ -89,14 +100,7 @@ module CLIHelper
     FileUtils.rm_r path
   end
 
-  def mkfile(file, content = String.new)
-    fn = File.join @git.dir.to_s, file
-    FileUtils.mkdir_p File.dirname(fn)
-    File.write fn, content
-    fn
-  end
-
   def read_index(file = 'index.xml')
-    File.read File.expand_path(file, @git.dir.to_s)
+    File.read File.expand_path(file, @git.path)
   end
 end

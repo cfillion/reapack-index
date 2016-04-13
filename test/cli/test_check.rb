@@ -105,7 +105,7 @@ Finished checks for 1 package with 1 failure
 
   def test_ignore
     setup = proc {
-      Dir.chdir @git.dir.to_s
+      Dir.chdir @git.path
       mkfile 'index.xml', '<index name="test"/>'
     }
 

@@ -7,32 +7,34 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_initial_commit
     wrapper do
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.add mkfile('Category/test2.lua', '@version 1.0')
-      @git.add mkfile('Category/Sub/test3.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [
+        mkfile('test1.lua', '@version 1.0'),
+        mkfile('Category/test2.lua', '@version 1.0'),
+        mkfile('Category/Sub/test3.lua', '@version 1.0'),
+      ]
 
       assert_output /3 new packages/ do
         assert_equal true, @indexer.run
       end
 
       assert_match 'Category/test2.lua', read_index
-      assert_match "raw/#{@git.log(1).last.sha}/test1.lua", read_index
+      assert_match "raw/#{@git.last_commit.id}/test1.lua", read_index
       assert_match 'https://github.com/cfillion/test-repository/raw', read_index
 
-      assert_match @git.log(1).last.date.utc.iso8601, read_index
+      assert_match @git.last_commit.time.utc.iso8601, read_index
     end
   end
 
   def test_normal_commit
     wrapper do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('README.md', '# Hello World')]
 
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.add mkfile('Category/test2.lua', '@version 1.0')
-      @git.add mkfile('Category/Sub/test3.lua', '@version 1.0')
-      @git.commit 'second commit'
+      @git.create_commit 'second commit', [
+        mkfile('test1.lua', '@version 1.0'),
+        mkfile('Category/test2.lua', '@version 1.0'),
+        mkfile('Category/Sub/test3.lua', '@version 1.0'),
+      ]
 
       assert_output "3 new categories, 3 new packages, 3 new versions\n" do
         assert_equal true, @indexer.run
@@ -52,10 +54,9 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_pwd_is_subdirectory
     wrapper do
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('test1.lua', '@version 1.0')]
 
-      pwd = File.join(@git.dir.to_s, 'test')
+      pwd = File.join(@git.path, 'test')
       Dir.mkdir pwd
       Dir.chdir pwd
 
@@ -70,9 +71,10 @@ class TestCLI::Scan < MiniTest::Test
   def test_verbose
     stdout, stderr = capture_io do
       wrapper ['--verbose'] do
-        @git.add mkfile('test.lua', '@version 1.0')
-        @git.add mkfile('test.png')
-        @git.commit 'initial commit'
+        @git.create_commit 'initial commit', [
+          mkfile('test.lua', '@version 1.0'),
+          mkfile('test.png'),
+        ]
 
         assert_equal true, @indexer.run
       end
@@ -87,8 +89,7 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_verbose_override
     wrapper ['--verbose', '--no-verbose'] do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
         assert_equal true, @indexer.run
@@ -101,8 +102,8 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_invalid_metadata
     wrapper do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /Warning: test\.lua: Invalid metadata/i do
         assert_equal true, @indexer.run
@@ -112,8 +113,8 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_no_warnings
     wrapper ['-w'] do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test.lua', 'no version tag in this script!')]
 
       _, stderr = capture_io do
         assert_equal true, @indexer.run
@@ -125,8 +126,8 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_no_warnings_override
     wrapper ['-w', '-W'] do
-      @git.add mkfile('test.lua', 'no version tag in this script!')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /Warning: test\.lua: Invalid metadata/i do
         assert_equal true, @indexer.run
@@ -136,18 +137,16 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_from_last
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [mkfile('test1.lua', '@version 1.0')]
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hello" commit="#{@git.log(1).last.sha}"/>
+<index version="1" name="hello" commit="#{@git.last_commit.id}"/>
       XML
     }
 
     wrapper [], setup: setup do
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
+      @git.create_commit 'second commit', [mkfile('test2.lua', '@version 1.0')]
 
       assert_output nil, '' do
         assert_equal true, @indexer.run
@@ -164,8 +163,8 @@ class TestCLI::Scan < MiniTest::Test
 
     INVALID_HASHES.each {|hash|
       setup = proc {
-        @git.add mkfile('test1.lua', '@version 1.0')
-        @git.commit 'initial commit'
+        @git.create_commit 'initial commit',
+          [mkfile('test1.lua', '@version 1.0')]
 
         mkfile 'index.xml', <<-XML
   <?xml version="1.0" encoding="utf-8"?>
@@ -174,8 +173,7 @@ class TestCLI::Scan < MiniTest::Test
       }
 
       wrapper [], setup: setup do
-        @git.add mkfile('test2.lua', '@version 1.0')
-        @git.commit 'second commit'
+        @git.create_commit 'second commit', [mkfile('test2.lua', '@version 1.0')]
 
         assert_output nil, '' do
           assert_equal true, @indexer.run
@@ -189,12 +187,12 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_amend
     setup = proc {
-      @git.add mkfile('Test/test.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('Test/test.lua', '@version 1.0')]
       
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hello" commit="#{@git.log(1).last.sha}">
+<index version="1" name="hello" commit="#{@git.last_commit.id}">
   <category name="Test">
     <reapack name="test.lua" type="script">
       <version name="1.0"/>
@@ -205,8 +203,8 @@ class TestCLI::Scan < MiniTest::Test
     }
 
     wrapper ['--amend'], setup: setup do
-      @git.add mkfile('Test/test.lua', "@version 1.0\n@author cfillion")
-      @git.commit 'second commit'
+      @git.create_commit 'second commit',
+        [mkfile('Test/test.lua', "@version 1.0\n@author cfillion")]
 
       assert_output /1 modified package/i, '' do
         assert_equal true, @indexer.run
@@ -218,12 +216,12 @@ class TestCLI::Scan < MiniTest::Test
 
   def test_no_amend
     setup = proc {
-      @git.add mkfile('Test/test.lua', '@version 1.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('Test/test.lua', '@version 1.0')]
       
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@git.log(1).last.sha}">
+<index version="1" commit="#{@git.last_commit.id}">
   <category name="Test">
     <reapack name="test.lua" type="script">
       <version name="1.0"/>
@@ -234,8 +232,8 @@ class TestCLI::Scan < MiniTest::Test
     }
 
     wrapper ['--no-amend'], setup: setup do
-      @git.add mkfile('Test/test.lua', "@version 1.0\n@author cfillion")
-      @git.commit 'second commit'
+      @git.create_commit 'second commit',
+        [mkfile('Test/test.lua', "@version 1.0\n@author cfillion")]
 
       assert_output '', /nothing to do/i do
         assert_equal true, @indexer.run
@@ -246,17 +244,15 @@ class TestCLI::Scan < MiniTest::Test
   end
 
   def test_scan_ignore
-    setup = proc { Dir.chdir @git.dir.to_s }
+    setup = proc { Dir.chdir @git.path }
 
     wrapper ['--ignore=Hello', '--ignore=Chunky/Bacon.lua',
              '--ignore=test2.lua'], setup: setup do
-      @git.add mkfile('README.md', '# Hello World')
-      @git.commit 'initial commit'
-
-      @git.add mkfile('Hello/World.lua', 'konnichiwa')
-      @git.add mkfile('Chunky/Bacon.lua', 'konnichiwa')
-      @git.add mkfile('Directory/test2.lua', '@version 1.0')
-      @git.commit 'second commit'
+      @git.create_commit 'initial commit', [
+        mkfile('Hello/World.lua', 'konnichiwa'),
+        mkfile('Chunky/Bacon.lua', 'konnichiwa'),
+        mkfile('Directory/test2.lua', '@version 1.0'),
+      ]
 
       assert_output "1 new category, 1 new package, 1 new version\n" do
         assert_equal true, @indexer.run
@@ -272,11 +268,10 @@ class TestCLI::Scan < MiniTest::Test
     wrapper do
       script = mkfile 'test.lua', '@version 1.0'
 
-      @git.add script
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit', [script]
 
-      @git.remove script
-      @git.commit 'second commit'
+      File.delete script
+      @git.create_commit 'second commit', [script]
 
       assert_output /1 removed package/i do
         assert_equal true, @indexer.run
@@ -291,15 +286,15 @@ class TestCLI::Scan < MiniTest::Test
     options = ['--progress', '--scan']
 
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 2.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test1.lua', '@version 2.0')]
 
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
-      options << @git.log(1).last.sha
+      @git.create_commit 'second commit',
+        [mkfile('test2.lua', '@version 1.0')]
+      options << @git.last_commit.id
 
-      @git.add mkfile('test3.lua', '@version 1.1')
-      @git.commit 'third commit'
+      @git.create_commit 'third commit',
+        [mkfile('test3.lua', '@version 1.1')]
     }
 
     wrapper options, setup: setup do
@@ -315,16 +310,16 @@ class TestCLI::Scan < MiniTest::Test
     options = ['--scan', nil, '--scan', nil]
 
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 2.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test1.lua', '@version 2.0')]
 
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
-      options[1] = @git.log(1).last.sha
+      @git.create_commit 'second commit',
+        [mkfile('test2.lua', '@version 1.0')]
+      options[1] = @git.last_commit.id
 
-      @git.add mkfile('test3.lua', '@version 1.1')
-      @git.commit 'third commit'
-      options[3] = @git.log(1).last.sha
+      @git.create_commit 'third commit',
+        [mkfile('test3.lua', '@version 1.1')]
+      options[3] = @git.last_commit.id
     }
 
     wrapper options, setup: setup do
@@ -340,12 +335,12 @@ class TestCLI::Scan < MiniTest::Test
     options = ['--scan']
 
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 2.0')
-      @git.commit 'initial commit'
+      @git.create_commit 'initial commit',
+        [mkfile('test1.lua', '@version 2.0')]
 
-      @git.add mkfile('test2.lua', '@version 1.0')
-      @git.commit 'second commit'
-      options << @git.log(1).last.sha
+      @git.create_commit 'second commit',
+        [mkfile('test2.lua', '@version 1.0')]
+      options << @git.last_commit.id
 
       options << '--scan'
     }
@@ -360,9 +355,9 @@ class TestCLI::Scan < MiniTest::Test
     options = ['--scan']
 
     setup = proc {
-      @git.add mkfile('test1.lua', '@version 2.0')
-      @git.commit 'initial commit'
-      options << @git.log(1).last.sha[0..7]
+      @git.create_commit 'initial commit',
+        [mkfile('test1.lua', '@version 2.0')]
+      options << @git.last_commit.short_id
     }
 
     wrapper options, setup: setup do
@@ -373,8 +368,7 @@ class TestCLI::Scan < MiniTest::Test
   def test_invalid_hashes
     INVALID_HASHES.each {|hash|
       wrapper ['--scan', hash] do
-        @git.add mkfile('README.md')
-        @git.commit 'initial commit'
+        @git.create_commit 'initial commit', [mkfile('README.md')]
 
         assert_output nil, /--scan: bad revision: #{Regexp.escape hash}/i do
           assert_equal false, @indexer.run
