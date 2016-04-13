@@ -13,7 +13,7 @@ class ReaPack::Index
     def self.validate_platform(platform)
       return unless platform # nil platform will be replaced by the default
 
-      unless PLATFORMS.has_key? platform
+      unless PLATFORMS.has_key? platform.to_sym
         raise Error, "invalid platform '#{platform}'"
       end
     end
@@ -50,30 +50,45 @@ class ReaPack::Index
   class SourceCollection
     Element = Struct.new :key, :platform, :file
 
+    class Selector
+      def initialize(key, elements)
+        @key, @elements = key, elements
+      end
+
+      def push(platform, file)
+        @elements << Element.new(@key, platform, file)
+      end
+
+      def clear
+        @elements.reject! {|e| e.key == @key }
+      end
+    end
+
     def initialize
       @elements = []
     end
 
-    def push(key, source)
-      @elements << Element.new(key, source.platform, source.file)
+    def initialize_copy(other)
+      super
+      other.instance_variable_set :@elements, @elements.dup
     end
 
-    def <<(source)
-      push nil, source
+    def [](key)
+      Selector.new key, @elements
     end
 
-    def conflicts(key = false)
+    def conflicts(key = nil)
       dups = @elements.group_by {|e| e.file }.select {|_, a| a.size > 1 }
 
       errors = dups.map {|f, a|
         packages = a.map {|e| e.key }.uniq
-        next unless key == false || packages.include?(key)
+        next if key && !packages.include?(key)
 
-        if key == false || packages.size == 1
-          original = sort(a, &:last)
+        if packages.size == 1 || !key
+          original = sort(a)[1]
           msg = "duplicate file '#{original.file}'"
         else
-          original = sort(a.select {|e| e.key != key }, &:first)
+          original = sort(a.select {|e| e.key != key }).first
           msg = "'#{original.file}' conflicts with '#{original.key}'"
         end
 
@@ -98,12 +113,8 @@ class ReaPack::Index
 
   private
     def sort(set)
-      grouped = set.group_by {|e| levels[e.platform] }
-      level = yield grouped.keys.sort
-
-      grouped[level]
-        .sort_by {|e| Source::PLATFORMS.keys.index e.platform }
-        .first
+      sorted = set.sort_by {|e| levels[e.platform] }
+      sorted.sort_by! {|e| Source::PLATFORMS.keys.index e.platform }
     end
 
     def levels

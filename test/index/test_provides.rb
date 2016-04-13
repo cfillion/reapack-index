@@ -248,38 +248,78 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_match %q{invalid value for tag "provides": duplicate file 'test.png'},
-      error.message
+    assert_equal "duplicate file 'test.png'", error.message
   end
 
-  def test_duplicate_path_expansion
+  def test_conflicts
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['script.lua', 'test.png']
+    index.files = ['script1.lua', 'script2.lua', 'script3.lua',
+                   'file1', 'file2']
+
+    index.scan index.files[0], <<-IN
+      @version 1.0
+      @provides file1
+    IN
 
     error = assert_raises ReaPack::Index::Error do
-     index.scan index.files.first, <<-IN
+     index.scan index.files[1], <<-IN
        @version 1.0
        @provides
-         test/../test.png
-         ./test.png
+         file1
+         file2
      IN
     end
 
-    assert_match %q{invalid value for tag "provides": duplicate file 'test.png'},
+    assert_equal "'file1' conflicts with 'script1.lua'",
       error.message
+
+    # did script2.lua did leave any trace behind?
+    index.scan index.files[2], <<-IN
+      @version 1.0
+      @provides file2
+    IN
   end
 
-  def test_duplicate_relative_expansion
+  def test_duplicate_other_package
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['Category/script.lua', 'Category/test.png', 'test.png']
+    index.files = ['script1.lua', 'script2.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
-      @provides
-        ../test.png
-        test.png
     IN
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan index.files.last, <<-IN
+       @version 1.0
+       @provides script1.lua
+     IN
+    end
+
+    assert_equal "'script1.lua' conflicts with 'script1.lua'",
+      error.message
+  end
+
+  def test_duplicate_cross_directory
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category1/script1.lua', 'Category2/script2.lua',
+                   'Category1/file']
+
+    index.scan index.files[0], <<-IN
+      @version 1.0
+      @provides file
+    IN
+
+    error = assert_raises ReaPack::Index::Error do
+     index.scan index.files[1], <<-IN
+       @version 1.0
+       @provides ../Category1/file
+     IN
+    end
+
+    assert_equal "'Category1/file' conflicts with 'Category1/script1.lua'",
+      error.message
   end
 end

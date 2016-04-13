@@ -56,73 +56,84 @@ class TestSource < MiniTest::Test
     assert_equal "invalid platform 'hello'", error.message
     assert_equal :all, src.platform
   end
+
+  def test_validate_platform
+    ReaPack::Index::Source.validate_platform nil
+    ReaPack::Index::Source.validate_platform :windows
+    ReaPack::Index::Source.validate_platform 'windows'
+
+    assert_raises ReaPack::Index::Error do
+      ReaPack::Index::Source.validate_platform :atari
+    end
+  end
 end
 
 class TestSourceCollection < MiniTest::Test
   def test_unique
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:all, 'file1.lua')
-    sc << ReaPack::Index::Source.new(:all, 'file2.lua')
+    sc['pkg'].push :all, 'file1.lua'
+    sc['pkg'].push :all, 'file2.lua'
 
+    assert_nil sc.conflicts('pkg')
     assert_nil sc.conflicts
   end
 
   def test_duplicates
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:all, 'file1.lua')
-    sc << ReaPack::Index::Source.new(:all, 'file1.lua', 'http://test/')
-    sc << ReaPack::Index::Source.new(:all, 'file2.lua')
-    sc << ReaPack::Index::Source.new(:all, 'file2.lua')
+    sc['pkg'].push :all, 'file1.lua'
+    sc['pkg'].push :all, 'file1.lua'
+    sc['pkg'].push :all, 'file2.lua'
+    sc['pkg'].push :all, 'file2.lua'
 
     assert_equal ["duplicate file 'file1.lua'", "duplicate file 'file2.lua'"],
-      sc.conflicts
-    assert_equal sc.conflicts, sc.conflicts(nil)
+      sc.conflicts('pkg')
   end
 
   def test_same_platform
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:windows, 'file.lua')
-    sc << ReaPack::Index::Source.new(:windows, 'file.lua', 'http://test/')
+    sc['test'].push :windows, 'file.lua'
+    sc['test'].push :windows, 'file.lua'
 
     assert_equal ["duplicate file 'file.lua' on windows"], sc.conflicts
   end
 
-  def test_different_platform
+  def test_unmatching_platform
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:darwin, 'file.lua')
-    sc << ReaPack::Index::Source.new(:windows, 'file.lua')
+    sc['test'].push :darwin, 'file.lua'
+    sc['test'].push :windows, 'file.lua'
 
     assert_nil sc.conflicts
   end
 
   def test_subplatform
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:all, 'file.lua')
-    sc << ReaPack::Index::Source.new(:windows, 'file.lua')
+    sc['test'].push :all, 'file.lua'
+    sc['test'].push :windows, 'file.lua'
 
     assert_equal ["duplicate file 'file.lua' on windows"], sc.conflicts
   end
 
   def test_subsubplatform
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:all, 'file.lua')
-    sc << ReaPack::Index::Source.new(:win32, 'file.lua')
+    sc['test'].push :all, 'file.lua'
+    sc['test'].push :win32, 'file.lua'
 
     assert_equal ["duplicate file 'file.lua' on win32"], sc.conflicts
   end
 
   def test_conflicts
     sc = ReaPack::Index::SourceCollection.new
-    sc.push 'package1.lua', ReaPack::Index::Source.new(:all, 'file1.lua')
+    sc['package1.lua'].push :all, 'file1.lua'
 
-    sc.push 'package2.lua', ReaPack::Index::Source.new(:all, 'file1.lua')
-    sc.push 'package2.lua', ReaPack::Index::Source.new(:all, 'file2.lua')
+    sc['package2.lua'].push :all, 'file1.lua'
+    sc['package2.lua'].push :all, 'file2.lua'
 
-    sc.push 'package3.lua', ReaPack::Index::Source.new(:windows, 'file2.lua')
+    sc['package3.lua'].push :windows, 'file2.lua'
 
-    sc.push 'package4.lua', ReaPack::Index::Source.new(:darwin, 'file1.lua')
+    sc['package4.lua'].push :darwin, 'file1.lua'
 
-    assert_nil sc.conflicts(nil), 'id = nil'
+    assert_nil sc.conflicts('not_specified.lua'), 'id = not_specified'
+
     assert_equal ["'file1.lua' conflicts with 'package2.lua'"],
       sc.conflicts('package1.lua'), 'id = package1'
 
@@ -141,53 +152,76 @@ class TestSourceCollection < MiniTest::Test
 
   def test_conflicts_bidirectional
     sc1 = ReaPack::Index::SourceCollection.new
-    sc1.push 'a', ReaPack::Index::Source.new(:all, 'file.lua')
-    sc1.push 'b', ReaPack::Index::Source.new(:windows, 'file.lua')
+    sc1['a'].push :all, 'file.lua'
+    sc1['b'].push :windows, 'file.lua'
 
     assert_equal ["'file.lua' conflicts with 'b' on windows"],
       sc1.conflicts('a'), 'id = a'
     assert_equal ["'file.lua' conflicts with 'a'"], sc1.conflicts('b'), 'id = b'
 
     sc2 = ReaPack::Index::SourceCollection.new
-    sc2.push 'b', ReaPack::Index::Source.new(:windows, 'file.lua')
-    sc2.push 'a', ReaPack::Index::Source.new(:all, 'file.lua')
+    sc2['b'].push :windows, 'file.lua'
+    sc2['a'].push :all, 'file.lua'
 
     assert_equal sc1.conflicts('a'), sc2.conflicts('a')
     assert_equal sc1.conflicts('b'), sc2.conflicts('b')
   end
 
-  def test_conflicts_highest_level
+  def test_conflicts_platform_selection
     sc1 = ReaPack::Index::SourceCollection.new
-    sc1.push 'a', ReaPack::Index::Source.new(:all, 'file.lua')
-    sc1.push 'b', ReaPack::Index::Source.new(:windows, 'file.lua')
-    sc1.push 'c', ReaPack::Index::Source.new(:win32, 'file.lua')
+    sc1['a'].push :all, 'file.lua'
+    sc1['b'].push :windows, 'file.lua'
+    sc1['c'].push :win32, 'file.lua'
 
     assert_equal ["'file.lua' conflicts with 'b' on windows"],
       sc1.conflicts('a'), 'id = a'
   end
 
-  def test_platform_lowest_level
+  def test_duplicate_platform_selection
     sc = ReaPack::Index::SourceCollection.new
-    sc << ReaPack::Index::Source.new(:windows, 'file.lua') # windows first
-    sc << ReaPack::Index::Source.new(:all, 'file.lua')
-
+    sc['test'].push :windows, 'file.lua'
+    sc['test'].push :all, 'file.lua'
     assert_equal ["duplicate file 'file.lua' on windows"], sc.conflicts
+
+    sc['test'].push :all, 'file.lua'
+    assert_equal ["duplicate file 'file.lua'"], sc.conflicts
   end
 
   def test_platform_same_level
     sc1 = ReaPack::Index::SourceCollection.new
-    sc1 << ReaPack::Index::Source.new(:all, 'file.lua')
-    sc1 << ReaPack::Index::Source.new(:win32, 'file.lua') # win32 first
-    sc1 << ReaPack::Index::Source.new(:darwin32, 'file.lua')
+    sc1['test'].push :all, 'file.lua'
+    sc1['test'].push :win32, 'file.lua' # win32 first
+    sc1['test'].push :darwin32, 'file.lua'
 
     assert_equal ["duplicate file 'file.lua' on win32"], sc1.conflicts
 
     sc2 = ReaPack::Index::SourceCollection.new
-    sc2 << ReaPack::Index::Source.new(:all, 'file.lua')
-    sc2 << ReaPack::Index::Source.new(:darwin32, 'file.lua') # darwin32 first
-    sc2 << ReaPack::Index::Source.new(:win32, 'file.lua')
+    sc2['test'].push :all, 'file.lua'
+    sc2['test'].push :darwin32, 'file.lua' # darwin32 first
+    sc2['test'].push :win32, 'file.lua'
 
     assert_equal sc1.conflicts, sc2.conflicts
   end
 
+  def test_remove_by_key
+    sc = ReaPack::Index::SourceCollection.new
+    sc['test'].push :all, 'file'
+
+    sc['test'].clear
+    sc['test'].push :all, 'file'
+
+    assert_equal nil, sc.conflicts('test')
+  end
+
+  def test_dup
+    sc1 = ReaPack::Index::SourceCollection.new
+    sc1['test'].push :all, 'file'
+    sc2 = sc1.dup
+
+    sc1['test'].push :all, 'file'
+    assert_nil sc2.conflicts
+
+    sc2['test'].push :all, 'file'
+    refute_nil sc2.conflicts
+  end
 end

@@ -43,6 +43,28 @@ class ReaPack::Index
     \z
   /x.freeze
 
+  PROVIDES_VALIDATOR = proc {|value|
+    begin
+      value.lines.each {|l|
+        m = l.chomp.match PROVIDES_REGEX
+        Source.validate_platform m[:platform]
+      }
+      nil
+    rescue Error => e
+      e.message
+    end
+  }
+
+  HEADER_RULES = {
+    # package-wide tags
+    :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
+
+    # version-specific tags
+    :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
+    :changelog => [MetaHeader::OPTIONAL, /.+/],
+    :provides => [MetaHeader::OPTIONAL, /.+/, PROVIDES_VALIDATOR]
+  }.freeze
+
   FS_ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :url_template
@@ -76,22 +98,25 @@ class ReaPack::Index
     @doc.encoding = 'utf-8'
 
     @metadata = Metadata.new @doc.root
+    @sources = SourceCollection.new
   end
 
   def scan(path, contents)
     type = self.class.type_of path
     return unless type
 
+    backups = Hash[[:@doc, :@sources].map {|var|
+      [var, instance_variable_get(var).dup]
+    }]
+
     mh = MetaHeader.new contents
-    backup = @doc.root.dup
-    @basedir = dirname(path).to_s
 
     if mh[:noindex]
       remove path
       return
     end
 
-    if errors = mh.validate(header_rules)
+    if errors = mh.validate(HEADER_RULES)
       prefix = errors.size == 1 ? "\x20" : "\n\x20\x20"
       raise Error, 'invalid metadata:%s' %
         [prefix + errors.join(prefix)]
@@ -105,6 +130,7 @@ class ReaPack::Index
 
       # store the version name for make_url
       @currentVersion = ver.name
+      @sources[path].clear
 
       ver.author = mh[:author]
       ver.time = @time if @time && ver.is_new?
@@ -115,11 +141,19 @@ class ReaPack::Index
 
         if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
           # add the package itself as a source
-          sources.unshift Source.new nil, nil, make_url(path)
+          src = Source.new nil, nil, make_url(path)
+          sources.unshift src
+
+          @sources[path].push src.platform, path
         end
+
 
         sources.each {|src| ver.add_source src }
       end
+    end
+
+    if cons = @sources.conflicts(path)
+      raise Error, cons.first
     end
 
     log_change 'new category', 'new categories' if cat.is_new?
@@ -138,7 +172,7 @@ class ReaPack::Index
 
     bump_commit
   rescue Error
-    @doc.root = backup
+    backups.each {|var, value| instance_variable_set var, value }
     raise
   end
   
@@ -298,22 +332,19 @@ private
     [cat, pkg]
   end
 
-  def expand(path)
-    expanded = File.expand_path path, FS_ROOT + @basedir
-    expanded[0...FS_ROOT.size] = ''
-    expanded
-  end
-
   def parse_provides(provides, path)
     basename = File.basename path
-    pathdir = Pathname.new @basedir
+    basedir = dirname(path).to_s
+    pathdir = Pathname.new basedir
 
     provides.to_s.lines.map {|line|
       m = line.chomp.match PROVIDES_REGEX
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
       pattern = basename if pattern == '.'
-      expanded = expand pattern
+
+      expanded = File.expand_path pattern, FS_ROOT + basedir
+      expanded[0...FS_ROOT.size] = ''
 
       if expanded == path
         # always resolve path even when an url template is set
@@ -327,15 +358,20 @@ private
       end
 
       files.map {|file|
-        url = make_url file, url_tpl
+        src = Source.new platform
+        src.url = make_url file, url_tpl
 
-        if file == path
-          file = nil
-        elsif url_tpl.nil?
-          file = Pathname.new(file).relative_path_from(pathdir).to_s
+        @sources[path].push src.platform, file
+
+        if file != path
+          if url_tpl.nil?
+            src.file = Pathname.new(file).relative_path_from(pathdir).to_s
+          else
+            src.file = file
+          end
         end
 
-        Source.new platform, file, url
+        src
       }
     }.flatten
   end
@@ -354,31 +390,5 @@ private
     else
       @doc.root['commit'] = sha1
     end
-  end
-
-  def header_rules
-    @header_rules ||= begin
-      {
-        # package-wide tags
-        :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
-
-        # version-specific tags
-        :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
-        :changelog => [MetaHeader::OPTIONAL, /.+/],
-        :provides => [MetaHeader::OPTIONAL, /.+/, method(:validate_provides).to_proc]
-      }.freeze
-    end
-  end
-
-  def validate_provides(value)
-    collection = SourceCollection.new
-    value.lines.each {|l|
-      m = l.chomp.match(PROVIDES_REGEX) or next
-      src = Source.new m[:platform], expand(m[:file]), m[:url]
-      collection << src
-    }
-    collection.conflicts&.join "\n"
-  rescue Error => e
-    e.message
   end
 end

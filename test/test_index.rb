@@ -141,6 +141,22 @@ class TestIndex < MiniTest::Test
     assert_equal "file not found 'unlisted.lua'", error.message
   end
 
+  def test_reset_index_after_error
+    index = ReaPack::Index.new @dummy_path
+    index.commit = @commit
+    index.url_template = 'http://host/$path'
+
+    assert_raises { index.scan 'not_listed.lua', '@version 1.0' }
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1"/>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
   def test_remove
     index = ReaPack::Index.new @real_path
     index.commit = @commit
