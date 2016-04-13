@@ -14,6 +14,7 @@ require 'rugged'
 require 'shellwords'
 require 'time'
 
+require 'reapack/index/cdetector'
 require 'reapack/index/cli'
 require 'reapack/index/cli/options'
 require 'reapack/index/metadata'
@@ -98,14 +99,14 @@ class ReaPack::Index
     @doc.encoding = 'utf-8'
 
     @metadata = Metadata.new @doc.root
-    @sources = SourceCollection.new
+    @cdetector = ConflictDetector.new
   end
 
   def scan(path, contents)
     type = self.class.type_of path
     return unless type
 
-    backups = Hash[[:@doc, :@sources].map {|var|
+    backups = Hash[[:@doc, :@cdetector].map {|var|
       [var, instance_variable_get(var).dup]
     }]
 
@@ -130,7 +131,7 @@ class ReaPack::Index
 
       # store the version name for make_url
       @currentVersion = ver.name
-      @sources[path].clear
+      @cdetector[path].clear
 
       ver.author = mh[:author]
       ver.time = @time if @time && ver.is_new?
@@ -144,7 +145,7 @@ class ReaPack::Index
           src = Source.new nil, nil, make_url(path)
           sources.unshift src
 
-          @sources[path].push src.platform, path
+          @cdetector[path].push src.platform, path
         end
 
 
@@ -152,7 +153,7 @@ class ReaPack::Index
       end
     end
 
-    if cons = @sources.conflicts(path)
+    if cons = @cdetector.conflicts(path)
       raise Error, cons.first
     end
 
@@ -361,7 +362,7 @@ private
         src = Source.new platform
         src.url = make_url file, url_tpl
 
-        @sources[path].push src.platform, file
+        @cdetector[path].push src.platform, file
 
         if file != path
           if url_tpl.nil?
