@@ -6,8 +6,8 @@ class TestConflictDetector < MiniTest::Test
     cd['pkg'].push :all, 'file1.lua'
     cd['pkg'].push :all, 'file2.lua'
 
-    assert_nil cd.conflicts('pkg')
-    assert_nil cd.conflicts
+    assert_nil cd.resolve('pkg')
+    assert_nil cd.resolve
   end
 
   def test_duplicates
@@ -18,7 +18,7 @@ class TestConflictDetector < MiniTest::Test
     cd['pkg'].push :all, 'file2.lua'
 
     assert_equal ["duplicate file 'file1.lua'", "duplicate file 'file2.lua'"],
-      cd.conflicts('pkg')
+      cd.resolve('pkg')
   end
 
   def test_same_platform
@@ -26,7 +26,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].push :windows, 'file.lua'
     cd['test'].push :windows, 'file.lua'
 
-    assert_equal ["duplicate file 'file.lua' on windows"], cd.conflicts
+    assert_equal ["duplicate file 'file.lua' on windows"], cd.resolve
   end
 
   def test_unmatching_platform
@@ -34,7 +34,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].push :darwin, 'file.lua'
     cd['test'].push :windows, 'file.lua'
 
-    assert_nil cd.conflicts
+    assert_nil cd.resolve
   end
 
   def test_subplatform
@@ -42,7 +42,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].push :all, 'file.lua'
     cd['test'].push :windows, 'file.lua'
 
-    assert_equal ["duplicate file 'file.lua' on windows"], cd.conflicts
+    assert_equal ["duplicate file 'file.lua' on windows"], cd.resolve
   end
 
   def test_subsubplatform
@@ -50,7 +50,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].push :all, 'file.lua'
     cd['test'].push :win32, 'file.lua'
 
-    assert_equal ["duplicate file 'file.lua' on win32"], cd.conflicts
+    assert_equal ["duplicate file 'file.lua' on win32"], cd.resolve
   end
 
   def test_conflicts
@@ -64,22 +64,22 @@ class TestConflictDetector < MiniTest::Test
 
     cd['package4.lua'].push :darwin, 'file1.lua'
 
-    assert_nil cd.conflicts('not_specified.lua'), 'id = not_specified'
+    assert_nil cd.resolve('not_specified.lua'), 'id = not_specified'
 
     assert_equal ["'file1.lua' conflicts with 'package2.lua'"],
-      cd.conflicts('package1.lua'), 'id = package1'
+      cd.resolve('package1.lua'), 'id = package1'
 
     assert_equal ["'file1.lua' conflicts with 'package1.lua'",
                   "'file2.lua' conflicts with 'package3.lua' on windows"],
-      cd.conflicts('package2.lua'), 'id = package2'
+      cd.resolve('package2.lua'), 'id = package2'
 
     assert_equal ["'file2.lua' conflicts with 'package2.lua'"],
-      cd.conflicts('package3.lua'), 'id = package3'
+      cd.resolve('package3.lua'), 'id = package3'
 
     # this conflict might happen on every platform,
     # so it should not be reported it as darwin-only
     assert_equal ["'file1.lua' conflicts with 'package1.lua'"],
-      cd.conflicts('package4.lua'), 'id = package4'
+      cd.resolve('package4.lua'), 'id = package4'
   end
 
   def test_conflicts_bidirectional
@@ -88,15 +88,15 @@ class TestConflictDetector < MiniTest::Test
     cd1['b'].push :windows, 'file.lua'
 
     assert_equal ["'file.lua' conflicts with 'b' on windows"],
-      cd1.conflicts('a'), 'id = a'
-    assert_equal ["'file.lua' conflicts with 'a'"], cd1.conflicts('b'), 'id = b'
+      cd1.resolve('a'), 'id = a'
+    assert_equal ["'file.lua' conflicts with 'a'"], cd1.resolve('b'), 'id = b'
 
     cd2 = ReaPack::Index::ConflictDetector.new
     cd2['b'].push :windows, 'file.lua'
     cd2['a'].push :all, 'file.lua'
 
-    assert_equal cd1.conflicts('a'), cd2.conflicts('a')
-    assert_equal cd1.conflicts('b'), cd2.conflicts('b')
+    assert_equal cd1.resolve('a'), cd2.resolve('a')
+    assert_equal cd1.resolve('b'), cd2.resolve('b')
   end
 
   def test_conflicts_platform_selection
@@ -106,17 +106,17 @@ class TestConflictDetector < MiniTest::Test
     cd1['c'].push :win32, 'file.lua'
 
     assert_equal ["'file.lua' conflicts with 'b' on windows"],
-      cd1.conflicts('a'), 'id = a'
+      cd1.resolve('a'), 'id = a'
   end
 
   def test_duplicate_platform_selection
     cd = ReaPack::Index::ConflictDetector.new
     cd['test'].push :windows, 'file.lua'
     cd['test'].push :all, 'file.lua'
-    assert_equal ["duplicate file 'file.lua' on windows"], cd.conflicts
+    assert_equal ["duplicate file 'file.lua' on windows"], cd.resolve
 
     cd['test'].push :all, 'file.lua'
-    assert_equal ["duplicate file 'file.lua'"], cd.conflicts
+    assert_equal ["duplicate file 'file.lua'"], cd.resolve
   end
 
   def test_platform_same_level
@@ -125,14 +125,14 @@ class TestConflictDetector < MiniTest::Test
     cd1['test'].push :win32, 'file.lua' # win32 first
     cd1['test'].push :darwin32, 'file.lua'
 
-    assert_equal ["duplicate file 'file.lua' on win32"], cd1.conflicts
+    assert_equal ["duplicate file 'file.lua' on win32"], cd1.resolve
 
     cd2 = ReaPack::Index::ConflictDetector.new
     cd2['test'].push :all, 'file.lua'
     cd2['test'].push :darwin32, 'file.lua' # darwin32 first
     cd2['test'].push :win32, 'file.lua'
 
-    assert_equal cd1.conflicts, cd2.conflicts
+    assert_equal cd1.resolve, cd2.resolve
   end
 
   def test_remove_by_key
@@ -142,7 +142,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].clear
     cd['test'].push :all, 'file'
 
-    assert_equal nil, cd.conflicts('test')
+    assert_equal nil, cd.resolve('test')
   end
 
   def test_dup
@@ -151,10 +151,10 @@ class TestConflictDetector < MiniTest::Test
     cd2 = cd1.dup
 
     cd1['test'].push :all, 'file'
-    assert_nil cd2.conflicts
+    assert_nil cd2.resolve
 
     cd2['test'].push :all, 'file'
-    refute_nil cd2.conflicts
+    refute_nil cd2.resolve
   end
 
   def test_load_xml
@@ -193,12 +193,12 @@ class TestConflictDetector < MiniTest::Test
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test2.lua'",
                   "duplicate file 'Other/background.png' on win32"],
-      cd.conflicts('Other/test1.lua')
+      cd.resolve('Other/test1.lua')
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
-      cd.conflicts('Other/test2.lua')
+      cd.resolve('Other/test2.lua')
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
-      cd.conflicts('Scripts/test3.lua')
+      cd.resolve('Scripts/test3.lua')
   end
 end

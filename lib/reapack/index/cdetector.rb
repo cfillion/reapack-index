@@ -29,7 +29,7 @@ class ReaPack::Index
       Selector.new key, @entries
     end
 
-    def conflicts(key = nil)
+    def resolve(key = nil)
       dups = @entries.group_by {|e| e.file }.select {|_, a| a.size > 1 }
 
       errors = dups.map {|f, a|

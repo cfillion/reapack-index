@@ -156,7 +156,7 @@ class ReaPack::Index
       end
     end
 
-    if cons = @cdetector.conflicts(path)
+    if cons = @cdetector.resolve(path)
       raise Error, cons.first
     end
 
