@@ -14,7 +14,7 @@ class TestCLI::Scan < MiniTest::Test
       ]
 
       assert_output /3 new packages/ do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'Category/test2.lua', read_index
@@ -37,7 +37,7 @@ class TestCLI::Scan < MiniTest::Test
       ]
 
       assert_output "3 new categories, 3 new packages, 3 new versions\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'Category/test2.lua', read_index
@@ -47,7 +47,7 @@ class TestCLI::Scan < MiniTest::Test
   def test_empty_branch
     wrapper do
       assert_output nil, /the current branch does not contains any commit/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -61,7 +61,7 @@ class TestCLI::Scan < MiniTest::Test
       Dir.chdir pwd
 
       assert_output /1 new package/ do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'test1.lua', read_index
@@ -71,9 +71,8 @@ class TestCLI::Scan < MiniTest::Test
   def test_verbose
     stdout, stderr = capture_io do
       wrapper ['--verbose'] do
-        script = mkfile 'test.lua', '@version 1.0'
         @git.create_commit 'initial commit', [
-          script,
+          mkfile('test.lua', '@version 1.0'),
           mkfile('test.png', 'file not shown in output'),
         ]
 
@@ -82,10 +81,10 @@ class TestCLI::Scan < MiniTest::Test
           mkfile('test.jsfx', '@version 1.0'),
         ]
 
-        File.delete script
-        @git.create_commit 'third commit', [script]
+        File.delete mkpath('test.lua')
+        @git.create_commit 'third commit', [mkpath('test.lua')]
 
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
 
@@ -108,7 +107,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'initial commit', [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_equal "empty index\n", stdout
@@ -122,7 +121,7 @@ processing [a-f0-9]{7}: third commit
         [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /Warning: test\.lua: Invalid metadata/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -133,7 +132,7 @@ processing [a-f0-9]{7}: third commit
         [mkfile('test.lua', 'no version tag in this script!')]
 
       _, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match /Warning: test\.lua: Invalid metadata/i, stderr
@@ -146,7 +145,7 @@ processing [a-f0-9]{7}: third commit
         [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /Warning: test\.lua: Invalid metadata/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -165,7 +164,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'second commit', [mkfile('test2.lua', '@version 1.0')]
 
       assert_output nil, '' do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match 'test1.lua', read_index
@@ -174,60 +173,14 @@ processing [a-f0-9]{7}: third commit
   end
 
   def test_amend
-    setup = proc {
-      @git.create_commit 'initial commit',
-        [mkfile('Test/test.lua', '@version 1.0')]
-      
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="hello" commit="#{@git.last_commit.id}">
-  <category name="Test">
-    <reapack name="test.lua" type="script">
-      <version name="1.0"/>
-    </reapack>
-  </category>
-</index>
-      XML
-    }
-
-    wrapper ['--amend'], setup: setup do
-      @git.create_commit 'second commit',
-        [mkfile('Test/test.lua', "@version 1.0\n@author cfillion")]
-
-      assert_output /1 modified package/i, '' do
-        assert_equal true, @indexer.run
-      end
-
-      assert_match 'cfillion', read_index
+    wrapper ['--amend'] do
+      assert_equal true, @cli.index.amend
     end
   end
 
   def test_no_amend
-    setup = proc {
-      @git.create_commit 'initial commit',
-        [mkfile('Test/test.lua', '@version 1.0')]
-      
-      mkfile 'index.xml', <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@git.last_commit.id}">
-  <category name="Test">
-    <reapack name="test.lua" type="script">
-      <version name="1.0"/>
-    </reapack>
-  </category>
-</index>
-      XML
-    }
-
-    wrapper ['--no-amend'], setup: setup do
-      @git.create_commit 'second commit',
-        [mkfile('Test/test.lua', "@version 1.0\n@author cfillion")]
-
-      assert_output '', /nothing to do/i do
-        assert_equal true, @indexer.run
-      end
-
-      refute_match 'cfillion', read_index
+    wrapper ['--no-amend'] do
+      assert_equal false, @cli.index.amend
     end
   end
 
@@ -243,7 +196,7 @@ processing [a-f0-9]{7}: third commit
       ]
 
       assert_output "1 new category, 1 new package, 1 new version\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match 'Hello/World.lua', read_index
@@ -254,15 +207,13 @@ processing [a-f0-9]{7}: third commit
 
   def test_remove
     wrapper do
-      script = mkfile 'test.lua', '@version 1.0'
+      @git.create_commit 'initial commit', [mkfile('test.lua', '@version 1.0')]
 
-      @git.create_commit 'initial commit', [script]
-
-      File.delete script
-      @git.create_commit 'second commit', [script]
+      File.delete mkpath('test.lua')
+      @git.create_commit 'second commit', [mkpath('test.lua')]
 
       assert_output /1 removed package/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match 'test.lua', read_index
@@ -286,7 +237,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @indexer.run }
+      capture_io { assert_equal true, @cli.run }
 
       refute_match 'test1.lua', read_index, 'The initial commit was scanned'
       assert_match 'test2.lua', read_index
@@ -311,7 +262,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @indexer.run }
+      capture_io { assert_equal true, @cli.run }
 
       refute_match 'test1.lua', read_index, 'The initial commit was scanned'
       assert_match 'test2.lua', read_index
@@ -334,7 +285,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @indexer.run }
+      capture_io { assert_equal true, @cli.run }
       assert_match 'test1.lua', read_index
     end
   end
@@ -349,7 +300,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @indexer.run }
+      capture_io { assert_equal true, @cli.run }
     end
   end
 
@@ -359,7 +310,7 @@ processing [a-f0-9]{7}: third commit
         @git.create_commit 'initial commit', [mkfile('README.md')]
 
         assert_output nil, /--scan: bad revision: #{Regexp.escape hash}/i do
-          assert_equal false, @indexer.run
+          assert_equal false, @cli.run
         end
       end
     }

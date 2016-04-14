@@ -19,7 +19,7 @@ Finished checks for 2 packages with 0 failures
       mkfile 'test2.lua', '@version 1.0'
 
       assert_output nil, expected do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -43,7 +43,7 @@ Finished checks for 2 packages with 1 failure
       mkfile 'test2.lua', '@version 1.0'
 
       assert_output nil, expected do
-        assert_equal false, @indexer.run
+        assert_equal false, @cli.run
       end
     end
   end
@@ -74,7 +74,7 @@ Finished checks for 1 package with 1 failure
       mkfile 'Hello/World.lua', "@version 1.0\n@provides background.png"
 
       assert_output nil, expected do
-        assert_equal false, @indexer.run
+        assert_equal false, @cli.run
       end
     end
   end
@@ -98,7 +98,7 @@ Finished checks for 1 package with 1 failure
       mkfile 'test3.lua', '@version 1.0'
 
       assert_output nil, expected do
-        assert_equal false, @indexer.run
+        assert_equal false, @cli.run
       end
     end
   end
@@ -123,7 +123,7 @@ Finished checks for 1 package with 0 failures
       mkfile 'Directory/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
-        @indexer.run
+        @cli.run
       end
     end
   end
@@ -151,7 +151,7 @@ Finished checks for 1 package with 0 failures
       mkfile 'Directory/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
-        @indexer.run
+        @cli.run
       end
     end
   end
@@ -159,7 +159,7 @@ Finished checks for 1 package with 0 failures
   def test_unset_name_warning
     wrapper ['--check'] do
       assert_output nil, /index is unnamed/i do
-        @indexer.run
+        @cli.run
       end
     end
   end
@@ -184,7 +184,7 @@ Finished checks for 2 packages with 1 failure
         mkfile 'Path/To/test1.lua', '@author'
         mkfile 'test2.lua', '@version 1.0'
 
-        assert_equal false, @indexer.run
+        assert_equal false, @cli.run
       end
     end
 

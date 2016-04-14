@@ -8,7 +8,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_website_link
     wrapper ['-l http://cfillion.tk'] do
       assert_output "1 new website link, empty index\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'rel="website">http://cfillion.tk</link>', read_index
@@ -18,7 +18,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_donation_link
     wrapper ['--donation-link', 'Link Label=http://cfillion.tk'] do
       assert_output "1 new donation link, empty index\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'rel="donation" href="http://cfillion.tk">Link Label</link>',
@@ -30,7 +30,7 @@ class TestCLI::Metadata < MiniTest::Test
     wrapper ['--link', 'shinsekai yori', '--donation-link', 'hello world',
              '--link', 'http://cfillion.tk'] do
       stdout, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_equal "1 new website link, empty index\n", stdout
@@ -43,7 +43,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_remove_link
     wrapper ['--link', 'http://test.com', '--link', '-http://test.com'] do
       assert_output "1 new website link, 1 removed website link, empty index\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match 'rel="website">http://test.com</link>', read_index
@@ -64,7 +64,7 @@ class TestCLI::Metadata < MiniTest::Test
 
     wrapper ['--ls-links'], setup: setup do
       stdin, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       expected = <<-OUT
@@ -84,7 +84,7 @@ class TestCLI::Metadata < MiniTest::Test
 
     wrapper opts, setup: setup do
       assert_output "1 modified metadata, empty index\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match 'Hello World', read_index
@@ -96,7 +96,7 @@ class TestCLI::Metadata < MiniTest::Test
     wrapper ['--about=404.md'] do
       assert_output "empty index\n",
           /warning: --about: no such file or directory - 404.md/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -113,7 +113,7 @@ class TestCLI::Metadata < MiniTest::Test
     wrapper opts, setup: setup do
       assert_output "empty index\n", /pandoc executable cannot be found/i do
         ENV['PATH'] = String.new
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   ensure
@@ -133,7 +133,7 @@ class TestCLI::Metadata < MiniTest::Test
 
     wrapper ['--remove-about'], setup: setup do
       assert_output "1 modified metadata\n" do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match 'Hello World', read_index
@@ -153,7 +153,7 @@ class TestCLI::Metadata < MiniTest::Test
 
     wrapper ['--dump-about'], setup: setup do
       assert_output 'Hello World' do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -161,7 +161,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_unset_name_warning
     wrapper do
       _, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_match /index is unnamed/i, stderr
@@ -173,7 +173,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_set_name
     wrapper ['--name=Hello World'] do
       _, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match /index is unnamed/i, stderr
@@ -184,7 +184,7 @@ class TestCLI::Metadata < MiniTest::Test
   def test_set_name_invalid
     wrapper ['--name=Hello/World'] do
       _, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       refute_match /The name of this index is unset/i, stderr

@@ -124,11 +124,10 @@ class TestGit < MiniTest::Test
   end
 
   def test_multibyte_filename
-    name = "\342\200\224.lua"
-    file = mkfile name
+    filename = "\342\200\224.lua"
 
-    @git.create_commit 'initial commit', [file]
-    assert_equal name, @git.last_commit.each_diff.first.file
+    @git.create_commit 'initial commit', [mkfile(filename)]
+    assert_equal filename, @git.last_commit.each_diff.first.file
   end
 
   def test_invalid_char_sequence

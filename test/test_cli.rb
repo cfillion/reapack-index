@@ -49,19 +49,13 @@ class TestCLI < MiniTest::Test
 
   def test_output
     wrapper ['-o output.xml'] do
-      @git.create_commit 'initial commit', [mkfile('test.lua', '@version 1.0')]
-
-      capture_io do
-        assert_equal true, @indexer.run
-      end
-
-      assert_match 'test.lua', read_index('output.xml')
+      assert_equal mkpath('output.xml'), @cli.index.path
     end
   end
 
   def test_create_commit
     wrapper ['--commit'] do
-      assert_output("empty index\n", /commit created\n/) { @indexer.run }
+      assert_output("empty index\n", /commit created\n/) { @cli.run }
       
       commit = @git.last_commit
       assert_equal 'index: empty index', commit.message
@@ -75,7 +69,7 @@ class TestCLI < MiniTest::Test
 
       fake_input do |fio|
         fio.getch = 'y'
-        _, stderr = capture_io { @indexer.run }
+        _, stderr = capture_io { @cli.run }
         assert_match /commit created/i, stderr
       end
 
@@ -91,7 +85,7 @@ class TestCLI < MiniTest::Test
 
       fake_input do |fio|
         fio.getch = 'n'
-        _, stderr = capture_io { @indexer.run }
+        _, stderr = capture_io { @cli.run }
         refute_match /commit created/i, stderr
       end
 
@@ -130,7 +124,7 @@ class TestCLI < MiniTest::Test
           mkfile('test.lua', 'no version tag in this script!')
         ]
 
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
 
@@ -190,7 +184,7 @@ class TestCLI < MiniTest::Test
         [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
 
       assert_equal "empty index\n", stdout
@@ -212,7 +206,7 @@ class TestCLI < MiniTest::Test
 
     wrapper ['--progress'], setup: setup do
       assert_output '', /Nothing to do!\n/ do
-        @indexer.run
+        @cli.run
       end
     end
   end
@@ -223,7 +217,7 @@ class TestCLI < MiniTest::Test
         [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output nil, /\nWarning:/i do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
@@ -234,57 +228,46 @@ class TestCLI < MiniTest::Test
         [mkfile('test.lua', 'no version tag in this script!')]
 
       assert_output '', '' do
-        assert_equal true, @indexer.run
+        assert_equal true, @cli.run
       end
     end
   end
 
-  def test_no_git_remote
-    wrapper [], remote: false do
-      # no crash :)
-      assert_output { @indexer.run }
-    end
-  end
-
   def test_url_template
-    wrapper ['--url-template=http://host/$path'], remote: false do
-      @git.create_commit 'initial commit',
-        [mkfile('hello.lua', '@version 1.0')]
-
-      assert_output { @indexer.run }
-      assert_match 'http://host/hello.lua', read_index
+    assert_output '', '' do
+      wrapper ['--url-template=http://host/$path'], remote: false do
+        assert_equal 'http://host/$path', @cli.index.url_template
+      end
     end
   end
 
-  def test_url_template_override_git
-    wrapper ['--url-template=http://host/$path'] do
-      @git.create_commit 'initial commit',
-        [mkfile('hello.lua', '@version 1.0')]
-
-      assert_output { @indexer.run }
-      assert_match 'http://host/hello.lua', read_index
+  def test_url_template_override_vcs
+    assert_output '', '' do
+      wrapper ['--url-template=http://host/$path'] do
+        assert_equal 'http://host/$path', @cli.index.url_template
+      end
     end
   end
 
   def test_url_template_invalid
-    wrapper ['--url-template=minoshiro'] do
-      @git.create_commit 'initial commit',
-        [mkfile('hello.lua', '@version 1.0')]
-
-      _, stderr = capture_io { @indexer.run }
-      assert_match /--url-template: .+\$path placeholder/i, stderr
+    _, stderr = capture_io do
+      wrapper ['--url-template=minoshiro'] do
+        assert_nil @cli.index.url_template
+      end
     end
+
+    assert_match /--url-template: .+\$path placeholder/i, stderr
   end
 
   def test_scan_check_mutally_exclusive
     wrapper ['--check', '--scan'] do
-      _, stderr = capture_io { @indexer.run }
+      _, stderr = capture_io { @cli.run }
       refute_match /finished checks/i, stderr
       read_index # index exists
     end
 
     wrapper ['--scan', '--check'] do
-      _, stderr = capture_io { @indexer.run }
+      _, stderr = capture_io { @cli.run }
       assert_match /finished checks/i, stderr
       assert_raises(Errno::ENOENT) { read_index }
     end

@@ -54,8 +54,12 @@ module GitHelper
     [path, repo]
   end
 
+  def mkpath(file)
+    File.join @git.path, file
+  end
+
   def mkfile(file, content = String.new)
-    fn = File.join @git.path, file
+    fn = mkpath file
     FileUtils.mkdir_p File.dirname(fn)
     File.write fn, content
     fn
@@ -94,12 +98,12 @@ module CLIHelper
 
     options[:setup].call if options.has_key? :setup
 
-    @indexer = ReaPack::Index::CLI.new \
+    @cli = ReaPack::Index::CLI.new \
       ['--no-progress', '--no-commit'] + args + ['--', path]
 
     yield if block_given?
   ensure
-    @git = @indexer = nil
+    @git = @cli = nil
     Dir.chdir old_pwd
     FileUtils.rm_r path
   end

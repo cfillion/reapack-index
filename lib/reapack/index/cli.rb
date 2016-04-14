@@ -1,4 +1,6 @@
 class ReaPack::Index::CLI
+  attr_reader :index
+
   def initialize(argv = [])
     @opts = parse_options(argv)
     path = argv.last || Dir.pwd
@@ -25,7 +27,7 @@ class ReaPack::Index::CLI
     set_url_template
 
     if @opts[:check]
-      return check
+      return do_check
     end
 
     if @opts[:lslinks]
@@ -38,7 +40,7 @@ class ReaPack::Index::CLI
       return true
     end
 
-    do_name; do_about; eval_links; scan_commits
+    do_name; do_about; eval_links; do_scan
 
     unless @index.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
@@ -69,7 +71,7 @@ private
     warn '--url-template: ' + e.message if is_custom
   end
 
-  def scan_commits
+  def do_scan
     if @git.empty?
       warn 'The current branch does not contains any commit.'
       return
@@ -89,12 +91,12 @@ private
 
     unless commits.empty?
       progress_wrapper commits.size do
-        commits.each {|commit| process commit }
+        commits.each {|commit| process_commit commit }
       end
     end
   end
 
-  def process(commit)
+  def process_commit(commit)
     if @opts[:verbose]
       log 'processing %s: %s' % [commit.short_id, commit.summary]
     end
@@ -103,12 +105,12 @@ private
     @index.time = commit.time
     @index.files = commit.filelist
 
-    commit.each_diff {|diff| index diff }
+    commit.each_diff {|diff| process_diff diff }
   ensure
     bump_progress
   end
 
-  def index(diff)
+  def process_diff(diff)
     return if ignored? expand_path(diff.file)
     return unless ReaPack::Index.type_of diff.file
 
@@ -185,7 +187,7 @@ private
     warn e.message
   end
 
-  def check
+  def do_check
     check_name
 
     @index.amend = true # enable checks for released versions as well
