@@ -56,6 +56,18 @@ class TestIndex < MiniTest::Test
     assert_equal 'f572d396fae9206628714fb2ce00f72e94f2258f', index.commit
   end
 
+  def test_read_invalid
+    File.write @dummy_path, "\33"
+    assert_raises ReaPack::Index::Error do
+      ReaPack::Index.new @dummy_path
+    end
+
+    File.write @dummy_path, "\0"
+    assert_raises ReaPack::Index::Error do
+      ReaPack::Index.new @dummy_path
+    end
+  end
+
   def test_new
     index = ReaPack::Index.new @dummy_path
 

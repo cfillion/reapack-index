@@ -87,9 +87,17 @@ class ReaPack::Index
     @cdetector = ConflictDetector.new
 
     if File.exist? path
-      # noblanks: don't preserve the original white spaces
-      # so we always output a neat document
-      @doc = File.open(path) {|file| Nokogiri::XML file, &:noblanks }
+      begin
+        # noblanks: don't preserve the original white spaces
+        # so we always output a neat document
+        @doc = File.open(path) {|file| Nokogiri::XML file, &:noblanks }
+      rescue Nokogiri::XML::SyntaxError
+      end
+
+      unless @doc&.root&.name == 'index'
+        raise Error, "'#{path}' is not a ReaPack index file"
+      end
+
       @cdetector.load_xml @doc.root
     else
       @dirty = true

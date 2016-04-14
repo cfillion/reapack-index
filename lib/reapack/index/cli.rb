@@ -11,20 +11,20 @@ class ReaPack::Index::CLI
     @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
 
     @opts = DEFAULTS.merge @opts
+    return unless @exit.nil?
 
-    log Hash[@opts.sort].inspect if @exit.nil?
-  rescue Rugged::OSError, Rugged::RepositoryError => e
+    log Hash[@opts.sort].inspect
+
+    @index = ReaPack::Index.new expand_path(@opts[:output])
+    @index.amend = @opts[:amend]
+    set_url_template
+  rescue Rugged::OSError, Rugged::RepositoryError, ReaPack::Index::Error => e
     $stderr.puts e.message
     @exit = false
   end
 
   def run
     return @exit unless @exit.nil?
-
-    @index = ReaPack::Index.new expand_path(@opts[:output])
-    @index.amend = @opts[:amend]
-
-    set_url_template
 
     if @opts[:check]
       return do_check

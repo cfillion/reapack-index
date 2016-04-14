@@ -178,6 +178,14 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_invalid_index
+    assert_output '', /\A'.+index\.xml' is not a ReaPack index file\Z/ do
+      setup = proc { mkfile 'index.xml', "\0" }
+      wrapper [], setup: setup do
+      end
+    end
+  end
+
   def test_progress
     wrapper ['--progress'] do
       @git.create_commit 'initial commit',
