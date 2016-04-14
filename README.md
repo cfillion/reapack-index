@@ -148,8 +148,7 @@ git remote).  These files will be installed/updated together with the package.
 
 Provides:
   Images/background.png
-  Images/fader_small.png
-  Images/fader_big.png
+  Images/fader_*.png
 
 @provides
   [windows] reaper_extension.dll http://mysite.com/download/$version/$path
