@@ -19,8 +19,8 @@ class ReaPack::Index::CLI
   def run
     return @exit unless @exit.nil?
 
-    @db = ReaPack::Index.new expand_path(@opts[:output])
-    @db.amend = @opts[:amend]
+    @index = ReaPack::Index.new expand_path(@opts[:output])
+    @index.amend = @opts[:amend]
 
     set_url_template
 
@@ -34,22 +34,22 @@ class ReaPack::Index::CLI
     end
 
     if @opts[:dump_about]
-      print @db.description
+      print @index.description
       return true
     end
 
     do_name; do_about; eval_links; scan_commits
 
-    unless @db.modified?
+    unless @index.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
       return success_code
     end
 
     # changelog will be cleared by Index#write!
-    changelog = @db.changelog
+    changelog = @index.changelog
     puts changelog unless @opts[:quiet]
 
-    @db.write!
+    @index.write!
     commit changelog
 
     success_code
@@ -64,7 +64,7 @@ private
     tpl = @opts[:url_template]
     is_custom = tpl != DEFAULTS[:url_template]
 
-    @db.url_template = is_custom ? tpl : @git.guess_url_template
+    @index.url_template = is_custom ? tpl : @git.guess_url_template
   rescue ReaPack::Index::Error => e
     warn '--url-template: ' + e.message if is_custom
   end
@@ -76,7 +76,7 @@ private
     end
 
     if @opts[:scan].empty?
-      commits = @git.commits_since @db.commit.to_s
+      commits = @git.commits_since @index.commit.to_s
     else
       commits = @opts[:scan].map {|hash|
         @git.get_commit hash or begin
@@ -99,9 +99,9 @@ private
       log 'processing %s: %s' % [commit.short_id, commit.summary]
     end
 
-    @db.commit = commit.id
-    @db.time = commit.time
-    @db.files = commit.filelist
+    @index.commit = commit.id
+    @index.time = commit.time
+    @index.files = commit.filelist
 
     commit.each_diff {|diff| index diff }
   ensure
@@ -115,10 +115,10 @@ private
     log "-> indexing #{diff.status} file #{diff.file}"
 
     if diff.status == :deleted
-      @db.remove diff.file
+      @index.remove diff.file
     else
       begin
-        @db.scan diff.file, diff.new_content
+        @index.scan diff.file, diff.new_content
       rescue ReaPack::Index::Error => e
         warn "#{diff.file}: #{e.message}"
       end
@@ -128,7 +128,7 @@ private
   def eval_links
     Array(@opts[:links]).each {|link|
       begin
-        @db.eval_link *link
+        @index.eval_link *link
       rescue ReaPack::Index::Error => e
         opt = case link.first
         when :website
@@ -145,7 +145,7 @@ private
   def print_links
     ReaPack::Index::Link::VALID_TYPES.each {|type|
       prefix = "[#{type}]".bold.light_black
-      @db.links(type).each {|link|
+      @index.links(type).each {|link|
         display = link.name == link.url ? link.url : '%s (%s)' % [link.name, link.url]
         puts '%s %s' % [prefix, display]
       }
@@ -153,14 +153,14 @@ private
   end
 
   def do_name
-    @db.name = @opts[:name] if @opts[:name]
+    @index.name = @opts[:name] if @opts[:name]
     check_name
   rescue ReaPack::Index::Error => e
     warn '--name: ' + e.message
   end
 
   def check_name
-    if @db.name.empty?
+    if @index.name.empty?
       warn 'This index is unnamed. ' \
         'Run the following command to set a name of your choice:' \
         "\n  #{File.basename $0} --name 'FooBar Scripts'"
@@ -171,14 +171,14 @@ private
     path = @opts[:about]
 
     unless path
-      @db.description = String.new if @opts[:rmabout]
+      @index.description = String.new if @opts[:rmabout]
       return
     end
 
     log "converting #{path} into RTF..."
 
     # look for the file in the working directory, not on the repository root
-    @db.description = File.read(path)
+    @index.description = File.read(path)
   rescue Errno::ENOENT => e
     warn '--about: ' + e.message.sub(' @ rb_sysopen', '')
   rescue ReaPack::Index::Error => e
@@ -188,12 +188,12 @@ private
   def check
     check_name
 
-    @db.amend = true # enable checks for released versions as well
+    @index.amend = true # enable checks for released versions as well
     failures = []
 
     pkgs = Hash[Dir.glob("#{Regexp.quote(@git.path)}/**/*").sort.map {|abs|
       rel = @git.relative_path abs
-      @db.files << rel
+      @index.files << rel
 
       next if !File.file?(abs) || ignored?(abs) || !ReaPack::Index.type_of(abs)
 
@@ -202,7 +202,7 @@ private
 
     pkgs.each_pair {|abs, rel|
       begin
-        @db.scan rel, File.read(abs)
+        @index.scan rel, File.read(abs)
 
         if @opts[:verbose]
           $stderr.puts '%s: passed' % rel
@@ -248,7 +248,7 @@ private
       prompt 'Commit the new index?'
     end
 
-    @git.create_commit "index: #{changelog}", [@db.path]
+    @git.create_commit "index: #{changelog}", [@index.path]
     $stderr.puts 'commit created'
   end
 
