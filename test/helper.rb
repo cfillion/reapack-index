@@ -41,6 +41,10 @@ module GitHelper
   def init_git
     path = Dir.mktmpdir 'test-repository'
     repo = Rugged::Repository.init_at path
+    repo.config['user.name'] = 'John Doe'
+    repo.config['user.email'] = 'john@doe.com'
+    repo.config['commit.gpgsign'] = false
+
     @git = ReaPack::Index::Git.new path
     [path, repo]
   end
