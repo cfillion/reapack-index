@@ -38,6 +38,11 @@ module IndexHelper
 end
 
 module GitHelper
+  INVALID_HASHES = [
+    'hello world', '0000000000000000000000000000000000000000',
+    '0000000000000000000000000000000000000deadbeef',
+  ].freeze
+
   def init_git
     path = Dir.mktmpdir 'test-repository'
     repo = Rugged::Repository.init_at path
@@ -59,11 +64,6 @@ end
 
 module CLIHelper
   include GitHelper
-
-  INVALID_HASHES = [
-    'hello world', '0000000000000000000000000000000000000000',
-    '0000000000000000000000000000000000000deadbeef',
-  ].freeze
 
   class FakeIO
     def initialize

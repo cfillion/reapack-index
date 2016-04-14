@@ -98,6 +98,31 @@ class TestGit < MiniTest::Test
     assert_equal [[:deleted, 'file1', nil]], hash[c3]
   end
 
+  def test_commits_since
+    assert_equal [], @git.commits_since(nil)
+    c1 = @git.create_commit 'first', []
+
+    assert_equal [c1], @git.commits_since(nil)
+    assert_equal [], @git.commits_since(c1.id)
+
+    c2 = @git.create_commit 'second', []
+    assert_equal [c1, c2], @git.commits_since(nil)
+    assert_equal [c2], @git.commits_since(c1.id)
+
+    INVALID_HASHES.each {|hash|
+      assert_equal [c1, c2], @git.commits_since(hash)
+    }
+  end
+
+  def test_get_commit
+    c = @git.create_commit 'first', []
+    assert_equal c, @git.get_commit(c.id)
+
+    INVALID_HASHES.each {|hash|
+      assert_nil @git.get_commit(hash)
+    }
+  end
+
   def test_multibyte_filename
     name = "\342\200\224.lua"
     file = mkfile name

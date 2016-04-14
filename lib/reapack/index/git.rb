@@ -13,6 +13,8 @@ class ReaPack::Index
     end
 
     def commits_since(sha)
+      return [] if empty?
+
       walker = Rugged::Walker.new @repo
       walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
       walker.push @repo.head.target_id
@@ -106,7 +108,7 @@ class ReaPack::Index
       return enum_for :each_diff unless block_given?
 
       if @parent
-        diff = @parent.diff @commit.oid
+        diff = @parent.diff id
       else
         diff = @commit.diff
       end

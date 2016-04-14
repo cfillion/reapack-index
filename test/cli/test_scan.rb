@@ -173,34 +173,6 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
-  def test_from_invalid_commit
-    # ensures that the indexer doesn't crash if it encounters
-    # an invalid commit marker in the index file
-
-    INVALID_HASHES.each {|hash|
-      setup = proc {
-        @git.create_commit 'initial commit',
-          [mkfile('test1.lua', '@version 1.0')]
-
-        mkfile 'index.xml', <<-XML
-  <?xml version="1.0" encoding="utf-8"?>
-  <index version="1" name="hello" commit="#{hash}"/>
-        XML
-      }
-
-      wrapper [], setup: setup do
-        @git.create_commit 'second commit', [mkfile('test2.lua', '@version 1.0')]
-
-        assert_output nil, '' do
-          assert_equal true, @indexer.run
-        end
-
-        assert_match 'test1.lua', read_index
-        assert_match 'test2.lua', read_index
-      end
-    }
-  end
-
   def test_amend
     setup = proc {
       @git.create_commit 'initial commit',
