@@ -1,4 +1,6 @@
 class TestConflictDetector < MiniTest::Test
+  include XMLHelper
+
   def test_unique
     cd = ReaPack::Index::ConflictDetector.new
     cd['pkg'].push :all, 'file1.lua'
@@ -153,5 +155,50 @@ class TestConflictDetector < MiniTest::Test
 
     cd2['test'].push :all, 'file'
     refute_nil cd2.conflicts
+  end
+
+  def test_load_xml
+    xml = <<-XML
+<index version="1">
+  <category name="Other">
+    <reapack name="test1.lua">
+      <version name="1.0">
+        <source platform="all">http://irrelevant/url</source>
+        <source platform="all" file="background.png">http://google.com</source>
+        <source platform="win32" file="background.png">http://duplicate/file/</source>
+      </version>
+    </reapack>
+    <reapack name="test2.lua">
+      <version name="1.0">
+        <source platform="all" file="test1.lua">http://oops/conflict/</source>
+      </version>
+    </reapack>
+    <reapack name="empty_ver.lua">
+      <version name="a"/>
+    </reapack>
+    <reapack name="empty_pkg.lua"/>
+  </category>
+  <category name="Scripts">
+    <reapack name="test3.lua">
+      <version name="1.0">
+        <source platform="all" file="../Other/test1.lua">http://cross/category</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    cd = ReaPack::Index::ConflictDetector.new
+    cd.load_xml make_node(xml)
+
+    assert_equal ["'Other/test1.lua' conflicts with 'Other/test2.lua'",
+                  "duplicate file 'Other/background.png' on win32"],
+      cd.conflicts('Other/test1.lua')
+
+    assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
+      cd.conflicts('Other/test2.lua')
+
+    assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
+      cd.conflicts('Scripts/test3.lua')
   end
 end

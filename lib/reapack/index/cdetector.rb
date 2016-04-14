@@ -1,36 +1,36 @@
 class ReaPack::Index
   class ConflictDetector
-    Element = Struct.new :key, :platform, :file
+    Entry = Struct.new :key, :platform, :file
 
     class Selector
       def initialize(key, elements)
-        @key, @elements = key, elements
+        @key, @entries = key, elements
       end
 
       def push(platform, file)
-        @elements << Element.new(@key, platform, file)
+        @entries << Entry.new(@key, platform, file)
       end
 
       def clear
-        @elements.reject! {|e| e.key == @key }
+        @entries.reject! {|e| e.key == @key }
       end
     end
 
     def initialize
-      @elements = []
+      @entries = []
     end
 
     def initialize_copy(other)
       super
-      other.instance_variable_set :@elements, @elements.dup
+      other.instance_variable_set :@entries, @entries.dup
     end
 
     def [](key)
-      Selector.new key, @elements
+      Selector.new key, @entries
     end
 
     def conflicts(key = nil)
-      dups = @elements.group_by {|e| e.file }.select {|_, a| a.size > 1 }
+      dups = @entries.group_by {|e| e.file }.select {|_, a| a.size > 1 }
 
       errors = dups.map {|f, a|
         packages = a.map {|e| e.key }.uniq
@@ -61,6 +61,26 @@ class ReaPack::Index
       }.compact
 
       errors unless errors.empty?
+    end
+
+    def load_xml(node)
+      Category.find_all(node).each {|cat|
+        Package.find_all(cat.node).each {|pkg|
+          pkgroot = File.join(cat.name, pkg.name)
+
+          pkg.versions.last&.children(Source::TAG)&.each {|src|
+            entry = Entry.new pkgroot, src[:platform].to_sym
+
+            if src[:file]
+              entry.file = ReaPack::Index.expand(src[:file], cat.name)
+            else
+              entry.file = pkgroot
+            end
+
+            @entries << entry
+          }
+        }
+      }
     end
 
   private

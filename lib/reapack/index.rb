@@ -84,10 +84,13 @@ class ReaPack::Index
     @files = []
     @path = path
 
+    @cdetector = ConflictDetector.new
+
     if File.exist? path
       # noblanks: don't preserve the original white spaces
       # so we always output a neat document
       @doc = File.open(path) {|file| Nokogiri::XML file, &:noblanks }
+      @cdetector.load_xml @doc.root
     else
       @dirty = true
       @is_new = true
@@ -100,7 +103,6 @@ class ReaPack::Index
     @doc.encoding = 'utf-8'
 
     @metadata = Metadata.new @doc.root
-    @cdetector = ConflictDetector.new
   end
 
   def scan(path, contents)
@@ -311,6 +313,12 @@ class ReaPack::Index
       .sub('$version', @currentVersion.to_s)
   end
 
+  def self.expand(filepath, basedir)
+    expanded = File.expand_path filepath, FS_ROOT + basedir
+    expanded[0...FS_ROOT.size] = ''
+    expanded
+  end
+
 private
   def log_change(desc, plural = nil)
     @dirty = true
@@ -345,8 +353,7 @@ private
 
       pattern = basename if pattern == '.'
 
-      expanded = File.expand_path pattern, FS_ROOT + basedir
-      expanded[0...FS_ROOT.size] = ''
+      expanded = self.class.expand pattern, basedir
 
       if expanded == path
         # always resolve path even when an url template is set

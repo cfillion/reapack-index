@@ -322,4 +322,33 @@ class TestIndex::Provides < MiniTest::Test
     assert_equal "'Category1/file' conflicts with 'Category1/script1.lua'",
       error.message
   end
+
+  def test_conflict_with_existing
+    File.write @dummy_path, <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Other">
+    <reapack name="test1.lua">
+      <version name="1.0">
+        <source platform="all" file="background.png">http://irrelevant</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Other/test2.lua', 'Other/background.png']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @provides background.png
+      IN
+    end
+
+    assert_equal "'Other/background.png' conflicts with 'Other/test1.lua'",
+      error.message
+  end
 end
