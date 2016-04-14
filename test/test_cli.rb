@@ -240,36 +240,9 @@ class TestCLI < MiniTest::Test
   end
 
   def test_no_git_remote
-    wrapper [], remote: '*' do
+    wrapper [], remote: false do
       # no crash :)
       assert_output { @indexer.run }
-    end
-  end
-
-  def test_weird_git_remote_url
-    wrapper [], remote: 'scp://hello.world/$path' do
-      _, stderr = capture_io { @indexer.run }
-      refute_match /invalid url/i, stderr
-      refute_match '$path', stderr
-    end
-  end
-
-  def test_auto_url_template_ssh
-    wrapper [], remote: 'git@github.com:User/Repo.git' do
-      @git.create_commit 'initial commit', [mkfile('hello.lua', '@version 1.0')]
-
-      assert_output { @indexer.run }
-      assert_match "https://github.com/User/Repo/raw/#{@git.last_commit.id}/hello.lua", read_index
-    end
-  end
-
-  def test_auto_url_template_https
-    wrapper [], remote: 'https://github.com/User/Repo.git' do
-      @git.create_commit 'initial commit',
-        [mkfile('hello.lua', '@version 1.0')]
-
-      assert_output { @indexer.run }
-      assert_match "https://github.com/User/Repo/raw/#{@git.last_commit.id}/hello.lua", read_index
     end
   end
 

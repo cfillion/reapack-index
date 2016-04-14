@@ -81,6 +81,8 @@ class ReaPack::Index
 
       # force-reload the repository
       @repo = Rugged::Repository.discover path
+
+      get_commit c
     end
 
   private
@@ -136,6 +138,10 @@ class ReaPack::Index
       lsfiles @commit.tree
     end
 
+    def ==(o)
+      id == o.id
+    end
+
   private
     def lsfiles(tree, base = String.new)
       files = []
@@ -159,10 +165,10 @@ class ReaPack::Index
       @delta, @repo = delta, repo
 
       if is_initial
-        @status = 'new'
+        @status = :added
         @file = delta.old_file
       else
-        @status = delta.status
+        @status = delta.status.to_sym
         @file = delta.new_file
       end
     end
@@ -174,6 +180,7 @@ class ReaPack::Index
     end
     
     def new_content
+      return if status == :deleted
       @repo.lookup(@file[:oid]).content.force_encoding(Encoding::UTF_8)
     end
   end

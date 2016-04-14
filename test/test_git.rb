@@ -16,6 +16,25 @@ class TestGit < MiniTest::Test
     assert_equal realpath.to_s, @git.path
   end
 
+  def test_relative_path
+    assert_equal 'test', @git.relative_path(File.join(@git.path, 'test'))
+  end
+
+  def test_guess_url_template
+    assert_nil @git.guess_url_template
+
+    @repo.remotes.create 'origin', 'git@github.com:User/Repo.git'
+    assert_match "https://github.com/User/Repo/raw/$commit/$path",
+      @git.guess_url_template
+
+    @repo.remotes.set_url 'origin', 'https://github.com/User/Repo.git'
+    assert_match "https://github.com/User/Repo/raw/$commit/$path",
+      @git.guess_url_template
+
+    @repo.remotes.set_url 'origin', 'scp://weird/url'
+    assert_nil @git.guess_url_template
+  end
+
   def test_create_initial_commit
     index = @repo.index
     index.add @git.relative_path(mkfile('ignored_staged'))
@@ -24,17 +43,17 @@ class TestGit < MiniTest::Test
     mkfile 'ignored'
 
     assert_equal true, @git.empty?
-    @git.create_commit 'initial commit', [mkfile('file')]
+    commit = @git.create_commit 'initial commit', [mkfile('file')]
     assert_equal false, @git.empty?
 
-    commit = @git.last_commit
+    assert_equal commit, @git.last_commit
     assert_equal 'initial commit', commit.message
     assert_equal ['file'], commit.each_diff.map {|d| d.file }
     assert_equal ['file'], commit.filelist
   end
 
   def test_create_subsequent_commit
-    @git.create_commit 'initial commit', [mkfile('file1')]
+    initial = @git.create_commit 'initial commit', [mkfile('file1')]
 
     mkfile 'ignored'
 
@@ -42,12 +61,41 @@ class TestGit < MiniTest::Test
     index.add @git.relative_path(mkfile('ignored_staged'))
     index.write
 
-    @git.create_commit 'second commit', [mkfile('file2')]
-
-    commit = @git.last_commit
+    commit = @git.create_commit 'second commit', [mkfile('file2')]
+    refute_equal initial, commit
     assert_equal 'second commit', commit.message
     assert_equal ['file2'], commit.each_diff.map {|d| d.file }
     assert_equal ['file1', 'file2'], commit.filelist
+  end
+
+  def test_commit_info
+    commit = @git.create_commit "initial commit\ndescription", [mkfile('file')]
+    assert_equal "initial commit\ndescription", commit.message
+    assert_equal 'initial commit', commit.summary
+
+    assert commit.id.start_with?(commit.short_id)
+    assert_equal 7, commit.short_id.size
+
+    assert_kind_of Time, commit.time
+    assert_equal ['file'], commit.filelist
+  end
+
+  def test_diff
+    hash = proc {|c|
+      c.each_diff.map {|d| [d.status, d.file, d.new_content] }
+    }
+
+    c1 = @git.create_commit 'initial commit', [mkfile('file1', 'initial')]
+    assert_equal [[:added, 'file1', 'initial']], hash[c1]
+
+    c2 = @git.create_commit 'second commit',
+      [mkfile('file1', 'second'), mkfile('file2')]
+    assert_equal [[:modified, 'file1', 'second'], [:added, 'file2', '']], hash[c2]
+
+    file1 = File.join @git.path, 'file1'
+    File.delete file1
+    c3 = @git.create_commit 'second commit', [file1]
+    assert_equal [[:deleted, 'file1', nil]], hash[c3]
   end
 
   def test_multibyte_filename

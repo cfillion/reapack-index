@@ -71,20 +71,36 @@ class TestCLI::Scan < MiniTest::Test
   def test_verbose
     stdout, stderr = capture_io do
       wrapper ['--verbose'] do
+        script = mkfile 'test.lua', '@version 1.0'
         @git.create_commit 'initial commit', [
-          mkfile('test.lua', '@version 1.0'),
-          mkfile('test.png'),
+          script,
+          mkfile('test.png', 'file not shown in output'),
         ]
+
+        @git.create_commit 'second commit', [
+          mkfile('test.lua', '@version 2.0'),
+          mkfile('test.jsfx', '@version 1.0'),
+        ]
+
+        File.delete script
+        @git.create_commit 'third commit', [script]
 
         assert_equal true, @indexer.run
       end
     end
 
-    assert_equal "1 new category, 1 new package, 1 new version\n", stdout
-    assert_match /reading configuration from .+\.reapack-index\.conf/i, stderr
-    assert_match /processing [a-f0-9]{7}: initial commit/i, stderr
-    assert_match /indexing new file test.lua/, stderr
-    refute_match /indexing new file test.png/, stderr
+    assert_match /reading configuration from .+\.reapack-index\.conf/, stderr
+
+    verbose = /
+processing [a-f0-9]{7}: initial commit
+-> indexing added file test\.lua
+processing [a-f0-9]{7}: second commit
+-> indexing added file test\.jsfx
+-> indexing modified file test\.lua
+processing [a-f0-9]{7}: third commit
+-> indexing deleted file test\.lua/i
+
+    assert_match verbose, stderr
   end
 
   def test_verbose_override
