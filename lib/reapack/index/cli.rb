@@ -1,12 +1,11 @@
-class ReaPack::Index
-  class CLI
+class ReaPack::Index::CLI
   def initialize(argv = [])
     @opts = parse_options(argv)
     path = argv.last || Dir.pwd
 
     return unless @exit.nil?
 
-    @git = Git.new path
+    @git = ReaPack::Index::Git.new path
     @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
 
     @opts = DEFAULTS.merge @opts
@@ -315,6 +314,5 @@ private
     # expand from the repository root or from the current directory if
     # the repository is not yet initialized
     File.expand_path path, @git ? @git.path : Dir.pwd
-  end
   end
 end

@@ -227,4 +227,24 @@ class TestIndex < MiniTest::Test
 
     assert_match /bee.+zebra/m, File.read(index.path)
   end
+
+  def test_dont_sort_versions
+    original = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Other">
+    <reapack name="test.lua">
+      <version name="z"/>
+      <version name="a"/>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    File.write @dummy_path, original
+    index = ReaPack::Index.new @dummy_path
+    index.write!
+
+    assert_equal original, File.read(index.path)
+  end
 end
