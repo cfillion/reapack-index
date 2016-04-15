@@ -3,36 +3,48 @@ class ReaPack::Index
     Entry = Struct.new :key, :platform, :file
 
     class Selector
-      def initialize(key, elements)
-        @key, @entries = key, elements
+      def initialize(bucket, key, cdetector)
+        @bucket, @key, @cdetector = bucket, key, cdetector
+        @entries = @cdetector.bucket bucket
       end
 
       def push(platform, file)
-        @entries << Entry.new(@key, platform, file)
+        @entries << Entry.new(@key, platform, file).freeze
       end
 
       def clear
         @entries.reject! {|e| e.key == @key }
       end
+
+      def resolve
+        @cdetector.resolve @bucket, @key
+      end
     end
 
     def initialize
-      @entries = []
+      @buckets = {}
     end
 
-    def initialize_copy(other)
+    def initialize_clone(other)
       super
-      other.instance_variable_set :@entries, @entries.dup
+      other.instance_variable_set :@buckets,
+        Hash[@buckets.map {|k, v| [k, v.clone] }]
     end
 
-    def [](key)
-      Selector.new key, @entries
+    def [](bucket, key)
+      Selector.new bucket, key, self
     end
 
-    def resolve(key = nil)
-      dups = @entries.group_by {|e| e.file }.select {|_, a| a.size > 1 }
+    def bucket(name)
+      @buckets[name] ||= []
+    end
 
-      errors = dups.map {|f, a|
+    def resolve(bucket, key = nil)
+      return unless bucket = @buckets[bucket]
+
+      dups = bucket.group_by {|e| e.file }.values.select {|a| a.size > 1 }
+
+      errors = dups.map {|a|
         packages = a.map {|e| e.key }.uniq
         next if key && !packages.include?(key)
 
@@ -77,7 +89,7 @@ class ReaPack::Index
               entry.file = pkgroot
             end
 
-            @entries << entry
+            bucket(pkg.type) << entry
           }
         }
       }

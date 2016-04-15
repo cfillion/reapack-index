@@ -119,7 +119,7 @@ class ReaPack::Index
 
     # variables to restore if an error occur
     backups = Hash[[:@doc, :@cdetector].map {|var|
-      [var, instance_variable_get(var).dup]
+      [var, instance_variable_get(var).clone]
     }]
 
     mh = MetaHeader.new contents
@@ -138,34 +138,35 @@ class ReaPack::Index
     cat, pkg = find path
     pkg.type = type
 
+    cselector = @cdetector[pkg.type, path]
+
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
 
       # store the version name for make_url
       @currentVersion = ver.name
-      @cdetector[path].clear
 
       ver.author = mh[:author]
       ver.time = @time if @time && ver.is_new?
       ver.changelog = mh[:changelog]
 
       ver.replace_sources do
-        sources = parse_provides mh[:provides], path
+        cselector.clear
+        sources = parse_provides mh[:provides], path, cselector
 
         if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
           # add the package itself as a source
           src = Source.new nil, nil, make_url(path)
           sources.unshift src
 
-          @cdetector[path].push src.platform, path
+          cselector.push src.platform, path
         end
-
 
         sources.each {|src| ver.add_source src }
       end
     end
 
-    if cons = @cdetector.resolve(path)
+    if cons = cselector.resolve
       raise Error, cons.first
     end
 
@@ -351,7 +352,7 @@ private
     [cat, pkg]
   end
 
-  def parse_provides(provides, path)
+  def parse_provides(provides, path, cselector)
     basename = File.basename path
     basedir = dirname(path).to_s
     pathdir = Pathname.new basedir
@@ -379,7 +380,7 @@ private
         src = Source.new platform
         src.url = make_url file, url_tpl
 
-        @cdetector[path].push src.platform, file
+        cselector.push src.platform, file
 
         if file != path
           if url_tpl.nil?

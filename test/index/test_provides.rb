@@ -328,7 +328,7 @@ class TestIndex::Provides < MiniTest::Test
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1">
   <category name="Other">
-    <reapack name="test1.lua">
+    <reapack name="test1.lua" type="script">
       <version name="1.0">
         <source platform="all" file="background.png">http://irrelevant</source>
       </version>
@@ -350,5 +350,21 @@ class TestIndex::Provides < MiniTest::Test
 
     assert_equal "'Other/background.png' conflicts with 'Other/test1.lua'",
       error.message
+  end
+
+  def test_same_file_cross_type
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['script.lua', 'file', 'effect.jsfx']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides file
+    IN
+
+    index.scan index.files.last, <<-IN
+      @version 1.0
+      @provides file
+    IN
   end
 end
