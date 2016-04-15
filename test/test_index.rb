@@ -210,6 +210,14 @@ class TestIndex < MiniTest::Test
     assert_match /<category.+<metadata/m, File.read(index.path)
   end
 
+  def test_remove_clear_cdetector
+    index = ReaPack::Index.new @real_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category Name/Hello World.lua', 'Category Name/test.lua']
+    index.remove index.files.first
+    index.scan index.files.last, "@version 2.0\n@provides Hello World.lua"
+  end
+
   def test_sort_categories
     File.write @dummy_path, <<-XML
 <index>
