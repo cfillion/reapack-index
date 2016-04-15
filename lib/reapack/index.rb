@@ -117,6 +117,7 @@ class ReaPack::Index
     type = self.class.type_of path
     return unless type
 
+    # variables to restore if an error occur
     backups = Hash[[:@doc, :@cdetector].map {|var|
       [var, instance_variable_get(var).dup]
     }]
@@ -135,7 +136,7 @@ class ReaPack::Index
     end
 
     cat, pkg = find path
-    pkg.type = type.to_s
+    pkg.type = type
 
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend

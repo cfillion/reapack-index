@@ -21,11 +21,11 @@ class ReaPack::Index
     end
 
     def type
-      @node[TYPE].to_s
+      @node[TYPE]&.to_sym
     end
 
     def type=(new_type)
-      new_type ||= String.new
+      new_type = new_type.to_sym
 
       return if type == new_type
 

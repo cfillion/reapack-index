@@ -31,11 +31,11 @@ class TestPackage < MiniTest::Test
     after = '<reapack name="1.0" type="script"/>'
 
     pkg = ReaPack::Index::Package.new before
-    assert_empty pkg.type
+    assert_nil pkg.type
 
     pkg.type = 'script'
     assert pkg.modified?, 'package is not modified'
-    assert_equal 'script', pkg.type
+    assert_equal :script, pkg.type
 
     assert_equal after, before.to_s
   end
@@ -45,7 +45,7 @@ class TestPackage < MiniTest::Test
 
     pkg = ReaPack::Index::Package.new before
 
-    assert_equal 'script', pkg.type
+    assert_equal :script, pkg.type
     pkg.type = pkg.type
 
     refute pkg.modified?, 'package is modified'
