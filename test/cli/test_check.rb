@@ -28,7 +28,7 @@ Finished checks for 2 packages with 0 failures
     expected = <<-STDERR
 F.
 
-1) test1.lua failed:
+1) cat/test1.lua failed:
   invalid metadata:
     missing tag "version"
     invalid value for tag "author"
@@ -39,8 +39,8 @@ Finished checks for 2 packages with 1 failure
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
 
     wrapper ['--check'], setup: setup do
-      mkfile 'test1.lua', '@author'
-      mkfile 'test2.lua', '@version 1.0'
+      mkfile 'cat/test1.lua', '@author'
+      mkfile 'cat/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
         assert_equal false, @cli.run
@@ -81,21 +81,21 @@ Finished checks for 1 package with 1 failure
 
   def test_quiet
     expected = <<-STDERR
-1) test1.lua failed:
+1) cat/test1.lua failed:
   invalid metadata:
     missing tag "version"
     invalid value for tag "author"
 
-2) test2.lua failed:
+2) cat/test2.lua failed:
   invalid metadata: missing tag "version"
     STDERR
 
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
 
     wrapper ['--check', '--quiet'], setup: setup do
-      mkfile 'test1.lua', '@author'
-      mkfile 'test2.lua'
-      mkfile 'test3.lua', '@version 1.0'
+      mkfile 'cat/test1.lua', '@author'
+      mkfile 'cat/test2.lua'
+      mkfile 'cat/test3.lua', '@version 1.0'
 
       assert_output nil, expected do
         assert_equal false, @cli.run

@@ -121,7 +121,7 @@ class TestCLI < MiniTest::Test
     _, stderr = capture_io do
       wrapper ['--warnings'], setup: setup do
         @git.create_commit 'initial commit', [
-          mkfile('test.lua', 'no version tag in this script!')
+          mkfile('cat/test.lua', 'no version tag in this script!')
         ]
 
         assert_equal true, @cli.run
@@ -204,7 +204,7 @@ class TestCLI < MiniTest::Test
   def test_progress_no_new_commit
     setup = proc {
       @git.create_commit 'initial commit',
-        [mkfile('test1.lua', '@version 1.0')]
+        [mkfile('cat/test1.lua', '@version 1.0')]
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -213,7 +213,7 @@ class TestCLI < MiniTest::Test
     }
 
     wrapper ['--progress'], setup: setup do
-      assert_output '', /Nothing to do!\n/ do
+      assert_output '', /nothing to do/i do
         @cli.run
       end
     end
@@ -222,9 +222,10 @@ class TestCLI < MiniTest::Test
   def test_progress_warnings
     wrapper ['--progress'] do
       @git.create_commit 'initial commit',
-        [mkfile('test.lua', 'no version tag in this script!')]
+        [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /\nWarning:/i do
+      # must output a new line before 'warning:'
+      assert_output nil, /\nwarning:/i do
         assert_equal true, @cli.run
       end
     end
@@ -233,7 +234,7 @@ class TestCLI < MiniTest::Test
   def test_quiet_mode
     wrapper ['--verbose', '--progress', '--quiet'] do
       @git.create_commit 'initial commit',
-        [mkfile('test.lua', 'no version tag in this script!')]
+        [mkfile('cat/test.lua', 'no version tag in this script!')]
 
       assert_output '', '' do
         assert_equal true, @cli.run

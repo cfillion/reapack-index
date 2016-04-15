@@ -140,7 +140,7 @@ class TestIndex::Provides < MiniTest::Test
     index.url_template = 'http://host/$path'
 
     error = assert_raises ReaPack::Index::Error do
-      index.scan 'test.lua', <<-IN
+      index.scan 'cat/test.lua', <<-IN
         @version 1.0
         @provides
           [hello] test.png
@@ -237,7 +237,7 @@ class TestIndex::Provides < MiniTest::Test
   def test_duplicate
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['script.lua', 'test.png']
+    index.files = ['cat/script.lua', 'cat/test.png']
 
     error = assert_raises ReaPack::Index::Error do
      index.scan index.files.first, <<-IN
@@ -248,14 +248,14 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_equal "duplicate file 'test.png'", error.message
+    assert_equal "duplicate file 'cat/test.png'", error.message
   end
 
   def test_conflicts
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['script1.lua', 'script2.lua', 'script3.lua',
-                   'file1', 'file2']
+    index.files = ['cat/script1.lua', 'cat/script2.lua', 'cat/script3.lua',
+                   'cat/file1', 'cat/file2']
 
     index.scan index.files[0], <<-IN
       @version 1.0
@@ -271,7 +271,7 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_equal "'file1' conflicts with 'script1.lua'",
+    assert_equal "'cat/file1' conflicts with 'cat/script1.lua'",
       error.message
 
     # did script2.lua did leave any trace behind?
@@ -284,7 +284,7 @@ class TestIndex::Provides < MiniTest::Test
   def test_duplicate_other_package
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['script1.lua', 'script2.lua']
+    index.files = ['cat/script1.lua', 'cat/script2.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -297,7 +297,7 @@ class TestIndex::Provides < MiniTest::Test
      IN
     end
 
-    assert_equal "'script1.lua' conflicts with 'script1.lua'",
+    assert_equal "'cat/script1.lua' conflicts with 'cat/script1.lua'",
       error.message
   end
 

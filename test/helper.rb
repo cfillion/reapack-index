@@ -87,7 +87,7 @@ module CLIHelper
   end
 
   def wrapper(args = [], options = {})
-    old_pwd = Dir.pwd
+    old_wd = Dir.pwd
 
     path, repo = init_git
 
@@ -104,7 +104,7 @@ module CLIHelper
     yield if block_given?
   ensure
     @git = @cli = nil
-    Dir.chdir old_pwd
+    Dir.chdir old_wd
     FileUtils.rm_r path
   end
 

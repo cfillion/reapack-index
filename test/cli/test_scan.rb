@@ -8,20 +8,19 @@ class TestCLI::Scan < MiniTest::Test
   def test_initial_commit
     wrapper do
       @git.create_commit 'initial commit', [
-        mkfile('test1.lua', '@version 1.0'),
-        mkfile('Category/test2.lua', '@version 1.0'),
-        mkfile('Category/Sub/test3.lua', '@version 1.0'),
+        mkfile('Category/test1.lua', '@version 1.0'),
+        mkfile('Category/Sub/test2.lua', '@version 1.0'),
       ]
 
-      assert_output /3 new packages/ do
+      assert_output /2 new packages/ do
         assert_equal true, @cli.run
       end
 
-      assert_match 'Category/test2.lua', read_index
-      assert_match "raw/#{@git.last_commit.id}/test1.lua", read_index
-      assert_match 'https://github.com/cfillion/test-repository/raw', read_index
+      assert_match 'Category/test1.lua', read_index
+      assert_match 'Category/Sub/test2.lua', read_index
 
-      assert_match @git.last_commit.time.utc.iso8601, read_index
+      assert_equal @git.last_commit.id, @cli.index.commit
+      assert_equal @git.last_commit.time, @cli.index.time
     end
   end
 
@@ -31,16 +30,17 @@ class TestCLI::Scan < MiniTest::Test
         [mkfile('README.md', '# Hello World')]
 
       @git.create_commit 'second commit', [
-        mkfile('test1.lua', '@version 1.0'),
-        mkfile('Category/test2.lua', '@version 1.0'),
-        mkfile('Category/Sub/test3.lua', '@version 1.0'),
+        mkfile('Category/test1.lua', '@version 1.0'),
+        mkfile('Category/Sub/test2.lua', '@version 1.0'),
       ]
 
-      assert_output "3 new categories, 3 new packages, 3 new versions\n" do
+      assert_output "2 new categories, 2 new packages, 2 new versions\n" do
         assert_equal true, @cli.run
       end
 
-      assert_match 'Category/test2.lua', read_index
+      assert_equal @git.last_commit.id, @cli.index.commit
+      assert_equal @git.last_commit.time, @cli.index.time
+      assert_match 'Category/test1.lua', read_index
     end
   end
 
@@ -52,13 +52,13 @@ class TestCLI::Scan < MiniTest::Test
     end
   end
 
-  def test_pwd_is_subdirectory
+  def test_wd_subdirectory
     wrapper do
-      @git.create_commit 'initial commit', [mkfile('test1.lua', '@version 1.0')]
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1.0')]
 
-      pwd = File.join(@git.path, 'test')
-      Dir.mkdir pwd
-      Dir.chdir pwd
+      Dir.mkdir mkpath('test')
+      Dir.chdir mkpath('test')
 
       assert_output /1 new package/ do
         assert_equal true, @cli.run
@@ -72,17 +72,18 @@ class TestCLI::Scan < MiniTest::Test
     stdout, stderr = capture_io do
       wrapper ['--verbose'] do
         @git.create_commit 'initial commit', [
-          mkfile('test.lua', '@version 1.0'),
-          mkfile('test.png', 'file not shown in output'),
+          mkfile('cat/test.lua', '@version 1.0'),
+          mkfile('cat/test.png', 'file not shown in output'),
+          mkfile('test.png', 'not shown either'),
         ]
 
         @git.create_commit 'second commit', [
-          mkfile('test.lua', '@version 2.0'),
-          mkfile('test.jsfx', '@version 1.0'),
+          mkfile('cat/test.lua', '@version 2.0'),
+          mkfile('cat/test.jsfx', '@version 1.0'),
         ]
 
-        File.delete mkpath('test.lua')
-        @git.create_commit 'third commit', [mkpath('test.lua')]
+        File.delete mkpath('cat/test.lua')
+        @git.create_commit 'third commit', [mkpath('cat/test.lua')]
 
         assert_equal true, @cli.run
       end
@@ -92,12 +93,12 @@ class TestCLI::Scan < MiniTest::Test
 
     verbose = /
 processing [a-f0-9]{7}: initial commit
--> indexing added file test\.lua
+-> indexing added file cat\/test\.lua
 processing [a-f0-9]{7}: second commit
--> indexing added file test\.jsfx
--> indexing modified file test\.lua
+-> indexing added file cat\/test\.jsfx
+-> indexing modified file cat\/test\.lua
 processing [a-f0-9]{7}: third commit
--> indexing deleted file test\.lua/i
+-> indexing deleted file cat\/test\.lua/i
 
     assert_match verbose, stderr
   end
@@ -118,9 +119,9 @@ processing [a-f0-9]{7}: third commit
   def test_invalid_metadata
     wrapper do
       @git.create_commit 'initial commit',
-        [mkfile('test.lua', 'no version tag in this script!')]
+        [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /Warning: test\.lua: Invalid metadata/i do
+      assert_output nil, /warning: cat\/test\.lua: Invalid metadata/i do
         assert_equal true, @cli.run
       end
     end
@@ -129,22 +130,22 @@ processing [a-f0-9]{7}: third commit
   def test_no_warnings
     wrapper ['-w'] do
       @git.create_commit 'initial commit',
-        [mkfile('test.lua', 'no version tag in this script!')]
+        [mkfile('cat/test.lua', 'no version tag in this script!')]
 
       _, stderr = capture_io do
         assert_equal true, @cli.run
       end
 
-      refute_match /Warning: test\.lua: Invalid metadata/i, stderr
+      refute_match /warning: test\.lua: Invalid metadata/i, stderr
     end
   end
 
   def test_no_warnings_override
     wrapper ['-w', '-W'] do
       @git.create_commit 'initial commit',
-        [mkfile('test.lua', 'no version tag in this script!')]
+        [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /Warning: test\.lua: Invalid metadata/i do
+      assert_output nil, /warning: cat\/test\.lua: Invalid metadata/i do
         assert_equal true, @cli.run
       end
     end
@@ -152,7 +153,8 @@ processing [a-f0-9]{7}: third commit
 
   def test_from_last
     setup = proc {
-      @git.create_commit 'initial commit', [mkfile('test1.lua', '@version 1.0')]
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1.0')]
 
       mkfile 'index.xml', <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -161,7 +163,8 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper [], setup: setup do
-      @git.create_commit 'second commit', [mkfile('test2.lua', '@version 1.0')]
+      @git.create_commit 'second commit',
+        [mkfile('cat/test2.lua', '@version 1.0')]
 
       assert_output nil, '' do
         assert_equal true, @cli.run
@@ -207,10 +210,11 @@ processing [a-f0-9]{7}: third commit
 
   def test_remove
     wrapper do
-      @git.create_commit 'initial commit', [mkfile('test.lua', '@version 1.0')]
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test.lua', '@version 1.0')]
 
-      File.delete mkpath('test.lua')
-      @git.create_commit 'second commit', [mkpath('test.lua')]
+      File.delete mkpath('cat/test.lua')
+      @git.create_commit 'second commit', [mkpath('cat/test.lua')]
 
       assert_output /1 removed package/i do
         assert_equal true, @cli.run
@@ -226,14 +230,14 @@ processing [a-f0-9]{7}: third commit
 
     setup = proc {
       @git.create_commit 'initial commit',
-        [mkfile('test1.lua', '@version 2.0')]
+        [mkfile('cat/test1.lua', '@version 2.0')]
 
       @git.create_commit 'second commit',
-        [mkfile('test2.lua', '@version 1.0')]
+        [mkfile('cat/test2.lua', '@version 1.0')]
       options << @git.last_commit.id
 
       @git.create_commit 'third commit',
-        [mkfile('test3.lua', '@version 1.1')]
+        [mkfile('cat/test3.lua', '@version 1.1')]
     }
 
     wrapper options, setup: setup do
@@ -250,14 +254,14 @@ processing [a-f0-9]{7}: third commit
 
     setup = proc {
       @git.create_commit 'initial commit',
-        [mkfile('test1.lua', '@version 2.0')]
+        [mkfile('cat/test1.lua', '@version 2.0')]
 
       @git.create_commit 'second commit',
-        [mkfile('test2.lua', '@version 1.0')]
+        [mkfile('cat/test2.lua', '@version 1.0')]
       options[1] = @git.last_commit.id
 
       @git.create_commit 'third commit',
-        [mkfile('test3.lua', '@version 1.1')]
+        [mkfile('cat/test3.lua', '@version 1.1')]
       options[3] = @git.last_commit.id
     }
 
@@ -275,10 +279,10 @@ processing [a-f0-9]{7}: third commit
 
     setup = proc {
       @git.create_commit 'initial commit',
-        [mkfile('test1.lua', '@version 2.0')]
+        [mkfile('cat/test1.lua', '@version 2.0')]
 
       @git.create_commit 'second commit',
-        [mkfile('test2.lua', '@version 1.0')]
+        [mkfile('cat/test2.lua', '@version 1.0')]
       options << @git.last_commit.id
 
       options << '--scan'

@@ -54,7 +54,7 @@ class TestIndex::Scan < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
-  def test_default_category
+  def test_package_in_root
     index = ReaPack::Index.new @dummy_path
     index.files = ['script.lua', 'Hello/World']
     index.url_template = 'http://host/$path'
@@ -65,9 +65,7 @@ class TestIndex::Scan < MiniTest::Test
     IN
 
     index.write!
-    result = File.read index.path
-    assert_match '<category name="Other">', result
-    assert_match 'file="Hello/World"', result
+    refute_match '<reapack', File.read(index.path)
   end
 
   def test_edit_version_amend_off
@@ -149,7 +147,7 @@ class TestIndex::Scan < MiniTest::Test
   def test_missing_version
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['test.lua']
+    index.files = ['cat/test.lua']
 
     error = assert_raises ReaPack::Index::Error do
       index.scan index.files.first, 'no version tag here'
@@ -161,7 +159,7 @@ class TestIndex::Scan < MiniTest::Test
   def test_empty_changelog
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['test.lua']
+    index.files = ['cat/test.lua']
 
     error = assert_raises ReaPack::Index::Error do
       index.scan index.files.first, <<-IN
@@ -190,7 +188,7 @@ class TestIndex::Scan < MiniTest::Test
   def test_author_boolean
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['test.lua']
+    index.files = ['cat/test.lua']
 
     error = assert_raises ReaPack::Index::Error do
       index.scan index.files.first, <<-IN
@@ -205,7 +203,7 @@ class TestIndex::Scan < MiniTest::Test
   def test_author_multiline
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['test.lua']
+    index.files = ['cat/test.lua']
 
     error = assert_raises ReaPack::Index::Error do
       index.scan index.files.first, <<-IN

@@ -72,9 +72,17 @@ class ReaPack::Index
   attr_reader :path, :url_template
   attr_accessor :amend, :files, :time
 
-  def self.type_of(path)
-    ext = File.extname(path)[1..-1]
-    PKG_TYPES.find {|_, v| v.include? ext }&.first
+  class << self
+    def type_of(path)
+      # don't treat files in the root directory as packages
+      # because they don't have a category
+      return if File.dirname(path) == '.'
+
+      ext = File.extname(path)[1..-1]
+      PKG_TYPES.find {|_, v| v.include? ext }&.first
+    end
+
+    alias :is_package? :type_of
   end
 
   def initialize(path)
@@ -135,10 +143,9 @@ class ReaPack::Index
         [prefix + errors.join(prefix)]
     end
 
-    cat, pkg = find path
-    pkg.type = type
+    cat, pkg = package_for path
 
-    cselector = @cdetector[pkg.type, path]
+    cselector = @cdetector[pkg.type = type, path]
 
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
@@ -191,7 +198,7 @@ class ReaPack::Index
   end
   
   def remove(path)
-    cat, pkg = find path, false
+    cat, pkg = package_for path, false
     return unless pkg
 
     @cdetector[pkg.type, path].clear
@@ -339,24 +346,19 @@ private
     @changes[desc][0] += 1
   end
 
-  def dirname(path)
-    name = File.dirname path
-    name unless name == '.'
-  end
-
-  def find(path, create = true)
-    cat_name = dirname(path) || 'Other'
+  def package_for(path, create = true)
+    cat_name = File.dirname path
     pkg_name = File.basename path
 
     cat = Category.get cat_name, @doc.root, create
-    pkg = Package.get pkg_name, cat && cat.node, create
+    pkg = Package.get pkg_name, cat&.node, create
 
     [cat, pkg]
   end
 
   def parse_provides(provides, path, cselector)
     basename = File.basename path
-    basedir = dirname(path).to_s
+    basedir = File.dirname path
     pathdir = Pathname.new basedir
 
     provides.to_s.lines.map {|line|
@@ -382,7 +384,7 @@ private
         src = Source.new platform
         src.url = make_url file, url_tpl
 
-        cselector.push src.platform, file
+        cselector.push src.platform, url_tpl ? expanded : file
 
         if file != path
           if url_tpl.nil?

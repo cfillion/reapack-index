@@ -158,7 +158,7 @@ class TestIndex < MiniTest::Test
     index.commit = @commit
     index.url_template = 'http://host/$path'
 
-    assert_raises { index.scan 'not_listed.lua', '@version 1.0' }
+    assert_raises { index.scan 'cat/not_listed.lua', '@version 1.0' }
 
     expected = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
