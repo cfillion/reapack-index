@@ -5,20 +5,21 @@ class TestPackage < MiniTest::Test
 
   def test_create
     before = make_node '<category />'
+
     after = <<-XML
 <category>
-  <reapack name="1.0"/>
+  <reapack name="pkg name"/>
 </category>
     XML
 
-    pkg = ReaPack::Index::Package.new '1.0', before
+    pkg = ReaPack::Index::Package.new 'pkg name', before
     assert pkg.is_new?, 'package is not new'
     assert pkg.modified?, 'package is not modified'
 
     assert_equal after.chomp, before.to_s
   end
 
-  def test_use
+  def test_from_existing_node
     before = make_node '<reapack name="1.0"/>'
 
     pkg = ReaPack::Index::Package.new before
@@ -91,5 +92,17 @@ class TestPackage < MiniTest::Test
     assert_equal [[ver11]], block_result
 
     assert pkg.has_version?('1.1'), 'version 1.1 not found'
+  end
+
+  def test_category_and_path
+    pkg1 = ReaPack::Index::Package.new make_node('<reapack/>')
+    assert_nil pkg1.category
+    assert_nil pkg1.path
+
+    pkg2 = ReaPack::Index::Package.new 'test',
+      make_node('<category name="Hello/World"/>')
+
+    assert_equal 'Hello/World', pkg2.category
+    assert_equal 'Hello/World/test', pkg2.path
   end
 end

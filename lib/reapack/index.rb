@@ -159,7 +159,7 @@ class ReaPack::Index
 
       ver.replace_sources do
         cselector.clear
-        sources = parse_provides mh[:provides], path, cselector
+        sources = parse_provides mh[:provides], pkg
 
         if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
           # add the package itself as a source
@@ -356,20 +356,19 @@ private
     [cat, pkg]
   end
 
-  def parse_provides(provides, path, cselector)
-    basename = File.basename path
-    basedir = File.dirname path
-    pathdir = Pathname.new basedir
+  def parse_provides(provides, pkg)
+    pathdir = Pathname.new pkg.category
 
     provides.to_s.lines.map {|line|
       m = line.chomp.match PROVIDES_REGEX
       platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
 
-      pattern = basename if pattern == '.'
+      pattern = pkg.name if pattern == '.'
 
-      expanded = self.class.expand pattern, basedir
+      expanded = self.class.expand pattern, pkg.category
+      cselector = @cdetector[pkg.type, pkg.path]
 
-      if expanded == path
+      if expanded == pkg.path
         # always resolve path even when an url template is set
         files = [expanded]
       elsif url_tpl.nil?
@@ -386,7 +385,7 @@ private
 
         cselector.push src.platform, url_tpl ? expanded : file
 
-        if file != path
+        if file != pkg.path
           if url_tpl.nil?
             src.file = Pathname.new(file).relative_path_from(pathdir).to_s
           else

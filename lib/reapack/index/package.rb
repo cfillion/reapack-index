@@ -20,6 +20,14 @@ class ReaPack::Index
       super || @versions.values.any? {|ver| ver.modified? }
     end
 
+    def category
+      @node.parent[NAME_ATTR]
+    end
+
+    def path
+      @path ||= File.join category, name if category && name
+    end
+
     def type
       @node[TYPE]&.to_sym
     end
