@@ -5,9 +5,8 @@ class ReaPack::Index
     AUTHOR = 'author'.freeze
     TIME = 'time'.freeze
 
-    def initialize(node, parent = nil)
+    def initialize(node)
       super
-
       @changelog = Changelog.new @node
     end
 

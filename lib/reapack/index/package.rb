@@ -6,13 +6,10 @@ class ReaPack::Index
   class Package < NamedNode
     @tag = 'reapack'.freeze
 
-    TYPE = 'type'.freeze
+    TYPE_ATTR = 'type'.freeze
 
-    def initialize(node, parent = nil)
+    def initialize(node)
       super
-
-      @versions = {}
-
       read_versions
     end
 
@@ -29,7 +26,7 @@ class ReaPack::Index
     end
 
     def type
-      @node[TYPE]&.to_sym
+      @node[TYPE_ATTR]&.to_sym
     end
 
     def type=(new_type)
@@ -37,7 +34,7 @@ class ReaPack::Index
 
       return if type == new_type
 
-      @node[TYPE] = new_type
+      @node[TYPE_ATTR] = new_type
       @dirty = true
     end
 
@@ -53,7 +50,7 @@ class ReaPack::Index
       if has_version? name
         ver = @versions[name]
       else
-        ver = @versions[name] = Version.new name, @node
+        ver = @versions[name] = Version.create name, @node
       end
 
       if block_given?
@@ -65,6 +62,8 @@ class ReaPack::Index
 
   private
     def read_versions
+      @versions ||= {}
+
       Version.find_all(@node).each {|ver|
         @versions[ver.name] = ver
       }

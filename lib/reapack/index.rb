@@ -350,8 +350,8 @@ private
     cat_name = File.dirname path
     pkg_name = File.basename path
 
-    cat = Category.get cat_name, @doc.root, create
-    pkg = Package.get pkg_name, cat&.node, create
+    cat = Category.fetch cat_name, @doc.root, create
+    pkg = Package.fetch pkg_name, cat&.node, create
 
     [cat, pkg]
   end

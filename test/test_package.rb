@@ -3,30 +3,6 @@ require File.expand_path '../helper', __FILE__
 class TestPackage < MiniTest::Test
   include XMLHelper
 
-  def test_create
-    before = make_node '<category />'
-
-    after = <<-XML
-<category>
-  <reapack name="pkg name"/>
-</category>
-    XML
-
-    pkg = ReaPack::Index::Package.new 'pkg name', before
-    assert pkg.is_new?, 'package is not new'
-    assert pkg.modified?, 'package is not modified'
-
-    assert_equal after.chomp, before.to_s
-  end
-
-  def test_from_existing_node
-    before = make_node '<reapack name="1.0"/>'
-
-    pkg = ReaPack::Index::Package.new before
-    refute pkg.is_new?, 'package is new'
-    refute pkg.modified?, 'package is modified'
-  end
-
   def test_change_type
     before = make_node '<reapack name="1.0"/>'
     after = '<reapack name="1.0" type="script"/>'
@@ -99,7 +75,7 @@ class TestPackage < MiniTest::Test
     assert_nil pkg1.category
     assert_nil pkg1.path
 
-    pkg2 = ReaPack::Index::Package.new 'test',
+    pkg2 = ReaPack::Index::Package.create 'test',
       make_node('<category name="Hello/World"/>')
 
     assert_equal 'Hello/World', pkg2.category

@@ -3,29 +3,6 @@ require File.expand_path '../helper', __FILE__
 class TestVersion < MiniTest::Test
   include XMLHelper
 
-  def test_create
-    before = make_node '<reapack />'
-    after = <<-XML
-<reapack>
-  <version name="1.0"/>
-</reapack>
-    XML
-
-    ver = ReaPack::Index::Version.new '1.0', before
-    assert ver.is_new?, 'version is not new'
-    assert ver.modified?, 'version is not modified'
-
-    assert_equal after.chomp, before.to_s
-  end
-
-  def test_use
-    before = make_node '<version name="1.0"/>'
-
-    ver = ReaPack::Index::Version.new before
-    refute ver.is_new?, 'version is new'
-    refute ver.modified?, 'version is modified'
-  end
-
   def test_set_author
     before = make_node '<version name="1.0"/>'
     after = '<version name="1.0" author="cfillion"/>'

@@ -3,63 +3,83 @@ require File.expand_path '../helper', __FILE__
 class TestNamedNode < MiniTest::Test
   include XMLHelper
 
+  def setup
+    @mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
+  end
+
   def test_no_tag_set
-    mock = Class.new ReaPack::Index::NamedNode
+    @ock = Class.new ReaPack::Index::NamedNode
     assert_raises { mock.tag }
   end
 
-  def test_find_in
-    node = make_node '<root><node name="hello"/><node name="world"/></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
+  def test_create_node
+    before = make_node '<parent />'
 
-    instance = mock.find_in node, 'hello'
-    assert_nil mock.find_in node, 'bacon'
+    after = <<-XML
+<parent>
+  <node name="name here"/>
+</parent>
+    XML
 
-    assert_kind_of mock, instance
-    assert_equal 'hello', instance.name
+    instance = @mock.create 'name here', before
+    assert instance.is_new?, 'instance is not new'
+    assert instance.modified?, 'instance is not modified'
+
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_from_existing_node
+    before = make_node '<node name="1.0"/>'
+
+    instance = @mock.new before
     refute instance.is_new?, 'instance is new'
     refute instance.modified?, 'instance is modified'
   end
 
+  def test_find_in
+    node = make_node '<root><node name="hello"/><node name="world"/></root>'
+
+    instance = @mock.find_in node, 'hello'
+    assert_kind_of @mock, instance
+    assert_equal 'hello', instance.name
+
+    assert_nil @mock.find_in node, 'bacon'
+  end
+
   def test_find_all
     node = make_node '<root><node name="hello"/><node name="world"/></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
 
-    instances = mock.find_all node
+    instances = @mock.find_all node
     assert_equal 2, instances.size
 
-    assert_kind_of mock, instances.first
+    assert_kind_of @mock, instances.first
     assert_equal 'hello', instances.first.name
-    refute instances.first.is_new?, 'instance is new'
 
+    assert_kind_of @mock, instances.last
     assert_equal 'world', instances.last.name
   end
 
-  def test_get_readonly
+  def test_fetch_existing
     node = make_node '<root><node name="hello"/></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
 
-    instance = mock.get 'hello', node, false
-    assert_kind_of mock, instance
+    instance = @mock.fetch 'hello', node, false
+    assert_kind_of @mock, instance
 
-    assert_nil mock.get 'world', node, false
+    assert_nil @mock.fetch 'world', node, false
   end
 
-  def test_get_create
+  def test_fetch_create
     node = make_node '<root></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
 
-    instance = mock.get 'hello', node, true
+    instance = @mock.fetch 'hello', node, true
 
-    assert_kind_of mock, instance
+    assert_kind_of @mock, instance
     assert instance.is_new?, 'instance is not new'
     assert instance.modified?, 'instance is not modified'
   end
 
   def test_get_null_parent
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
-
-    assert_nil mock.get 'hello', nil, false
+    assert_nil @mock.fetch 'hello', nil, false
   end
 
   def test_empty
@@ -70,20 +90,16 @@ class TestNamedNode < MiniTest::Test
     </root>
     XML
 
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
-
-    first = mock.find_in node, 'first'
+    first = @mock.find_in node, 'first'
     assert first.empty?, 'first is not empty'
 
-    second = mock.find_in node, 'second'
+    second = @mock.find_in node, 'second'
     refute second.empty?, 'second is empty'
   end
 
   def test_remove
     node = make_node '<root><node name="test"/></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
-
-    instance = mock.find_in node, 'test'
+    instance = @mock.find_in node, 'test'
 
     assert_equal 1, node.children.size
     instance.remove
@@ -92,9 +108,8 @@ class TestNamedNode < MiniTest::Test
 
   def test_children
     node = make_node '<root><node name="test"><a/><b/></root>'
-    mock = Class.new(ReaPack::Index::NamedNode) { @tag = 'node' }
 
-    instance = mock.find_in node, 'test'
+    instance = @mock.find_in node, 'test'
     assert_equal node.css('a').inspect, instance.children('a').inspect
   end
 end

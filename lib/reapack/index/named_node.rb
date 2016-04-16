@@ -21,27 +21,32 @@ class ReaPack::Index
         .map {|node| self.new node }
     end
 
-    def self.get(name, parent, create)
+    def self.fetch(name, parent, create)
       return unless parent
 
-      node = self.find_in parent, name
+      instance = find_in parent, name
 
       if create
-        node ||= self.new name, parent
+        instance ||= self.create name, parent
       end
 
-      node
+      instance
     end
 
-    def initialize(node, parent = nil)
-      return @node = node if parent.nil?
+    def self.create(name, parent)
+      node = Nokogiri::XML::Node.new tag, parent.document
+      node[NAME_ATTR] = name
+      node.parent = parent
 
-      @is_new = true
-      @dirty = true
+      instance = new node
+      instance.instance_variable_set :@is_new, true
+      instance.instance_variable_set :@dirty, true
 
-      @node = Nokogiri::XML::Node.new self.class.tag, parent.document
-      @node[NAME_ATTR] = node
-      @node.parent = parent
+      instance
+    end
+
+    def initialize(node)
+      @node = node
     end
 
     attr_reader :node
