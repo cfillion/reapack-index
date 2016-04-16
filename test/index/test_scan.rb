@@ -306,4 +306,28 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_data
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Grooves/sws.data', 'Grooves/sws/test.mid']
+
+    index.scan index.files.first, "@version 1.0\n@provides sws/*.mid"
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Grooves">
+    <reapack name="sws.data" type="data">
+      <version name="1.0">
+        <source platform="all" file="sws/test.mid">http://host/Grooves/sws/test.mid</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
 end

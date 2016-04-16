@@ -32,6 +32,7 @@ class ReaPack::Index
     script: %w{lua eel py},
     extension: %w{ext},
     effect: %w{jsfx},
+    data: %{data},
   }.freeze
 
   WITH_MAIN = [:script, :effect].freeze
