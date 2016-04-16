@@ -7,7 +7,7 @@ class ReaPack::Index
       @tag
     end
 
-    def self.find_in(parent, name)
+    def self.find_one(name, parent)
       node = parent.element_children.find {|node|
         node.name == tag && node[NAME_ATTR] == name
       }
@@ -24,7 +24,7 @@ class ReaPack::Index
     def self.fetch(name, parent, create)
       return unless parent
 
-      instance = find_in parent, name
+      instance = find_one name, parent
 
       if create
         instance ||= self.create name, parent

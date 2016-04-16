@@ -36,14 +36,14 @@ class TestNamedNode < MiniTest::Test
     refute instance.modified?, 'instance is modified'
   end
 
-  def test_find_in
+  def test_find_one
     node = make_node '<root><node name="hello"/><node name="world"/></root>'
 
-    instance = @mock.find_in node, 'hello'
+    instance = @mock.find_one 'hello', node
     assert_kind_of @mock, instance
     assert_equal 'hello', instance.name
 
-    assert_nil @mock.find_in node, 'bacon'
+    assert_nil @mock.find_one 'bacon', node
   end
 
   def test_find_all
@@ -83,23 +83,16 @@ class TestNamedNode < MiniTest::Test
   end
 
   def test_empty
-    node = make_node <<-XML
-    <root>
-      <node name="first"/>
-      <node name="second"><something/></node>
-    </root>
-    XML
-
-    first = @mock.find_in node, 'first'
+    first = @mock.new make_node('<node/>')
     assert first.empty?, 'first is not empty'
 
-    second = @mock.find_in node, 'second'
+    second = @mock.new make_node('<node><something/></node>')
     refute second.empty?, 'second is empty'
   end
 
   def test_remove
     node = make_node '<root><node name="test"/></root>'
-    instance = @mock.find_in node, 'test'
+    instance = @mock.find_one 'test', node
 
     assert_equal 1, node.children.size
     instance.remove
@@ -107,9 +100,9 @@ class TestNamedNode < MiniTest::Test
   end
 
   def test_children
-    node = make_node '<root><node name="test"><a/><b/></root>'
+    node = make_node '<node name="test"><a/><b><a/></b></node>'
 
-    instance = @mock.find_in node, 'test'
-    assert_equal node.css('a').inspect, instance.children('a').inspect
+    instance = @mock.new node
+    assert_equal node.css('> a').inspect, instance.children('a').inspect
   end
 end
