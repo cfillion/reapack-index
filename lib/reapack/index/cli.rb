@@ -122,7 +122,7 @@ private
       begin
         @index.scan diff.file, diff.new_content
       rescue ReaPack::Index::Error => e
-        warn "#{diff.file}: #{e.message}"
+        warn "#{diff.file}:\n#{indent e.message}"
       end
     end
   end
