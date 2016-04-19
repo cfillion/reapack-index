@@ -218,9 +218,7 @@ private
           $stderr.print 'F'
         end
 
-        prefix = "\n\x20\x20"
-        failures << "%s failed:#{prefix}%s" %
-          [rel, e.message.gsub("\n", prefix).yellow]
+        failures << "%s failed:\n%s" % [rel, indent(e.message).yellow]
       end
     }
 
@@ -316,5 +314,11 @@ private
     # expand from the repository root or from the current directory if
     # the repository is not yet initialized
     File.expand_path path, @git ? @git.path : Dir.pwd
+  end
+
+  def indent(input)
+    output = String.new
+    input.lines {|l| output += "\x20\x20#{l}" }
+    output
   end
 end

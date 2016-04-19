@@ -121,7 +121,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'initial commit',
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /warning: cat\/test\.lua: Invalid metadata/i do
+      assert_output nil, /warning: cat\/test\.lua: missing tag/i do
         assert_equal true, @cli.run
       end
     end
@@ -136,7 +136,7 @@ processing [a-f0-9]{7}: third commit
         assert_equal true, @cli.run
       end
 
-      refute_match /warning: test\.lua: Invalid metadata/i, stderr
+      refute_match /warning/i, stderr
     end
   end
 
@@ -145,7 +145,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'initial commit',
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /warning: cat\/test\.lua: Invalid metadata/i do
+      assert_output nil, /warning/i do
         assert_equal true, @cli.run
       end
     end

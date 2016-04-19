@@ -137,9 +137,7 @@ class ReaPack::Index
     end
 
     if errors = mh.validate(HEADER_RULES)
-      prefix = errors.size == 1 ? "\x20" : "\n\x20\x20"
-      raise Error, 'invalid metadata:%s' %
-        [prefix + errors.join(prefix)]
+      raise Error, errors.join("\n")
     end
 
     cat, pkg = package_for path

@@ -214,7 +214,7 @@ class TestIndex::Scan < MiniTest::Test
       IN
     end
 
-    assert_equal 'invalid metadata: invalid value for tag "author"', error.message
+    assert_equal 'invalid value for tag "author"', error.message
   end
 
   def test_noindex
