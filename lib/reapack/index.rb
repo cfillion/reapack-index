@@ -80,7 +80,7 @@ class ReaPack::Index
       return if File.dirname(path) == '.'
 
       ext = File.extname(path)[1..-1]
-      PKG_TYPES.find {|_, v| v.include? ext }&.first
+      PKG_TYPES.find {|_, v| v.include? ext }&.first if ext
     end
 
     alias :is_package? :type_of

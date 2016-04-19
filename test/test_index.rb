@@ -5,6 +5,7 @@ class TestIndex < MiniTest::Test
 
   def test_type_of
     assert_nil ReaPack::Index.type_of('src/main.cpp')
+    assert_nil ReaPack::Index.type_of('src/noext')
 
     assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.lua')
     assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.eel')
