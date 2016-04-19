@@ -79,7 +79,7 @@ class ReaPack::Index
 
     def resolve_type(input)
       PKG_TYPES
-        .find {|name, exts| input.to_sym == name || exts.include?(input) }
+        .find {|name, exts| input.to_sym == name || exts.include?(input.to_s) }
         &.first
     end
   end

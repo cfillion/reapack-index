@@ -23,15 +23,15 @@ class TestIndex < MiniTest::Test
     expected = [
       nil,
       :script, :script, :script,
-      :effect, :effect,
+      :effect, :effect, :effect,
       :extension, :extension,
       :data,
     ]
 
     actual = [
       'hello',
-      'script', 'lua', 'eel',
-      'effect', 'jsfx',
+      :script, 'lua', 'eel',
+      'effect', :jsfx, 'jsfx',
       'extension', 'ext',
       'data',
     ].map {|fn| ReaPack::Index.resolve_type fn }
