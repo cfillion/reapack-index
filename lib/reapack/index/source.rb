@@ -2,6 +2,7 @@ class ReaPack::Index
   class Source
     TAG = 'source'.freeze
     PLATFORM = 'platform'.freeze
+    TYPE = 'type'.freeze
     FILE = 'file'.freeze
 
     PLATFORMS = {
@@ -10,35 +11,44 @@ class ReaPack::Index
       darwin: :all, darwin32: :darwin, darwin64: :darwin,
     }.freeze
 
-    def self.validate_platform(platform)
-      return unless platform # nil platform will be replaced by the default
-
-      unless PLATFORMS.has_key? platform.to_sym
-        raise Error, "invalid platform '#{platform}'"
+    class << self
+      def is_platform?(input)
+        PLATFORMS.has_key? input&.to_sym
       end
     end
 
-    def initialize(platform = nil, file = nil, url = nil)
-      self.platform = platform
-      self.file = file
-      self.url = url
+    def initialize(url = nil)
+      @url = url
+      @platform = :all
     end
+
+    attr_reader :platform, :type
+    attr_accessor :file, :url
 
     def platform=(new_platform)
       new_platform ||= :all
-      new_platform = new_platform.to_sym
 
-      self.class.validate_platform new_platform
+      unless self.class.is_platform? new_platform
+        raise Error, "invalid platform '#{new_platform}'"
+      end
 
-      @platform = new_platform
+      @platform = new_platform.to_sym
     end
 
-    attr_reader :platform
-    attr_accessor :file, :url
+    def type=(new_type)
+      return @type = new_type if new_type.nil?
+
+      unless ReaPack::Index.is_type? new_type
+        raise Error, "invalid type '#{new_type}'"
+      end
+
+      @type = new_type.to_sym
+    end
 
     def make_node(parent)
       @node = Nokogiri::XML::Node.new TAG, parent.document
       @node[PLATFORM] = @platform
+      @node[TYPE] = @type if @type
       @node[FILE] = @file if @file
       @node.content = Addressable::URI.encode @url
       @node.parent = parent

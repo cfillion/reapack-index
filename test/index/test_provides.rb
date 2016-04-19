@@ -18,7 +18,7 @@ class TestIndex::Provides < MiniTest::Test
     index.scan index.files.first, <<-IN
       @version 1.0
       @provides
-        ../Resources/unicode.dat
+        [windows] ../Resources/unicode.dat
         test.png
     IN
 
@@ -29,7 +29,7 @@ class TestIndex::Provides < MiniTest::Test
     <reapack name="script.lua" type="script">
       <version name="1.0">
         <source platform="all">http://host/Category/script.lua</source>
-        <source platform="all" file="../Resources/unicode.dat">http://host/Resources/unicode.dat</source>
+        <source platform="windows" file="../Resources/unicode.dat">http://host/Resources/unicode.dat</source>
         <source platform="all" file="test.png">http://host/Category/test.png</source>
       </version>
     </reapack>
@@ -55,54 +55,6 @@ class TestIndex::Provides < MiniTest::Test
     end
 
     assert_equal "file not found 'test.png'", error.message
-  end
-
-  def test_platform
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-
-    index.files = [
-      'Category/script.lua',
-      'Category/winall.png',
-      'Category/win32bit.png',
-      'Category/win64bit.png',
-      'Category/osxall.png',
-      'Category/osx32bit.png',
-      'Category/osx64bit.png',
-    ]
-
-    index.scan index.files.first, <<-IN
-      @version 1.0
-      @provides
-        [windows] winall.png
-        [win32]  win32bit.png
-        [win64]win64bit.png
-         [ darwin ] osxall.png
-        [darwin32] osx32bit.png
-        [darwin64] osx64bit.png
-    IN
-
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1">
-  <category name="Category">
-    <reapack name="script.lua" type="script">
-      <version name="1.0">
-        <source platform="all">http://host/Category/script.lua</source>
-        <source platform="windows" file="winall.png">http://host/Category/winall.png</source>
-        <source platform="win32" file="win32bit.png">http://host/Category/win32bit.png</source>
-        <source platform="win64" file="win64bit.png">http://host/Category/win64bit.png</source>
-        <source platform="darwin" file="osxall.png">http://host/Category/osxall.png</source>
-        <source platform="darwin32" file="osx32bit.png">http://host/Category/osx32bit.png</source>
-        <source platform="darwin64" file="osx64bit.png">http://host/Category/osx64bit.png</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
-    index.write!
-    assert_equal expected, File.read(index.path)
   end
 
   def test_mainfile_platform
@@ -135,7 +87,7 @@ class TestIndex::Provides < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
-  def test_invalid_platform
+  def test_invalid_options
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
 
@@ -146,9 +98,6 @@ class TestIndex::Provides < MiniTest::Test
           [hello] test.png
       IN
     end
-
-    assert_match %q{invalid value for tag "provides": invalid platform 'hello'},
-      error.message
   end
 
   def test_custom_url
@@ -164,23 +113,6 @@ class TestIndex::Provides < MiniTest::Test
     index.write!
     assert_match 'http://google.com/download/master/1.0/Category/script.lua',
       File.read(index.path)
-  end
-
-  def test_filename_spaces
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['Category/hello world.lua']
-
-    index.scan index.files.first, <<-IN
-      @version 1.0
-      @provides
-        hello world.lua
-    IN
-
-    index.write!
-
-    result = File.read @dummy_path
-    assert_match 'hello world.lua', result
   end
 
   def test_empty_tag

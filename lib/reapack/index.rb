@@ -22,6 +22,7 @@ require 'reapack/index/metadata'
 require 'reapack/index/named_node'
 require 'reapack/index/package'
 require 'reapack/index/parsers'
+require 'reapack/index/provides'
 require 'reapack/index/source'
 require 'reapack/index/version'
 
@@ -32,27 +33,14 @@ class ReaPack::Index
     script: %w{lua eel py},
     extension: %w{ext},
     effect: %w{jsfx},
-    data: %{data},
+    data: %w{data},
   }.freeze
 
   WITH_MAIN = [:script, :effect].freeze
 
-  PROVIDES_REGEX = /
-    \A
-    ( \[ \s* (?<platform> .+? ) \s* \] )?
-    \s*
-    (?<file> .+?)
-    ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
-    \z
-  /x.freeze
-
   PROVIDES_VALIDATOR = proc {|value|
     begin
-      value.lines.each {|l|
-        m = l.chomp.match PROVIDES_REGEX
-        Source.validate_platform m[:platform]
-      }
-      nil
+      Provides.parse_each(value).to_a and nil
     rescue Error => e
       e.message
     end
@@ -74,6 +62,10 @@ class ReaPack::Index
   attr_accessor :amend, :files, :time
 
   class << self
+    def is_type?(input)
+      PKG_TYPES.has_key? input&.to_sym
+    end
+
     def type_of(path)
       # don't treat files in the root directory as packages
       # because they don't have a category
@@ -84,6 +76,12 @@ class ReaPack::Index
     end
 
     alias :is_package? :type_of
+
+    def resolve_type(input)
+      PKG_TYPES
+        .find {|name, exts| input.to_sym == name || exts.include?(input) }
+        &.first
+    end
   end
 
   def initialize(path)
@@ -164,7 +162,7 @@ class ReaPack::Index
 
         if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
           # add the package itself as a source
-          src = Source.new nil, nil, make_url(path)
+          src = Source.new make_url(path)
           sources.unshift src
 
           cselector.push src.platform, path
@@ -360,37 +358,35 @@ private
   def parse_provides(provides, pkg)
     pathdir = Pathname.new pkg.category
 
-    provides.to_s.lines.map {|line|
-      m = line.chomp.match PROVIDES_REGEX
-      platform, pattern, url_tpl = m[:platform], m[:file], m[:url]
+    Provides.parse_each(provides).map {|line|
+      line.file_pattern = pkg.name if line.file_pattern == '.'
 
-      pattern = pkg.name if pattern == '.'
-
-      expanded = self.class.expand pattern, pkg.category
-      cselector = @cdetector[pkg.type, pkg.path]
+      expanded = self.class.expand line.file_pattern, pkg.category
+      cselector = @cdetector[line.type || pkg.type, pkg.path]
 
       if expanded == pkg.path
         # always resolve path even when an url template is set
         files = [expanded]
-      elsif url_tpl.nil?
+      elsif line.url_template.nil?
         files = @files.select {|f| File.fnmatch expanded, f, File::FNM_PATHNAME }
-        raise Error, "file not found '#{pattern}'" if files.empty?
+        raise Error, "file not found '#{line.file_pattern}'" if files.empty?
       else
         # use the relative path for external urls
-        files = [pattern]
+        files = [line.file_pattern]
       end
 
       files.map {|file|
-        src = Source.new platform
-        src.url = make_url file, url_tpl
+        src = Source.new make_url(file, line.url_template)
+        src.platform = line.platform
+        src.type = line.type
 
-        cselector.push src.platform, url_tpl ? expanded : file
+        cselector.push src.platform, line.url_template ? expanded : file
 
         if file != pkg.path
-          if url_tpl.nil?
-            src.file = Pathname.new(file).relative_path_from(pathdir).to_s
-          else
+          if line.url_template
             src.file = file
+          else
+            src.file = Pathname.new(file).relative_path_from(pathdir).to_s
           end
         end
 

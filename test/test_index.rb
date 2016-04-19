@@ -3,12 +3,40 @@ require File.expand_path '../helper', __FILE__
 class TestIndex < MiniTest::Test
   include IndexHelper
 
-  def test_type_of
-    assert_nil ReaPack::Index.type_of('src/main.cpp')
-    assert_nil ReaPack::Index.type_of('src/noext')
+  def test_is_type
+    assert_equal [false, true, true, false],
+      [nil, 'script', :script, :hello].map {|t| ReaPack::Index.is_type? t }
+  end
 
-    assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.lua')
-    assert_equal :script, ReaPack::Index.type_of('Track/instrument_track.eel')
+  def test_type_of
+    assert_equal [nil, nil, nil, :script, :script, :extension, :effect, :data],
+      [
+        'src/main.cpp', 'src/noext', 'in_root',
+        'Cat/test.lua', 'Cat/test.eel',
+        'Cat/test.ext',
+        'Cat/test.jsfx',
+        'Cat/test.data',
+      ].map {|fn| ReaPack::Index.type_of fn }
+  end
+
+  def test_resolve_type
+    expected = [
+      nil,
+      :script, :script, :script,
+      :effect, :effect,
+      :extension, :extension,
+      :data,
+    ]
+
+    actual = [
+      'hello',
+      'script', 'lua', 'eel',
+      'effect', 'jsfx',
+      'extension', 'ext',
+      'data',
+    ].map {|fn| ReaPack::Index.resolve_type fn }
+
+    assert_equal expected, actual
   end
 
   def test_url_template

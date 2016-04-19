@@ -85,12 +85,11 @@ class TestVersion < MiniTest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source platform="all" file="test.lua">http://files.cfillion.tk/test.lua</source>
+  <source platform="all">http://files.cfillion.tk/test.lua</source>
 </version>
     XML
 
-    src = ReaPack::Index::Source.new nil, 'test.lua',
-      'http://files.cfillion.tk/test.lua'
+    src = ReaPack::Index::Source.new 'http://files.cfillion.tk/test.lua'
 
     ver = ReaPack::Index::Version.new before
     ver.add_source src
@@ -103,20 +102,21 @@ class TestVersion < MiniTest::Test
   def test_replace_sources
     before = make_node <<-XML
 <version name="1.0">
-  <source platform="all" file="old.lua">http://files.cfillion.tk/old.lua</source>
+  <source platform="all">http://files.cfillion.tk/old.lua</source>
 </version>
     XML
 
     after = <<-XML
 <version name="1.0">
-  <source platform="all" file="new.lua">http://files.cfillion.tk/new.lua</source>
+  <source platform="all">http://files.cfillion.tk/new.lua</source>
 </version>
 XML
 
     ver = ReaPack::Index::Version.new before
 
     ver.replace_sources do
-      ver.add_source :all, 'new.lua', 'http://files.cfillion.tk/new.lua'
+      src = ReaPack::Index::Source.new 'http://files.cfillion.tk/new.lua'
+      ver.add_source src
     end
 
     assert ver.modified?, 'version is not modified'
@@ -127,14 +127,15 @@ XML
   def test_replace_sources_to_identical
     before = make_node <<-XML
 <version name="1.0">
-  <source platform="all" file="test.lua">http://files.cfillion.tk/test.lua</source>
+  <source platform="all">http://files.cfillion.tk/test.lua</source>
 </version>
     XML
 
     ver = ReaPack::Index::Version.new before
 
     ver.replace_sources do
-      ver.add_source :all, 'test.lua', 'http://files.cfillion.tk/test.lua'
+      src = ReaPack::Index::Source.new 'http://files.cfillion.tk/test.lua'
+      ver.add_source src
     end
 
     refute ver.modified?, 'version is modified'

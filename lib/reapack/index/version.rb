@@ -66,8 +66,7 @@ class ReaPack::Index
       raise Error, 'no files provided' if new_sources.empty?
     end
 
-    def add_source(src, file = nil, url = nil)
-      src = Source.new src, file, url unless src.is_a? Source
+    def add_source(src)
       src.make_node @node
 
       @dirty = true
