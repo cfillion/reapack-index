@@ -36,15 +36,15 @@ class TestProvides < MiniTest::Test
     assert_equal [:windows, :win32, :win64, :darwin, :darwin32, :darwin64],
       [
         '[windows] file',
-        '[Win32] file',
+        '[win32] file',
         '[win64] file',
-        '[darwin]file',
+        '[Darwin]file',
         ' [ darwin32 ] file',
         '[win32, darwin64] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).platform }
 
     error = assert_raises ReaPack::Index::Error do
-      ReaPack::Index::Provides.parse '[HeLlO] osx64bit.png'
+      ReaPack::Index::Provides.parse '[HeLlO] file'
     end
 
     assert_equal "unknown option (platform or type) 'HeLlO'", error.message
@@ -54,9 +54,15 @@ class TestProvides < MiniTest::Test
     assert_equal [:script, :data, nil, nil],
       vals = [
         '[script] file',
-        '[windows,data] file',
+        '[windows,Data] file',
         '[windows] file',
         '[,windows,,] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).type }
+
+    error = assert_raises ReaPack::Index::Error do
+      ReaPack::Index::Provides.parse '[, Test] file'
+    end
+
+    assert_equal "unknown option (platform or type) 'Test'", error.message
   end
 end

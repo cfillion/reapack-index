@@ -25,8 +25,10 @@ class ReaPack::Index
         instance = self.new pattern, url_tpl
 
         options and options.split(',').each {|user_opt|
-          opt = user_opt.strip.downcase.to_sym
-          next if opt.empty?
+          user_opt.strip!
+          next if user_opt.empty?
+
+          opt = user_opt.downcase.to_sym
 
           if Source.is_platform? opt
             instance.platform = opt
