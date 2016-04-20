@@ -48,12 +48,13 @@ class ReaPack::Index
 
   HEADER_RULES = {
     # package-wide tags
-    :version => /\A(?:[^\d]*\d{1,4}[^\d]*){1,4}\z/,
+    :version => [
+      MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE, /\d/],
 
     # version-specific tags
-    :author => [MetaHeader::OPTIONAL, /\A[^\n]+\z/],
-    :changelog => [MetaHeader::OPTIONAL, /.+/],
-    :provides => [MetaHeader::OPTIONAL, /.+/, PROVIDES_VALIDATOR]
+    :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],
+    :changelog => [MetaHeader::VALUE],
+    :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR]
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

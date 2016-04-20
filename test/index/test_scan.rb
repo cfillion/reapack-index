@@ -153,7 +153,7 @@ class TestIndex::Scan < MiniTest::Test
       index.scan index.files.first, 'no version tag here'
     end
 
-    assert_match 'missing tag "version"', error.message
+    assert_equal "missing tag 'version'", error.message
   end
 
   def test_empty_changelog
@@ -168,7 +168,7 @@ class TestIndex::Scan < MiniTest::Test
       IN
     end
 
-    assert_match 'invalid value for tag "changelog"', error.message
+    assert_equal "missing value for tag 'changelog'", error.message
   end
 
   def test_author
@@ -197,7 +197,7 @@ class TestIndex::Scan < MiniTest::Test
       IN
     end
 
-    assert_match 'invalid value for tag "author"', error.message
+    assert_equal "missing value for tag 'author'", error.message
   end
 
   def test_author_multiline
@@ -214,7 +214,7 @@ class TestIndex::Scan < MiniTest::Test
       IN
     end
 
-    assert_equal 'invalid value for tag "author"', error.message
+    assert_equal "tag 'author' must be singleline", error.message
   end
 
   def test_noindex

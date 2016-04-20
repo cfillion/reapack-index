@@ -29,8 +29,8 @@ Finished checks for 2 packages with 0 failures
 F.
 
 1) cat/test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  missing tag 'version'
+  missing value for tag 'author'
 
 Finished checks for 2 packages with 1 failure
     STDERR
@@ -81,11 +81,11 @@ Finished checks for 1 package with 1 failure
   def test_quiet
     expected = <<-STDERR
 1) cat/test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  missing tag 'version'
+  missing value for tag 'author'
 
 2) cat/test2.lua failed:
-  missing tag "version"
+  missing tag 'version'
     STDERR
 
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
@@ -168,8 +168,8 @@ Path/To/test1.lua: failed
 test2.lua: passed
 
 1) Path/To/test1.lua failed:
-  missing tag "version"
-  invalid value for tag "author"
+  missing tag 'version'
+  missing value for tag 'author'
 
 Finished checks for 2 packages with 1 failure
     STDERR
