@@ -54,6 +54,9 @@ Misc options:
     -h, --help                       Prints this help
 ```
 
+A getting started guide and packaging documentation are available in
+the [wiki](https://github.com/cfillion/reapack-index/wiki).
+
 ### Configuration
 
 Options can be specified from the command line or stored in configuration files.
