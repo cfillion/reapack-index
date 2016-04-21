@@ -6,7 +6,7 @@
 !define NAME "ReaPack Index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
-!define RUBY_VERSION "2.2.4"
+!define RUBY_VERSION "2.3.0"
 !define RUBYINSTALLER_FILE "rubyinstaller-${RUBY_VERSION}.exe"
 !define RUBYINSTALLER_URL \
   "http://dl.bintray.com/oneclick/rubyinstaller/${RUBYINSTALLER_FILE}"
@@ -19,7 +19,7 @@
 !define RUGGED_VERSION "0.24.0"
 !define RUGGED_FILE "rugged-${RUGGED_VERSION}-%PLATFORM%.gem"
 !define RUGGED_URL \
-  "https://github.com/cfillion/reapack-index/releases/download/v${VERSION}/${RUGGED_FILE}"
+  "https://github.com/cfillion/reapack-index/releases/download/v1.0beta3/${RUGGED_FILE}"
 
 Name "${NAME}"
 OutFile "reapack-index-${VERSION}.exe"
@@ -124,11 +124,15 @@ SectionEnd
 Function .onInit
   !insertmacro RELOAD_PATH
   nsExec::ExecToStack '"ruby" -e " \
+    rubyver = Gem::Version.new(RUBY_VERSION); \
+    exit 2 unless rubyver >= Gem::Version.new(\"${RUBY_VERSION}\"); \
+    ; \
     spec = Gem::Specification.find_all_by_name(\"rugged\").first; \
     req = Gem::Requirement.new(\"~> ${RUGGED_VERSION}\"); \
-    raise unless spec && req =~ spec.version'
+    exit 3 unless spec && req =~ spec.version'
   Pop $0
 
+  StrCmp $0 "2" +2 0 ; ruby out of date
   StrCmp $0 "error" 0 +6 ; failed to launch ruby
     SectionGetFlags ${InstallRuby} $1
     IntOp $1 $1 | ${SF_SELECTED}
@@ -136,7 +140,7 @@ Function .onInit
     SectionSetFlags ${InstallRuby} $1
     Goto +2 ; also install rugged
 
-  StrCmp $0 "1" 0 +5 ; rugged is not installed
+  StrCmp $0 "3" 0 +5 ; rugged missing/out of date
     SectionGetFlags ${InstallRugged} $1
     IntOp $1 $1 | ${SF_SELECTED}
     IntOp $1 $1 | ${SF_RO}
