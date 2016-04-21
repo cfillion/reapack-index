@@ -2,7 +2,7 @@
 !include Sections.nsh
 !include StrRep.nsh
 
-!define VERSION "1.0beta3"
+!define VERSION "1.0beta4"
 !define NAME "ReaPack Index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
@@ -19,7 +19,7 @@
 !define RUGGED_VERSION "0.24.0"
 !define RUGGED_FILE "rugged-${RUGGED_VERSION}-%PLATFORM%.gem"
 !define RUGGED_URL \
-  "https://github.com/cfillion/reapack-index/releases/download/v1.0beta3/${RUGGED_FILE}"
+  "https://github.com/cfillion/reapack-index/releases/download/v1.0beta4/${RUGGED_FILE}"
 
 Name "${NAME}"
 OutFile "reapack-index-${VERSION}.exe"
