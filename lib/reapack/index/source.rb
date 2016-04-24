@@ -50,7 +50,7 @@ class ReaPack::Index
       @node[PLATFORM] = @platform
       @node[TYPE] = @type if @type
       @node[FILE] = @file if @file
-      @node.content = Addressable::URI.encode @url
+      @node.content = Addressable::URI.parse(@url).normalize.to_s
       @node.parent = parent
     rescue Addressable::URI::InvalidURIError => e
       raise Error, e.message

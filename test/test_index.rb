@@ -56,6 +56,9 @@ class TestIndex < MiniTest::Test
     assert_match "missing $path placeholder in 'test'", error.message
     assert_equal 'https://google.com/$path', index.url_template
 
+    index.url_template = 'https://google.com/sp ace/$path'
+    assert_equal 'https://google.com/sp ace/$path', index.url_template
+
     index.url_template = nil
     assert_nil index.url_template
   end

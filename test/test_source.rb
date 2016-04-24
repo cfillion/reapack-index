@@ -11,8 +11,8 @@ class TestSource < MiniTest::Test
 </version>
     XML
 
-    src = ReaPack::Index::Source.new 'http://files.cfillion.tk/hello world.lua'
-    assert_equal 'http://files.cfillion.tk/hello world.lua', src.url
+    src = ReaPack::Index::Source.new 'http://files.cfillion.tk/./hello world.lua'
+    assert_equal 'http://files.cfillion.tk/./hello world.lua', src.url
 
     src.make_node before
 

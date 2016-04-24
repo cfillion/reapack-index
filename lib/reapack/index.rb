@@ -253,7 +253,7 @@ class ReaPack::Index
       raise Addressable::URI::InvalidURIError
     end
 
-    @url_template = uri.to_s.freeze
+    @url_template = tpl
   rescue Addressable::URI::InvalidURIError
     raise Error, "invalid template '#{tpl}'"
   end
