@@ -120,7 +120,7 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @real_path
 
     index.write @dummy_path
-    assert_equal File.read(@real_path), File.read(@dummy_path)
+    assert_equal File.read(@real_path), File.binread(@dummy_path)
   end
 
   def test_mkdir

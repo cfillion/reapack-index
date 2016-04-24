@@ -286,7 +286,7 @@ class ReaPack::Index
     sort @doc.root
 
     FileUtils.mkdir_p File.dirname(path)
-    File.write path, @doc.to_xml
+    File.binwrite path, @doc.to_xml
   end
 
   def write!
