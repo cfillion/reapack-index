@@ -197,7 +197,7 @@ private
       rel = @git.relative_path abs
       @index.files << rel
 
-      next if !File.file?(abs) || ignored?(abs) || !ReaPack::Index.is_package?(abs)
+      next if !File.file?(abs) || ignored?(abs) || !ReaPack::Index.is_package?(rel)
 
       [abs, rel]
     }.compact]

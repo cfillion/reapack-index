@@ -15,8 +15,8 @@ Finished checks for 2 packages with 0 failures
     setup = proc { mkfile 'index.xml', '<index name="test"/>' }
 
     wrapper ['--check'], setup: setup do
-      mkfile 'test1.lua', '@version 1.0'
-      mkfile 'test2.lua', '@version 1.0'
+      mkfile 'cat/test1.lua', '@version 1.0'
+      mkfile 'cat/test2.lua', '@version 1.0'
 
       assert_output nil, expected do
         assert_equal true, @cli.run
@@ -165,7 +165,7 @@ Finished checks for 1 package with 0 failures
   def test_verbose
     expected = <<-STDERR
 Path/To/test1.lua: failed
-test2.lua: passed
+cat/test2.lua: passed
 
 1) Path/To/test1.lua failed:
   missing tag 'version'
@@ -179,12 +179,26 @@ Finished checks for 2 packages with 1 failure
     _, stderr = capture_io do
       wrapper ['--check', '--verbose'], setup: setup do
         mkfile 'Path/To/test1.lua', '@author'
-        mkfile 'test2.lua', '@version 1.0'
+        mkfile 'cat/test2.lua', '@version 1.0'
 
         assert_equal false, @cli.run
       end
     end
 
     assert_match expected, stderr
+  end
+
+  def test_ignore_root
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    _, stderr = capture_io do
+      wrapper ['--check'], setup: setup do
+        mkfile 'test.lua', '@version 1.0'
+
+        assert_equal true, @cli.run
+      end
+    end
+
+    assert_match 'Finished checks for 0 packages with 0 failures', stderr
   end
 end
