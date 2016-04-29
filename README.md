@@ -10,9 +10,10 @@ Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion
 
 ### Installation
 
-Ruby 2 need to be installed on your computer and ready to be used from a command
-prompt. Run the following command from a command prompt (cmd.exe, Terminal.app,
-XTerm) to install reapack-index on your computer:
+Ruby v2.3 or newer must be installed on your computer in order to install
+and use this software.  
+Run the following command from a command prompt (eg. cmd.exe, Terminal.app,
+XTerm) to install reapack-index:
 
 ```
 gem install reapack-index
