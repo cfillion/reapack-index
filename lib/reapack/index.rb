@@ -59,7 +59,7 @@ class ReaPack::Index
 
   FS_ROOT = File.expand_path('/').freeze
 
-  attr_reader :path, :url_template
+  attr_reader :path, :url_template, :cdetector
   attr_accessor :amend, :files, :time
 
   class << self
@@ -328,6 +328,10 @@ class ReaPack::Index
       .sub('$path', path)
       .sub('$commit', commit || 'master')
       .sub('$version', @currentVersion.to_s)
+  end
+
+  def clear_cdetector
+    @cdetector.clear
   end
 
   def self.expand(filepath, basedir)

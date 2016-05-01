@@ -39,6 +39,10 @@ class ReaPack::Index
       @buckets[name] ||= []
     end
 
+    def clear
+      @buckets.clear
+    end
+
     def resolve(bucket, key = nil)
       return unless bucket = @buckets[bucket]
 

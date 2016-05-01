@@ -190,6 +190,7 @@ private
   def do_check
     check_name
 
+    @index.cdetector.clear
     @index.amend = true # enable checks for released versions as well
     failures = []
 

@@ -47,22 +47,16 @@ Finished checks for 2 packages with 1 failure
     end
   end
 
-  def test_uses_scan
-    expected = <<-STDERR
-F
-
-1) Hello/World.lua failed:
-  file not found 'background.png'
-
-Finished checks for 1 package with 1 failure
-    STDERR
-
+  def test_ignore_current_index
     setup = proc {
+      mkfile 'background.png'
       mkfile 'index.xml', <<-XML
 <index name="test">
   <category name="Hello">
     <reapack name="World.lua" type="script">
-      <version name="1.0"/>
+      <version name="1.0">
+        <source file="../background.png"/>
+      </version>
     </reapack>
   </category>
 </index>
@@ -70,11 +64,9 @@ Finished checks for 1 package with 1 failure
     }
 
     wrapper ['--check'], setup: setup do
-      mkfile 'Hello/World.lua', "@version 1.0\n@provides background.png"
+      mkfile 'Chunky/Bacon.lua', "@version 1.0\n@provides ../background.png"
 
-      assert_output nil, expected do
-        assert_equal false, @cli.run
-      end
+      capture_io { assert_equal true, @cli.run }
     end
   end
 

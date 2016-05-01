@@ -167,6 +167,16 @@ class TestConflictDetector < MiniTest::Test
     refute_nil cd2.resolve('grp')
   end
 
+  def test_clear
+    cd = ReaPack::Index::ConflictDetector.new
+    cd['grp', 'test'].push :all, 'file'
+
+    cd.clear
+    cd['grp', 'test'].push :all, 'file'
+
+    assert_equal nil, cd.resolve('grp', 'test')
+  end
+
   def test_load_xml
     xml = <<-XML
 <index version="1">
