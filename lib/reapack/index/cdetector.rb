@@ -81,7 +81,7 @@ class ReaPack::Index
           pkgroot = File.join(cat.name, pkg.name)
 
           pkg.versions.last&.children(Source::TAG)&.each {|src|
-            entry = Entry.new pkgroot, src[:platform].to_sym
+            entry = Entry.new pkgroot, src[:platform]&.to_sym || :all
 
             if src[:file]
               entry.file = ReaPack::Index.expand(src[:file], cat.name)
@@ -97,8 +97,8 @@ class ReaPack::Index
 
   private
     def sort(set)
-      sorted = set.sort_by {|e| levels[e.platform] }
-      sorted.sort_by! {|e| Source::PLATFORMS.keys.index e.platform }
+      sorted = set.sort_by {|e| levels[e.platform] || 0 }
+      sorted.sort_by! {|e| Source::PLATFORMS.keys.index(e.platform) || 0 }
     end
 
     def levels

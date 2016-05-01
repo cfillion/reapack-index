@@ -194,6 +194,16 @@ class TestConflictDetector < MiniTest::Test
         <source platform="all" file="../Other/test1.lua">http://cross/category</source>
       </version>
     </reapack>
+    <reapack name="no_platform.lua" type="script">
+      <version name="1.0">
+        <source file="picture">http://cross/category</source>
+      </version>
+    </reapack>
+    <reapack name="no_platform.lua" type="script">
+      <version name="1.0">
+        <source platform="bacon" file="picture">http://cross/category</source>
+      </version>
+    </reapack>
   </category>
 </index>
     XML
@@ -210,5 +220,8 @@ class TestConflictDetector < MiniTest::Test
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
       cd.resolve(:script, 'Scripts/test3.lua'), 'test3'
+
+    cd.resolve :script, 'Scripts/no_platform.lua'
+    cd.resolve :script, 'Scripts/weird_platform.lua'
   end
 end
