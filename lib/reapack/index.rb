@@ -59,7 +59,7 @@ class ReaPack::Index
 
   FS_ROOT = File.expand_path('/').freeze
 
-  attr_reader :path, :url_template, :cdetector
+  attr_reader :path, :url_template
   attr_accessor :amend, :files, :time
 
   class << self
