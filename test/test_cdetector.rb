@@ -108,14 +108,21 @@ class TestConflictDetector < MiniTest::Test
     assert_equal b1.resolve, b2.resolve
   end
 
-  def test_conflicts_platform_selection
+  def test_platform_selection
     cd1 = ReaPack::Index::ConflictDetector.new
-    cd1['grp', 'a'].push :all, 'file.lua'
-    cd1['grp', 'b'].push :windows, 'file.lua'
-    cd1['grp', 'c'].push :win32, 'file.lua'
+    cd1['grp1', 'a'].push :all, 'file.lua'
+    cd1['grp1', 'b'].push :windows, 'file.lua'
+    cd1['grp1', 'c'].push :win32, 'file.lua'
 
     assert_equal ["'file.lua' conflicts with 'b' on windows"],
-      cd1.resolve('grp', 'a'), 'id = a'
+      cd1.resolve('grp1', 'a'), 'id = a (grp1)'
+
+    cd1['grp2', 'a'].push :all, 'file.lua'
+    cd1['grp2', 'b'].push :darwin, 'file.lua'
+    cd1['grp2', 'c'].push :win32, 'file.lua'
+
+    assert_equal ["'file.lua' conflicts with 'b' on darwin"],
+      cd1.resolve('grp2', 'a'), 'id = a (grp2)'
   end
 
   def test_duplicate_platform_selection
