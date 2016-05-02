@@ -300,4 +300,32 @@ class TestIndex < MiniTest::Test
 
     assert_equal original, File.read(index.path)
   end
+
+  def test_dont_mess_with_link_ordering
+    # https://bugs.ruby-lang.org/issues/11907
+    original = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <metadata>
+    <link>1</link>
+    <link>2</link>
+    <link>3</link>
+    <link>4</link>
+    <link>5</link>
+    <link>6</link>
+    <description><![CDATA[
+    ]]></description>
+  </metadata>
+</index>
+    XML
+
+    File.write @dummy_path, original
+    index = ReaPack::Index.new @dummy_path
+    assert_output '' do
+    index.write!
+    end
+
+    expected = original.sub /(<link.+?)(\s+?)(<description.+?<\/description>)/m, "\\3\\2\\1"
+    assert_equal expected, File.read(index.path)
+  end
 end

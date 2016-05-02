@@ -12,6 +12,7 @@ require 'pandoc-ruby'
 require 'pathname'
 require 'rugged'
 require 'shellwords'
+require 'stable_sort'
 require 'time'
 
 require 'reapack/index/cdetector'
@@ -401,12 +402,12 @@ private
   end
 
   def sort(node)
-    node.children.each {|n| sort n }
+    node.element_children.map {|n| sort n }
     return if node.name == Package.tag
 
-    sorted = node.children
-      .sort_by {|n| n[:name].to_s.downcase }
-      .sort_by {|n| n.name.downcase }
+    sorted = node.element_children
+      .stable_sort_by {|n| n[:name].to_s.downcase }
+      .stable_sort_by {|n| n.name.downcase }
 
     sorted.each {|n| node << n }
   end
