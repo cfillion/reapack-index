@@ -105,7 +105,9 @@ private
     @index.time = commit.time
     @index.files = commit.filelist
 
-    commit.each_diff {|diff| process_diff diff }
+    commit.each_diff
+      .sort_by {|diff| diff.status == :deleted ? 0 : 1 }
+      .each {|diff| process_diff diff }
   ensure
     bump_progress
   end

@@ -224,8 +224,29 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
+  def test_move_no_conflicts
+    wrapper do
+      contents = "@version 1.0\n@provides file"
+
+      @git.create_commit 'initial commit', [
+        mkfile('cat/testz.lua', contents),
+        mkfile('cat/file'),
+      ]
+
+      File.delete mkpath('cat/testz.lua')
+      @git.create_commit 'second commit', [
+        mkpath('cat/testz.lua'),
+        mkfile('cat/testa.lua', contents),
+      ]
+
+      assert_output /2 new packages/i do
+        assert_equal true, @cli.run
+      end
+    end
+  end
+
   def test_specify_commit
-    # --progress to check for FloatDomainError: Infinity errors
+    # --progress is enabled to check for FloatDomainError: Infinity errors
     options = ['--progress', '--scan']
 
     setup = proc {
