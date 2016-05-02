@@ -53,10 +53,10 @@ class ReaPack::Index
         next if key && !packages.include?(key)
 
         if packages.size == 1 || !key
-          original = sort(a)[1]
+          original = sort_platforms(a)[1]
           msg = "duplicate file '#{original.file}'"
         else
-          original = sort(a.select {|e| e.key != key }).first
+          original = sort_platforms(a.select {|e| e.key != key }).first
           msg = "'#{original.file}' conflicts with '#{original.key}'"
         end
 
@@ -100,7 +100,7 @@ class ReaPack::Index
     end
 
   private
-    def sort(set)
+    def sort_platforms(set)
       set.group_by {|e| levels[e.platform] || 0 }.sort
         .map {|_, a| a.sort_by {|e| Source::PLATFORMS.keys.index(e.platform) || 0 } }
         .flatten
