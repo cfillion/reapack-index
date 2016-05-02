@@ -371,7 +371,9 @@ private
         # always resolve path even when an url template is set
         files = [expanded]
       elsif line.url_template.nil?
-        files = @files.select {|f| File.fnmatch expanded, f, File::FNM_PATHNAME }
+        files = @files.select {|f|
+          File.fnmatch expanded, f, File::FNM_PATHNAME | File::FNM_EXTGLOB
+        }
         raise Error, "file not found '#{line.file_pattern}'" if files.empty?
       else
         # use the relative path for external urls

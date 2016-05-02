@@ -142,7 +142,7 @@ class TestIndex::Provides < MiniTest::Test
     index.scan index.files.first, <<-IN
       @version 1.0
       @provides
-        [windows] Data/*
+        [windows] Data/{a,b}.*
         test*
     IN
 
