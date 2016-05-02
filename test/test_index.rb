@@ -255,13 +255,14 @@ class TestIndex < MiniTest::Test
 <index>
   <category name="zebra"/>
   <category name="bee"/>
+  <category name="Cat"/>
 </index>
     XML
 
     index = ReaPack::Index.new @dummy_path
     index.write!
 
-    assert_match /bee.+zebra/m, File.read(index.path)
+    assert_match /bee.+Cat.+zebra/m, File.read(index.path)
   end
 
   def test_sort_packages

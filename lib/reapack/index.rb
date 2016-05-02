@@ -402,9 +402,12 @@ private
 
   def sort(node)
     node.children.each {|n| sort n }
-
     return if node.name == Package.tag
-    sorted = node.children.sort_by{|n| n[:name].to_s }.sort_by {|n| n.name }
+
+    sorted = node.children
+      .sort_by {|n| n[:name].to_s.downcase }
+      .sort_by {|n| n.name.downcase }
+
     sorted.each {|n| node << n }
   end
 
