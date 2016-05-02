@@ -101,24 +101,7 @@ class ReaPack::Index
 
   private
     def sort(set)
-      sorted = set.sort_by {|e| levels[e.platform] || 0 }
-      sorted.sort_by! {|e| Source::PLATFORMS.keys.index(e.platform) || 0 }
-    end
-
-    def levels
-      @@levels ||= begin
-        Hash[Source::PLATFORMS.map {|name, parent|
-          levels = 0
-
-          loop do
-            break unless parent
-            levels += 1
-            parent = Source::PLATFORMS[parent]
-          end
-
-          [name, levels]
-        }]
-      end
+      set.sort_by {|e| Source::PLATFORMS.keys.index(e.platform) || 0 }
     end
   end
 end
