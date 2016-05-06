@@ -17,7 +17,7 @@ class ReaPack::Index
       end
     end
 
-    def initialize(url = nil)
+    def initialize(url)
       @url = url
       @platform = :all
     end
@@ -47,7 +47,7 @@ class ReaPack::Index
 
     def make_node(parent)
       @node = Nokogiri::XML::Node.new TAG, parent.document
-      @node[PLATFORM] = @platform
+      @node[PLATFORM] = @platform if @platform != :all
       @node[TYPE] = @type if @type
       @node[FILE] = @file if @file
       @node.content = Addressable::URI.parse(@url).normalize.to_s

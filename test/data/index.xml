@@ -4,7 +4,7 @@
     <reapack name="Hello World.lua" type="script">
       <version name="1.0" author="cfillion">
         <changelog><![CDATA[Fixed a division by zero error.]]></changelog>
-        <source platform="all">https://google.com/Category%20Name/Hello%20World.lua</source>
+        <source>https://google.com/Category%20Name/Hello%20World.lua</source>
       </version>
     </reapack>
   </category>

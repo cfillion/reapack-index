@@ -7,7 +7,7 @@ class TestSource < MiniTest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source platform="all">http://files.cfillion.tk/hello%20world.lua</source>
+  <source>http://files.cfillion.tk/hello%20world.lua</source>
 </version>
     XML
 
@@ -38,7 +38,7 @@ class TestSource < MiniTest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source platform="all" file="test.png">http://hello/world</source>
+  <source file="test.png">http://hello/world</source>
 </version>
     XML
 
@@ -54,7 +54,7 @@ class TestSource < MiniTest::Test
   end
 
   def test_platform
-    src = ReaPack::Index::Source.new
+    src = ReaPack::Index::Source.new 'http://hello/world'
     assert_equal :all, src.platform
 
     src.platform = 'windows'
@@ -72,16 +72,19 @@ class TestSource < MiniTest::Test
 
     assert_equal "invalid platform 'hello'", error.message
     assert_equal :darwin, src.platform
-  end
 
-  def test_type
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source platform="all" type="effect">http://hello/world</source>
+  <source platform="darwin">http://hello/world</source>
 </version>
     XML
 
+    src.make_node before
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_type
     src = ReaPack::Index::Source.new 'http://hello/world'
     assert_nil src.type
 
@@ -101,8 +104,14 @@ class TestSource < MiniTest::Test
     assert_equal "invalid type 'jsfx'", error.message
     assert_equal :effect, src.type
 
-    src.make_node before
+    before = make_node '<version name="1.0"/>'
+    after = <<-XML
+<version name="1.0">
+  <source type="effect">http://hello/world</source>
+</version>
+    XML
 
+    src.make_node before
     assert_equal after.chomp, before.to_s
   end
 

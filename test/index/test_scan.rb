@@ -44,7 +44,7 @@ class TestIndex::Scan < MiniTest::Test
     <reapack name="Instrument Track.lua" type="script">
       <version name="1.0">
         <changelog><![CDATA[Hello World]]></changelog>
-        <source platform="all">http://host/Category/Path/Instrument%20Track.lua</source>
+        <source>http://host/Category/Path/Instrument%20Track.lua</source>
       </version>
     </reapack>
   </category>
@@ -116,7 +116,7 @@ class TestIndex::Scan < MiniTest::Test
     <reapack name="Hello World.lua" type="script">
       <version name="1.0">
         <changelog><![CDATA[New Changelog!]]></changelog>
-        <source platform="all">http://google.com/Category%20Name/Hello%20World.lua</source>
+        <source>http://google.com/Category%20Name/Hello%20World.lua</source>
       </version>
     </reapack>
   </category>
@@ -272,7 +272,7 @@ class TestIndex::Scan < MiniTest::Test
   <category name="Extensions">
     <reapack name="reapack.ext" type="extension">
       <version name="1.0">
-        <source platform="all" file="reaper_reapack.so">http://example.com/reaper_reapack.so</source>
+        <source file="reaper_reapack.so">http://example.com/reaper_reapack.so</source>
       </version>
     </reapack>
   </category>
@@ -296,7 +296,7 @@ class TestIndex::Scan < MiniTest::Test
   <category name="Dynamics">
     <reapack name="super_compressor.jsfx" type="effect">
       <version name="1.0">
-        <source platform="all">http://host/Dynamics/super_compressor.jsfx</source>
+        <source>http://host/Dynamics/super_compressor.jsfx</source>
       </version>
     </reapack>
   </category>
@@ -320,7 +320,7 @@ class TestIndex::Scan < MiniTest::Test
   <category name="Grooves">
     <reapack name="sws.data" type="data">
       <version name="1.0">
-        <source platform="all" file="sws/test.mid">http://host/Grooves/sws/test.mid</source>
+        <source file="sws/test.mid">http://host/Grooves/sws/test.mid</source>
       </version>
     </reapack>
   </category>

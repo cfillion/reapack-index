@@ -75,7 +75,7 @@ class ReaPack::Index
   private
     def hash_sources(nodes)
       nodes.map {|src|
-        [src[Source::PLATFORM], src[Source::FILE], src.content]
+        [src[Source::PLATFORM] || 'all', src[Source::FILE], src.content]
       }
     end
   end

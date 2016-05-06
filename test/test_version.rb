@@ -85,7 +85,7 @@ class TestVersion < MiniTest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source platform="all">http://files.cfillion.tk/test.lua</source>
+  <source>http://files.cfillion.tk/test.lua</source>
 </version>
     XML
 
@@ -95,20 +95,19 @@ class TestVersion < MiniTest::Test
     ver.add_source src
 
     assert ver.modified?, 'version is not modified'
-
     assert_equal after.chomp, before.to_s
   end
 
   def test_replace_sources
     before = make_node <<-XML
 <version name="1.0">
-  <source platform="all">http://files.cfillion.tk/old.lua</source>
+  <source>http://files.cfillion.tk/old.lua</source>
 </version>
     XML
 
     after = <<-XML
 <version name="1.0">
-  <source platform="all">http://files.cfillion.tk/new.lua</source>
+  <source>http://files.cfillion.tk/new.lua</source>
 </version>
 XML
 
