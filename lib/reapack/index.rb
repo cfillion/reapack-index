@@ -150,7 +150,9 @@ class ReaPack::Index
       next unless ver.is_new? || @amend
 
       # store the version name for make_url
+      # TODO: split in a new class, along with make_url?
       @currentVersion = ver.name
+      @currentPkg = pkg
 
       ver.author = mh[:author]
       ver.time = @time if @time && ver.is_new?
@@ -329,6 +331,7 @@ class ReaPack::Index
       .sub('$path', path)
       .sub('$commit', commit || 'master')
       .sub('$version', @currentVersion.to_s)
+      .sub('$package', @currentPkg&.path.to_s)
   end
 
   def clear_cdetector

@@ -7,7 +7,7 @@ class TestIndex::Provides < MiniTest::Test
 
   def test_simple
     index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
+    index.url_template = 'http://host/$path?$package'
 
     index.files = [
       'Category/script.lua',
@@ -28,9 +28,9 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source>http://host/Category/script.lua</source>
-        <source platform="windows" file="../Resources/unicode.dat">http://host/Resources/unicode.dat</source>
-        <source file="test.png">http://host/Category/test.png</source>
+        <source>http://host/Category/script.lua?Category/script.lua</source>
+        <source platform="windows" file="../Resources/unicode.dat">http://host/Resources/unicode.dat?Category/script.lua</source>
+        <source file="test.png">http://host/Category/test.png?Category/script.lua</source>
       </version>
     </reapack>
   </category>
