@@ -341,6 +341,64 @@ processing [a-f0-9]{7}: third commit
     }
   end
 
+  def test_rescan
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1.0')]
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="hello" commit="#{@git.last_commit.id}">
+  <category name="Other">
+    <reapack name="Hello.lua" type="script" />
+  </category>
+</index>
+      XML
+    }
+
+    wrapper ['--rescan'], setup: setup do
+      @git.create_commit 'second commit',
+        [mkfile('cat/test2.lua', '@version 1.0')]
+
+      assert_output nil, '' do
+        assert_equal true, @cli.run
+      end
+
+      contents = read_index
+      assert_match 'test1.lua', contents
+      refute_match 'Hello.lua', contents
+    end
+  end
+
+  def test_rescan_override
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1.0')]
+
+      mkfile 'index.xml', <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="hello" commit="#{@git.last_commit.id}">
+  <category name="Other">
+    <reapack name="Hello.lua" type="script" />
+  </category>
+</index>
+      XML
+    }
+
+    wrapper ['--rescan', '--scan'], setup: setup do
+      @git.create_commit 'second commit',
+        [mkfile('cat/test2.lua', '@version 1.0')]
+
+      assert_output nil, '' do
+        assert_equal true, @cli.run
+      end
+
+      contents = read_index
+      refute_match 'test1.lua', contents
+      assert_match 'Hello.lua', contents
+    end
+  end
+
   def test_no_arguments
     wrapper ['--scan'] do; end
   end

@@ -210,13 +210,11 @@ class TestIndex < MiniTest::Test
     assert_equal true, index.modified?
     assert_equal '1 removed package', index.changelog
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@commit}"/>
-    XML
-
     index.write @dummy_path
-    assert_equal expected, File.read(@dummy_path)
+    contents = File.read @dummy_path
+
+    assert_match @commit, contents
+    refute_match '<category', contents
   end
 
   def test_remove_inexistant
@@ -327,5 +325,20 @@ class TestIndex < MiniTest::Test
 
     expected = original.sub /(<link.+?)(\s+?)(<description.+?<\/description>)/m, "\\3\\2\\1"
     assert_equal expected, File.read(index.path)
+  end
+
+  def test_clear
+    index = ReaPack::Index.new @real_path
+    index.commit = @commit
+
+    index.clear
+
+    index.write @dummy_path
+    contents = File.read @dummy_path
+
+    refute_match @commit, contents
+    refute_match '<category', contents
+    assert_match 'name="Test"', contents
+    assert_match '<description', contents
   end
 end

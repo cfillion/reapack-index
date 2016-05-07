@@ -77,10 +77,13 @@ private
       return
     end
 
-    if @opts[:scan].empty?
-      commits = @git.commits_since @index.commit.to_s
+    commits = if @opts[:rescan]
+      @index.clear
+      @git.commits
+    elsif @opts[:scan].empty?
+      @git.commits_since @index.commit
     else
-      commits = @opts[:scan].map {|hash|
+      @opts[:scan].map {|hash|
         @git.get_commit hash or begin
           $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
           @exit = false

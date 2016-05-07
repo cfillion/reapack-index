@@ -9,6 +9,7 @@ class ReaPack::Index::CLI
   DEFAULTS = {
     check: false,
     scan: [],
+    rescan: false,
     verbose: false,
     warnings: true,
     progress: true,
@@ -53,7 +54,7 @@ class ReaPack::Index::CLI
       end
 
       op.on '-s', '--scan [COMMIT]', 'Scan new commits (default) or specific commits' do |commit|
-        opts[:check] = false
+        opts[:check] = opts[:rescan] = false
         opts[:scan] ||= []
 
         if commit
@@ -61,6 +62,11 @@ class ReaPack::Index::CLI
         else
           opts[:scan].clear
         end
+      end
+
+      op.on '--rescan', 'Rescan the whole git history' do
+        opts[:check] = false
+        opts[:rescan] = true
       end
 
       op.separator 'Indexer options:'

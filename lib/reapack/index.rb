@@ -334,6 +334,10 @@ class ReaPack::Index
       .sub('$package', @currentPkg&.path.to_s)
   end
 
+  def clear
+    Category.find_all(@doc.root).each {|cat| cat.remove }
+  end
+
   def clear_cdetector
     @cdetector.clear
   end

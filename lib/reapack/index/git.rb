@@ -12,6 +12,10 @@ class ReaPack::Index
       File.expand_path @repo.workdir
     end
 
+    def commits
+      commits_since nil
+    end
+
     def commits_since(sha)
       return [] if empty?
 

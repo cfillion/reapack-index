@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="f572d396fae9206628714fb2ce00f72e94f2258f">
+<index version="1" commit="f572d396fae9206628714fb2ce00f72e94f2258f" name="Test">
   <category name="Category Name">
     <reapack name="Hello World.lua" type="script">
       <version name="1.0" author="cfillion">
@@ -8,4 +8,7 @@
       </version>
     </reapack>
   </category>
+  <description>
+    <link>https://github.com/cfillion/reapack-index</link>
+  </description>
 </index>

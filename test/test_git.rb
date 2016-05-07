@@ -100,6 +100,7 @@ class TestGit < MiniTest::Test
 
   def test_commits_since
     assert_equal [], @git.commits_since(nil)
+    assert_equal [], @git.commits
     c1 = @git.create_commit 'first', []
 
     assert_equal [c1], @git.commits_since(nil)
@@ -107,6 +108,7 @@ class TestGit < MiniTest::Test
 
     c2 = @git.create_commit 'second', []
     assert_equal [c1, c2], @git.commits_since(nil)
+    assert_equal [c1, c2], @git.commits
     assert_equal [c2], @git.commits_since(c1.id)
 
     INVALID_HASHES.each {|hash|

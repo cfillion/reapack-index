@@ -280,5 +280,11 @@ class TestCLI < MiniTest::Test
       assert_match /finished checks/i, stderr
       assert_raises(Errno::ENOENT) { read_index }
     end
+
+    wrapper ['--check', '--rescan'] do
+      _, stderr = capture_io { @cli.run }
+      refute_match /finished checks/i, stderr
+      read_index # index exists
+    end
   end
 end

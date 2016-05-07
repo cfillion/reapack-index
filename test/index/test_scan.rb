@@ -109,22 +109,11 @@ class TestIndex::Scan < MiniTest::Test
     assert index.modified?, 'index is not modified'
     assert_equal '1 modified package, 1 modified version', index.changelog
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@commit}">
-  <category name="Category Name">
-    <reapack name="Hello World.lua" type="script">
-      <version name="1.0">
-        <changelog><![CDATA[New Changelog!]]></changelog>
-        <source>http://google.com/Category%20Name/Hello%20World.lua</source>
-      </version>
-    </reapack>
-  </category>
-</index>
-    XML
-
     index.write @dummy_path
-    assert_equal expected, File.read(@dummy_path)
+    contents = File.read @dummy_path
+
+    assert_match @commit, contents
+    assert_match 'New Changelog!', contents
   end
 
   def test_edit_version_amend_unmodified
@@ -234,13 +223,11 @@ class TestIndex::Scan < MiniTest::Test
     assert_equal true, index.modified?
     assert_equal '1 removed package', index.changelog
 
-    expected = <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<index version="1" commit="#{@commit}"/>
-    XML
-
     index.write @dummy_path
-    assert_equal expected, File.read(@dummy_path)
+    contents = File.read @dummy_path
+
+    assert_match @commit, contents
+    refute_match '<category', contents
   end
 
   def test_version_time
