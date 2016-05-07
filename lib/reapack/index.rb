@@ -55,7 +55,8 @@ class ReaPack::Index
     # version-specific tags
     :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],
     :changelog => [MetaHeader::VALUE],
-    :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR]
+    :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR],
+    :nomain => [MetaHeader::BOOLEAN],
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze
@@ -162,8 +163,9 @@ class ReaPack::Index
         cselector.clear
         sources = parse_provides mh[:provides], pkg
 
-        if WITH_MAIN.include?(type) && sources.none? {|src| src.file.nil? }
-          # add the package itself as a source
+        if !mh[:nomain] && WITH_MAIN.include?(type) \
+            && sources.none? {|src| src.file.nil? }
+          # add the package itself as a main source
           src = Source.new make_url(path)
           sources.unshift src
 

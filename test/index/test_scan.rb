@@ -230,6 +230,30 @@ class TestIndex::Scan < MiniTest::Test
     refute_match '<category', contents
   end
 
+  def test_nomain
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua', 'Category/test']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, "@version 1.0\n@nomain"
+    end
+
+    assert_equal 'no files provided', error.message
+  end
+
+  def test_nomain_invalid
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua', 'Category/test']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, "@version 1.0\n@nomain wtf is this value"
+    end
+
+    assert_equal "tag 'nomain' cannot have a value", error.message
+  end
+
   def test_version_time
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
