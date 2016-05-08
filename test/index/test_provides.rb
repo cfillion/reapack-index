@@ -28,7 +28,7 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source>http://host/Category/script.lua?Category/script.lua</source>
+        <source main="true">http://host/Category/script.lua?Category/script.lua</source>
         <source platform="windows" file="../Resources/unicode.dat">http://host/Resources/unicode.dat?Category/script.lua</source>
         <source file="test.png">http://host/Category/test.png?Category/script.lua</source>
       </version>
@@ -152,7 +152,7 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source>http://host/Category/script.lua</source>
+        <source main="true">http://host/Category/script.lua</source>
         <source platform="windows" file="Data/a.dat">http://host/Category/Data/a.dat</source>
         <source platform="windows" file="Data/b.dat">http://host/Category/Data/b.dat</source>
         <source file="test.txt">http://host/Category/test.txt</source>

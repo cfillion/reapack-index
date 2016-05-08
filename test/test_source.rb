@@ -115,6 +115,26 @@ class TestSource < MiniTest::Test
     assert_equal after.chomp, before.to_s
   end
 
+  def test_explicit_main
+    before = make_node '<version name="1.0"/>'
+    after = <<-XML
+<version name="1.0">
+  <source main="true">http://host/</source>
+</version>
+    XML
+
+    assert_equal true, ReaPack::Index::Source.new('http://host/', true).main?
+
+    src = ReaPack::Index::Source.new 'http://host/'
+    assert_equal false, src.main?
+    src.main = true
+    assert_equal true, src.main?
+
+    src.make_node before
+
+    assert_equal after.chomp, before.to_s
+  end
+
   def test_is_platform
     assert_equal [false, true, true, false],
       [nil, :windows, 'windows', :atari].map {|p|

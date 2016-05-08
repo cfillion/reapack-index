@@ -4,6 +4,7 @@ class ReaPack::Index
     PLATFORM = 'platform'.freeze
     TYPE = 'type'.freeze
     FILE = 'file'.freeze
+    MAIN = 'main'.freeze
 
     PLATFORMS = {
       all: nil,
@@ -17,13 +18,17 @@ class ReaPack::Index
       end
     end
 
-    def initialize(url)
+    def initialize(url, main = false)
       @url = url
+      @main = main
       @platform = :all
     end
 
     attr_reader :platform, :type
     attr_accessor :file, :url
+    attr_writer :main
+
+    def main?; @main; end
 
     def platform=(new_platform)
       new_platform ||= :all
@@ -47,6 +52,7 @@ class ReaPack::Index
 
     def make_node(parent)
       @node = Nokogiri::XML::Node.new TAG, parent.document
+      @node[MAIN] = true if @main
       @node[PLATFORM] = @platform if @platform != :all
       @node[TYPE] = @type if @type
       @node[FILE] = @file if @file

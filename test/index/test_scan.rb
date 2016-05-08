@@ -44,7 +44,7 @@ class TestIndex::Scan < MiniTest::Test
     <reapack name="Instrument Track.lua" type="script">
       <version name="1.0">
         <changelog><![CDATA[Hello World]]></changelog>
-        <source>http://host/Category/Path/Instrument%20Track.lua</source>
+        <source main="true">http://host/Category/Path/Instrument%20Track.lua</source>
       </version>
     </reapack>
   </category>
@@ -307,7 +307,7 @@ class TestIndex::Scan < MiniTest::Test
   <category name="Dynamics">
     <reapack name="super_compressor.jsfx" type="effect">
       <version name="1.0">
-        <source>http://host/Dynamics/super_compressor.jsfx</source>
+        <source main="true">http://host/Dynamics/super_compressor.jsfx</source>
       </version>
     </reapack>
   </category>

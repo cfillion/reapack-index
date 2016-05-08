@@ -166,7 +166,7 @@ class ReaPack::Index
         if !mh[:nomain] && WITH_MAIN.include?(type) \
             && sources.none? {|src| src.file.nil? }
           # add the package itself as a main source
-          src = Source.new make_url(path)
+          src = Source.new make_url(path), true
           sources.unshift src
 
           cselector.push src.platform, path
