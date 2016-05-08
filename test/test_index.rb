@@ -341,4 +341,16 @@ class TestIndex < MiniTest::Test
     assert_match 'name="Test"', contents
     assert_match '<description', contents
   end
+
+  def test_clear_reset_cdetector
+    index = ReaPack::Index.new @real_path
+    index.commit = @commit
+    index.files = ['Category Name/test.lua', 'Category Name/Hello World.lua']
+    index.url_template = 'http://host/$path'
+
+    index.clear
+
+    # no error because of fake conflict:
+    index.scan index.files.first, "@version 1.0\n@provides Hello World.lua"
+  end
 end
