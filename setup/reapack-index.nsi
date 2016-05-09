@@ -86,6 +86,19 @@ Section /o "Ruby for Windows" InstallRuby
   !insertmacro EXEC_GUI '"$R0" /VERYSILENT /TASKS=MODPATH' ${RUBYINSTALLER_FILE}
 
   !insertmacro RELOAD_PATH
+
+  nsExec::ExecToStack 'ruby -v'
+  Pop $0
+
+  StrCmp $0 "error" 0 +6 ; failed to launch ruby
+  MessageBox MB_YESNO|MB_ICONQUESTION "This computer need to be rebooted \
+      in order to complete the installation process. Reboot now?" IDNO +3
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
+      "reapack-index installer" "$EXEPATH"
+    Reboot
+
+    DetailPrint "Relaunch reapack-index installer after rebooting your computer."
+    Abort
 SectionEnd
 
 Section /o "Rugged (libgit2)" InstallRugged
