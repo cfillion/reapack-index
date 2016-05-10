@@ -56,7 +56,8 @@ class ReaPack::Index
     :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],
     :changelog => [MetaHeader::VALUE],
     :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR],
-    :nomain => [MetaHeader::BOOLEAN],
+    :index => [MetaHeader::BOOLEAN],
+    :main => [MetaHeader::BOOLEAN],
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze
@@ -134,7 +135,7 @@ class ReaPack::Index
 
     mh = MetaHeader.new contents
 
-    if mh[:noindex]
+    if mh[:index] == false
       remove path
       return
     end
@@ -163,10 +164,10 @@ class ReaPack::Index
         cselector.clear
         sources = parse_provides mh[:provides], pkg
 
-        if !mh[:nomain] && WITH_MAIN.include?(type) \
+        if !mh[:metapackage] && WITH_MAIN.include?(type) \
             && sources.none? {|src| src.file.nil? }
           # add the package itself as a main source
-          src = Source.new make_url(path), true
+          src = Source.new make_url(path), mh[:main, true]
           sources.unshift src
 
           cselector.push src.platform, path
