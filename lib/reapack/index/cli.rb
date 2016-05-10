@@ -195,8 +195,7 @@ private
   def do_check
     check_name
 
-    @index.clear_cdetector
-    @index.amend = true # enable checks for released versions as well
+    @index.clear
     failures = []
 
     pkgs = Hash[Dir.glob("#{Regexp.quote(@git.path)}/**/*").sort.map {|abs|
@@ -208,6 +207,7 @@ private
       [abs, rel]
     }.compact]
 
+    # reiterate over the pkg list after registering every file
     pkgs.each_pair {|abs, rel|
       begin
         @index.scan rel, File.read(abs)

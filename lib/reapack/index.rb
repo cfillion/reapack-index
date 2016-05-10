@@ -336,10 +336,6 @@ class ReaPack::Index
 
   def clear
     Category.find_all(@doc.root).each {|cat| cat.remove }
-    clear_cdetector
-  end
-
-  def clear_cdetector
     @cdetector.clear
   end
 
