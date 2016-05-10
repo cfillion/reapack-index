@@ -42,12 +42,6 @@ class TestProvides < MiniTest::Test
         ' [ darwin32 ] file',
         '[win32, darwin64] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).platform }
-
-    error = assert_raises ReaPack::Index::Error do
-      ReaPack::Index::Provides.parse '[HeLlO] file'
-    end
-
-    assert_equal "unknown option (platform or type) 'HeLlO'", error.message
   end
 
   def test_types
@@ -59,10 +53,27 @@ class TestProvides < MiniTest::Test
         '[,windows,,] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).type }
 
-    error = assert_raises ReaPack::Index::Error do
-      ReaPack::Index::Provides.parse '[, Test] file'
-    end
+  end
 
-    assert_equal "unknown option (platform or type) 'Test'", error.message
+  def test_main
+    assert_equal [true, false, nil, false],
+      [
+        '[main] file',
+        '[nomain] file',
+        'file',
+        '[main, nomain] file',
+      ].map {|l| ReaPack::Index::Provides.parse(l).main? }
+  end
+
+  def test_invalid_options
+    assert_equal ["unknown option 'HeLlO'", "unknown option 'Test'"],
+      [
+        '[HeLlO] file',
+        '[, Test] file',
+      ].map {|l|
+        assert_raises ReaPack::Index::Error do
+          ReaPack::Index::Provides.parse l
+        end.message
+      }
   end
 end

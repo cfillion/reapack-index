@@ -1,5 +1,5 @@
 class ReaPack::Index
-  Provides = Struct.new :file_pattern, :url_template, :platform, :type do
+  Provides = Struct.new :file_pattern, :url_template, :platform, :type, :main do
     PROVIDES_REGEX = /
       \A
       ( \[ \s* (?<options> .+? ) \s* \] )?
@@ -8,6 +8,8 @@ class ReaPack::Index
       ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
       \z
     /x.freeze
+
+    alias :main? :main
 
     class << self
       def parse_each(input)
@@ -28,14 +30,16 @@ class ReaPack::Index
           user_opt.strip!
           next if user_opt.empty?
 
-          opt = user_opt.downcase.to_sym
+          opt = user_opt.downcase
 
           if Source.is_platform? opt
-            instance.platform = opt
+            instance.platform = opt.to_sym
           elsif type = ReaPack::Index.resolve_type(opt)
             instance.type = type
+          elsif opt =~ /\A(no)?main\Z/
+            instance.main = !$1
           else
-            raise Error, "unknown option (platform or type) '#{user_opt}'"
+            raise Error, "unknown option '#{user_opt}'"
           end
         }
 

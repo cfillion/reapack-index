@@ -147,6 +147,7 @@ class ReaPack::Index
     cat, pkg = package_for path
 
     cselector = @cdetector[pkg.type = type, path]
+    @is_main = !mh[:metapackage] && WITH_MAIN.include?(type) # TODO: split
 
     pkg.version mh[:version] do |ver|
       next unless ver.is_new? || @amend
@@ -164,8 +165,7 @@ class ReaPack::Index
         cselector.clear
         sources = parse_provides mh[:provides], pkg
 
-        if !mh[:metapackage] && WITH_MAIN.include?(type) \
-            && sources.none? {|src| src.file.nil? }
+        if @is_main && sources.none? {|src| src.file.nil? }
           # add the package itself as a main source
           src = Source.new make_url(path), mh[:main, true]
           sources.unshift src
@@ -200,7 +200,7 @@ class ReaPack::Index
     backups.each {|var, value| instance_variable_set var, value }
     raise
   end
-  
+
   def remove(path)
     cat, pkg = package_for path, false
     return unless pkg
@@ -389,13 +389,15 @@ private
       end
 
       files.map {|file|
-        src = Source.new make_url(file, line.url_template)
+        src = Source.new make_url(file, line.url_template), line.main?
         src.platform = line.platform
         src.type = line.type
 
         cselector.push src.platform, line.url_template ? expanded : file
 
-        if file != pkg.path
+        if file == pkg.path
+          src.main = @is_main if line.main.nil?
+        else
           if line.url_template
             src.file = file
           else

@@ -75,8 +75,8 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source platform="darwin">http://host/Category/script.lua</source>
-        <source platform="win64">http://host/Category/script.lua</source>
+        <source main="true" platform="darwin">http://host/Category/script.lua</source>
+        <source main="true" platform="win64">http://host/Category/script.lua</source>
       </version>
     </reapack>
   </category>
@@ -298,5 +298,59 @@ class TestIndex::Provides < MiniTest::Test
       @version 1.0
       @provides file
     IN
+  end
+
+  def test_main
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = [
+      'Category/script.lua',
+      'Category/a.dat',
+      'Category/b.dat',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        [main] a.dat
+        [nomain] .
+        [nomain] b.dat
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="script.lua" type="script">
+      <version name="1.0">
+        <source main="true" file="a.dat">http://host/Category/a.dat</source>
+        <source>http://host/Category/script.lua</source>
+        <source file="b.dat">http://host/Category/b.dat</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_main_self
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = [
+      'Category/script.lua',
+      'Category/a.dat',
+      'Category/b.dat',
+    ]
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides .
+    IN
+
+    index.write!
+    assert_match 'main="true"', File.read(index.path)
   end
 end
