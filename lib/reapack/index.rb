@@ -304,7 +304,7 @@ private
   end
 
   def bump_commit
-    sha1 = commit()
+    sha1 = @commit || last_commit
 
     if sha1.nil?
       @doc.root.remove_attribute 'commit'

@@ -169,6 +169,17 @@ class TestIndex < MiniTest::Test
     refute_match '<category', contents
   end
 
+  def test_retain_last_commit
+    index = ReaPack::Index.new @real_path
+    assert_nil index.commit
+
+    index.remove 'Category Name/Hello World.lua'
+    index.write @dummy_path
+
+    refute_nil index.last_commit
+    assert_match index.last_commit, File.read(@dummy_path)
+  end
+
   def test_remove_inexistant
     index = ReaPack::Index.new @real_path
 
