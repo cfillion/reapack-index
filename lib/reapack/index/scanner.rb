@@ -26,6 +26,7 @@ class ReaPack::Index
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
       @is_main = !@mh[:metapackage] && WITH_MAIN.include?(pkg.type)
+      @cselectors = []
     end
 
     def run
@@ -33,7 +34,7 @@ class ReaPack::Index
         raise Error, errors.join("\n")
       end
 
-      cselector = @index.cdetector[@pkg.type, @pkg.path]
+      cselector = selector_for @pkg.type
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend
@@ -60,9 +61,8 @@ class ReaPack::Index
         end
       end
 
-      if cons = cselector.resolve
-        raise Error, cons.first
-      end
+      cons = @cselectors.map {|s| s.resolve }.flatten.compact
+      raise Error, cons.first unless cons.empty?
     end
 
     def make_url(path, template = nil)
@@ -90,7 +90,7 @@ class ReaPack::Index
         line.file_pattern = @pkg.name if line.file_pattern == '.'
 
         expanded = ReaPack::Index.expand line.file_pattern, @pkg.category
-        cselector = @index.cdetector[line.type || @pkg.type, @pkg.path]
+        cselector = selector_for line.type || @pkg.type
 
         if expanded == @pkg.path
           # always resolve path even when an url template is set
@@ -125,6 +125,12 @@ class ReaPack::Index
           src
         }
       }.flatten
+    end
+  private
+    def selector_for(type)
+      selector = @index.cdetector[type, @pkg.path]
+      @cselectors << selector
+      selector
     end
   end
 end
