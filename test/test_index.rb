@@ -137,55 +137,7 @@ class TestIndex < MiniTest::Test
     FileUtils.rm_r dirname if File.exist? dirname
   end
 
-  def test_make_url_defaut_branch
-    index = ReaPack::Index.new @dummy_path
-    index.files = ['Category/script.lua']
-    index.url_template = 'http://host/$commit/$path'
-    index.commit = nil
-
-    assert_match 'http://host/master/Category/script.lua',
-      index.make_url('Category/script.lua')
-  end
-
-  def test_make_url_without_template
-    index = ReaPack::Index.new @dummy_path
-    index.files = ['script.lua']
-
-    assert_equal nil, index.url_template
-    index.make_url 'script.lua', 'ok if explicit template'
-
-    error = assert_raises ReaPack::Index::Error do
-      index.make_url 'script.lua'
-    end
-
-    assert_match /url template/i, error.message
-  end
-
-  def test_make_url_commit
-    index = ReaPack::Index.new @dummy_path
-    index.files = ['Category/script.lua']
-    index.url_template = 'http://host/$commit/$path'
-    index.commit = @commit
-
-    assert_equal "http://host/#{@commit}/Category/script.lua",
-      index.make_url('Category/script.lua')
-  end
-
-  def test_make_url_unlisted
-    index = ReaPack::Index.new @dummy_path
-    index.commit = @commit
-    index.url_template = 'http://google.com/$path'
-
-    index.make_url 'unlisted.lua', 'ok with url template'
-
-    error = assert_raises ReaPack::Index::Error do
-     index.make_url 'unlisted.lua'
-    end
-
-    assert_equal "file not found 'unlisted.lua'", error.message
-  end
-
-  def test_reset_index_after_error
+  def test_reset_after_error
     index = ReaPack::Index.new @dummy_path
     index.commit = @commit
     index.url_template = 'http://host/$path'

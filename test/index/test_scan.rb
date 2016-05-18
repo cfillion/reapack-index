@@ -133,33 +133,6 @@ class TestIndex::Scan < MiniTest::Test
     assert_empty index.changelog
   end
 
-  def test_missing_version
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['cat/test.lua']
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, 'no version tag here'
-    end
-
-    assert_equal "missing tag 'version'", error.message
-  end
-
-  def test_empty_changelog
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['cat/test.lua']
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, <<-IN
-        @version 1.0
-        @changelog
-      IN
-    end
-
-    assert_equal "missing value for tag 'changelog'", error.message
-  end
-
   def test_author
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
@@ -172,38 +145,6 @@ class TestIndex::Scan < MiniTest::Test
 
     index.write!
     assert_match '<version name="1.0" author="cfillion">', File.read(index.path)
-  end
-
-  def test_author_boolean
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['cat/test.lua']
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, <<-IN
-        @version 1.0
-        @author
-      IN
-    end
-
-    assert_equal "missing value for tag 'author'", error.message
-  end
-
-  def test_author_multiline
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['cat/test.lua']
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, <<-IN
-        @version 1.0
-        @author
-          hello
-          world
-      IN
-    end
-
-    assert_equal "tag 'author' must be singleline", error.message
   end
 
   def test_noindex
@@ -251,21 +192,6 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
 
     refute_match 'main="true"', File.read(index.path)
-  end
-
-  def test_invalid_main
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['Category/script.lua', 'Category/test']
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan index.files.first, <<-IN
-      @version 1.0
-      @nomain wtf is this value
-      IN
-    end
-
-    assert_equal "tag 'nomain' cannot have a value", error.message
   end
 
   def test_version_time
