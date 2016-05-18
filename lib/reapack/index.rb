@@ -41,7 +41,7 @@ class ReaPack::Index
   FS_ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :url_template, :cdetector
-  attr_accessor :amend, :files, :time
+  attr_accessor :amend, :commit, :files, :time
 
   class << self
     def is_type?(input)
@@ -228,11 +228,9 @@ class ReaPack::Index
     log_change 'modified metadata' if oldName != newName
   end
 
-  def commit
-    @commit ||= @doc.root[:commit]
+  def last_commit
+    @doc.root[:commit]
   end
-
-  attr_writer :commit
 
   def write(path)
     sort @doc.root

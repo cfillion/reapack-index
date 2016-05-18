@@ -85,7 +85,7 @@ class TestIndex < MiniTest::Test
     index = ReaPack::Index.new @real_path
 
     assert_equal 1, index.version
-    assert_equal 'f572d396fae9206628714fb2ce00f72e94f2258f', index.commit
+    assert_equal 'f572d396fae9206628714fb2ce00f72e94f2258f', index.last_commit
   end
 
   def test_read_invalid

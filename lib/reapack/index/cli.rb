@@ -81,7 +81,7 @@ private
       @index.clear
       @git.commits
     elsif @opts[:scan].empty?
-      @git.commits_since @index.commit
+      @git.commits_since @index.last_commit
     else
       @opts[:scan].map {|hash|
         @git.get_commit hash or begin
