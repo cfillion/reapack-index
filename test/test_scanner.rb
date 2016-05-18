@@ -88,6 +88,15 @@ class TestScanner < MiniTest::Test
 
       assert_equal "file not found 'unlisted.lua'", error.message
     end
+
+    def test_repeat
+      @index.expect :files, ['Category/script.lua']
+      @index.expect :url_template, '$path $path'
+      @index.expect :commit, 'C0FF33'
+
+      assert_equal 'Category/script.lua Category/script.lua',
+        @scanner.make_url('Category/script.lua')
+    end
   end
 
   class TestValidation < MiniTest::Test

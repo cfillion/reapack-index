@@ -77,10 +77,10 @@ class ReaPack::Index
       end
 
       template
-        .sub('$path', path)
-        .sub('$commit', @index.commit || 'master')
-        .sub('$version', @ver.name)
-        .sub('$package', @pkg.path)
+        .gsub('$path', path)
+        .gsub('$commit', @index.commit || 'master')
+        .gsub('$version', @ver.name)
+        .gsub('$package', @pkg.path)
     end
 
     def parse_provides(provides)
