@@ -341,7 +341,7 @@ processing [a-f0-9]{7}: third commit
     }
   end
 
-  def test_rescan
+  def test_rebuild
     setup = proc {
       @git.create_commit 'initial commit',
         [mkfile('cat/test1.lua', '@version 1.0')]
@@ -356,7 +356,7 @@ processing [a-f0-9]{7}: third commit
       XML
     }
 
-    wrapper ['--rescan'], setup: setup do
+    wrapper ['--rebuild'], setup: setup do
       @git.create_commit 'second commit',
         [mkfile('cat/test2.lua', '@version 1.0')]
 
@@ -370,7 +370,7 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
-  def test_rescan_override
+  def test_rebuild_override
     setup = proc {
       @git.create_commit 'initial commit',
         [mkfile('cat/test1.lua', '@version 1.0')]
@@ -385,7 +385,7 @@ processing [a-f0-9]{7}: third commit
       XML
     }
 
-    wrapper ['--rescan', '--scan'], setup: setup do
+    wrapper ['--rebuild', '--scan'], setup: setup do
       @git.create_commit 'second commit',
         [mkfile('cat/test2.lua', '@version 1.0')]
 

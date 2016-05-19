@@ -77,7 +77,7 @@ private
       return
     end
 
-    commits = if @opts[:rescan]
+    commits = if @opts[:rebuild]
       @index.clear
       @git.commits
     elsif @opts[:scan].empty?
