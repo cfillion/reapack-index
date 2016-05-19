@@ -1,1 +1,1 @@
--- @noindex
+-- @index false
