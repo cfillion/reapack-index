@@ -17,8 +17,8 @@ class ReaPack::Index
       :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],
       :changelog => [MetaHeader::VALUE],
       :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR],
-      :index => [MetaHeader::BOOLEAN],
-      :main => [MetaHeader::BOOLEAN],
+      :noindex => [MetaHeader::BOOLEAN],
+      :metapackage => [MetaHeader::BOOLEAN],
     }.freeze
 
     WITH_MAIN = [:script, :effect].freeze
@@ -49,7 +49,7 @@ class ReaPack::Index
 
           if @is_main && sources.none? {|src| src.file.nil? }
             # add the package itself as a main source
-            src = Source.new make_url(@pkg.path), @mh[:main, true]
+            src = Source.new make_url(@pkg.path), true
             sources.unshift src
 
             @cselector.push @pkg.type, src.platform, @pkg.path

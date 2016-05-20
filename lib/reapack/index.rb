@@ -108,7 +108,7 @@ class ReaPack::Index
 
     mh = MetaHeader.new contents
 
-    if mh[:index] == false
+    if mh[:noindex]
       remove path
       return
     end

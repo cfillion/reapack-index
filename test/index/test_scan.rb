@@ -150,7 +150,7 @@ class TestIndex::Scan < MiniTest::Test
   def test_noindex
     index = ReaPack::Index.new @real_path
 
-    index.scan 'script.lua', '@index false'
+    index.scan 'script.lua', '@noindex'
 
     assert_equal false, index.modified?
   end
@@ -159,7 +159,7 @@ class TestIndex::Scan < MiniTest::Test
     index = ReaPack::Index.new @real_path
     index.commit = @commit
 
-    index.scan 'Category Name/Hello World.lua', '@index false'
+    index.scan 'Category Name/Hello World.lua', '@noindex'
 
     assert_equal true, index.modified?
     assert_equal '1 removed package', index.changelog
@@ -181,17 +181,6 @@ class TestIndex::Scan < MiniTest::Test
     end
 
     assert_equal 'no files provided', error.message
-  end
-
-  def test_nomain
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-    index.files = ['Category/script.lua', 'Category/test']
-
-    index.scan index.files.first, "@version 1.0\n@main false"
-    index.write!
-
-    refute_match 'main="true"', File.read(index.path)
   end
 
   def test_version_time

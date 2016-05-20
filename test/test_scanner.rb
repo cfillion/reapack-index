@@ -177,15 +177,15 @@ class TestScanner < MiniTest::Test
     end
 
     def test_index
-      @mh[:index] = 'value'
+      @mh[:noindex] = 'value'
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
-      assert_equal "tag 'index' cannot have a value", error.message
+      assert_equal "tag 'noindex' cannot have a value", error.message
     end
 
-    def test_main
-      @mh[:main] = 'value'
+    def test_metapackage
+      @mh[:metapackage] = 'value'
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
-      assert_equal "tag 'main' cannot have a value", error.message
+      assert_equal "tag 'metapackage' cannot have a value", error.message
     end
   end
 end
