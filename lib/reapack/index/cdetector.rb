@@ -71,6 +71,7 @@ class ReaPack::Index
         if platforms.size > 1
           # check platform inheritance
           platforms.any? {|p|
+            break true unless Source::PLATFORMS[p]
             loop do
               p = Source::PLATFORMS[p] or break false
               break true if platforms.include? p

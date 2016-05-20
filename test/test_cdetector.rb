@@ -252,4 +252,12 @@ class TestConflictDetector < MiniTest::Test
 
     assert_nil cd['Scripts/explicit_type.lua'].resolve
   end
+
+  def test_unknown_platform
+    cd = ReaPack::Index::ConflictDetector.new
+    cd['test1'].push :grp, :unknown, 'file'
+    cd['test2'].push :grp, :all, 'file'
+
+    assert_equal ["'file' conflicts with 'test2'"], cd['test1'].resolve
+  end
 end
