@@ -316,4 +316,16 @@ class TestIndex < MiniTest::Test
     # no error because of fake conflict:
     index.scan index.files.first, "@version 1.0\n@provides Hello World.lua"
   end
+
+  def test_move_no_conflicts
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['cat/testz.lua', 'cat/testa.lua', 'cat/file1', 'cat/file2']
+    index.url_template = 'http://host/$path'
+
+    contents = "@version 1.0\n@provides\n\tfile1\n\t[effect] file2"
+
+    index.scan 'cat/testz.lua', contents
+    index.remove 'cat/testz.lua'
+    index.scan 'cat/testa.lua', contents
+  end
 end

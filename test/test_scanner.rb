@@ -8,6 +8,7 @@ class TestScanner < MiniTest::Test
       @pkg = MiniTest::Mock.new
       @pkg.expect :type, :script
       @pkg.expect :path, 'Hello/World.lua'
+      @pkg.expect :path, 'Hello/World.lua'
 
       @ver = MiniTest::Mock.new
       @ver.expect :name, '1.0'
@@ -15,14 +16,18 @@ class TestScanner < MiniTest::Test
       @mh = MiniTest::Mock.new
       @mh.expect :[], nil, [:metapackage]
 
+      @cdetector = MiniTest::Mock.new
+      @cdetector.expect :[], nil, ['Hello/World.lua']
+
       @index = MiniTest::Mock.new
+      @index.expect :cdetector, @cdetector
 
       @scanner = ReaPack::Index::Scanner.new @cat, @pkg, @mh, @index
       @scanner.instance_variable_set :@ver, @ver
     end
 
     def teardown
-      [@cat, @pkg, @ver, @mh, @index].each {|mock| mock.verify }
+      [@cat, @pkg, @ver, @mh, @index, @cdetector].each {|mock| mock.verify }
     end
 
     def test_path
@@ -103,11 +108,15 @@ class TestScanner < MiniTest::Test
     def setup
       @pkg = MiniTest::Mock.new
       @pkg.expect :type, :script
+      @pkg.expect :path, 'cat/test'
 
       @mh = MetaHeader.new String.new
       @mh[:version] = '1.0'
 
-      @scanner = ReaPack::Index::Scanner.new nil, @pkg, @mh, nil
+      @index = MiniTest::Mock.new
+      @index.expect :cdetector, ReaPack::Index::ConflictDetector.new
+
+      @scanner = ReaPack::Index::Scanner.new nil, @pkg, @mh, @index
     end
 
     def test_validation

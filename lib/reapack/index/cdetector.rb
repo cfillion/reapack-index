@@ -3,21 +3,26 @@ class ReaPack::Index
     Entry = Struct.new :key, :platform, :file
 
     class Selector
-      def initialize(bucket, key, cdetector)
-        @bucket, @key, @cdetector = bucket, key, cdetector
-        @entries = @cdetector.bucket bucket
+      def initialize(key, cdetector)
+        @key, @cdetector = key, cdetector
       end
 
-      def push(platform, file)
-        @entries << Entry.new(@key, platform, file).freeze
+      def push(bucket, platform, file)
+        @cdetector.bucket(bucket) << Entry.new(@key, platform, file).freeze
       end
 
       def clear
-        @entries.reject! {|e| e.key == @key }
+        @cdetector.buckets.each_value do |b|
+          b.reject! {|e| e.key == @key }
+        end
       end
 
       def resolve
-        @cdetector.resolve @bucket, @key
+        errors = @cdetector.buckets.map do |b, _|
+          @cdetector.resolve b, @key
+        end.compact.flatten
+
+        errors unless errors.empty?
       end
     end
 
@@ -31,11 +36,14 @@ class ReaPack::Index
         Hash[@buckets.map {|k, v| [k, v.clone] }]
     end
 
-    def [](bucket, key)
-      Selector.new bucket, key, self
+    def [](key)
+      Selector.new key, self
     end
 
+    attr_reader :buckets
+
     def bucket(name)
+      raise ArgumentError, 'bucket name is not a symbol' unless name.is_a? Symbol
       @buckets[name] ||= []
     end
 
@@ -43,10 +51,8 @@ class ReaPack::Index
       @buckets.clear
     end
 
-    def resolve(bucket, key = nil)
-      return unless bucket = @buckets[bucket]
-
-      dups = bucket.group_by {|e| e.file }.values.select {|a| a.size > 1 }
+    def resolve(bname, key = nil)
+      dups = bucket(bname).group_by {|e| e.file }.values.select {|a| a.size > 1 }
 
       errors = dups.map {|a|
         packages = a.map {|e| e.key }.uniq

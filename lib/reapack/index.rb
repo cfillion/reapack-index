@@ -151,7 +151,7 @@ class ReaPack::Index
     cat, pkg = package_for path, false
     return unless pkg
 
-    @cdetector[pkg.type, path].clear
+    @cdetector[path].clear
 
     pkg.remove
     cat.remove if cat.empty?

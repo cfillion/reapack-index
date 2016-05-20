@@ -26,15 +26,13 @@ class ReaPack::Index
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
       @is_main = !@mh[:metapackage] && WITH_MAIN.include?(pkg.type)
-      @cselectors = []
+      @cselector = @index.cdetector[pkg.path]
     end
 
     def run
       if errors = @mh.validate(HEADER_RULES)
         raise Error, errors.join("\n")
       end
-
-      cselector = selector_for @pkg.type
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend
@@ -46,7 +44,7 @@ class ReaPack::Index
         ver.changelog = @mh[:changelog]
 
         ver.replace_sources do
-          cselector.clear
+          @cselector.clear
           sources = parse_provides @mh[:provides]
 
           if @is_main && sources.none? {|src| src.file.nil? }
@@ -54,15 +52,16 @@ class ReaPack::Index
             src = Source.new make_url(@pkg.path), @mh[:main, true]
             sources.unshift src
 
-            cselector.push src.platform, @pkg.path
+            @cselector.push @pkg.type, src.platform, @pkg.path
           end
 
           sources.each {|src| ver.add_source src }
         end
       end
 
-      cons = @cselectors.map {|s| s.resolve }.flatten.compact
-      raise Error, cons.first unless cons.empty?
+      if cons = @cselector.resolve
+        raise Error, cons.first unless cons.empty?
+      end
     end
 
     def make_url(path, template = nil)
@@ -90,7 +89,6 @@ class ReaPack::Index
         line.file_pattern = @pkg.name if line.file_pattern == '.'
 
         expanded = ReaPack::Index.expand line.file_pattern, @pkg.category
-        cselector = selector_for line.type || @pkg.type
 
         if expanded == @pkg.path
           # always resolve path even when an url template is set
@@ -110,7 +108,8 @@ class ReaPack::Index
           src.platform = line.platform
           src.type = line.type
 
-          cselector.push src.platform, line.url_template ? expanded : file
+          @cselector.push src.type || @pkg.type, src.platform,
+            line.url_template ? expanded : file
 
           if file == @pkg.path
             src.main = @is_main if line.main.nil?
@@ -125,12 +124,6 @@ class ReaPack::Index
           src
         }
       }.flatten
-    end
-  private
-    def selector_for(type)
-      selector = @index.cdetector[type, @pkg.path]
-      @cselectors << selector
-      selector
     end
   end
 end
