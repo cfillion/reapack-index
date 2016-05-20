@@ -91,7 +91,9 @@ class ReaPack::Index
           pkgroot = File.join(cat.name, pkg.name)
 
           pkg.versions.last&.children(Source::TAG)&.each {|src|
-            entry = Entry.new pkgroot, src[:platform]&.to_sym || :all
+            type = src[:type] || pkg.type
+            platform = src[:platform] || :all
+            entry = Entry.new pkgroot, platform.to_sym
 
             if src[:file]
               entry.file = ReaPack::Index.expand(src[:file], cat.name)
@@ -99,7 +101,7 @@ class ReaPack::Index
               entry.file = pkgroot
             end
 
-            bucket(pkg.type) << entry
+            bucket(type.to_sym) << entry
           }
         }
       }

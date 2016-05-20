@@ -220,9 +220,14 @@ class TestConflictDetector < MiniTest::Test
         <source file="picture">http://cross/category</source>
       </version>
     </reapack>
-    <reapack name="no_platform.lua" type="script">
+    <reapack name="weird_platform.lua" type="script">
       <version name="1.0">
         <source platform="bacon" file="picture">http://cross/category</source>
+      </version>
+    </reapack>
+    <reapack name="explicit_type.lua" type="script">
+      <version name="1.0">
+        <source type="effect" file="picture">http://cross/category</source>
       </version>
     </reapack>
   </category>
@@ -234,15 +239,17 @@ class TestConflictDetector < MiniTest::Test
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test2.lua'",
                   "duplicate file 'Other/background.png' on win32"],
-      cd.resolve(:script, 'Other/test1.lua'), 'test1'
+      cd['Other/test1.lua'].resolve, 'test1'
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
-      cd.resolve(:script, 'Other/test2.lua'), 'test2'
+      cd['Other/test2.lua'].resolve, 'test2'
 
     assert_equal ["'Other/test1.lua' conflicts with 'Other/test1.lua'"],
-      cd.resolve(:script, 'Scripts/test3.lua'), 'test3'
+      cd['Scripts/test3.lua'].resolve, 'test3'
 
-    cd.resolve :script, 'Scripts/no_platform.lua'
-    cd.resolve :script, 'Scripts/weird_platform.lua'
+    cd['Scripts/no_platform.lua'].resolve
+    cd['Scripts/weird_platform.lua'].resolve
+
+    assert_nil cd['Scripts/explicit_type.lua'].resolve
   end
 end
