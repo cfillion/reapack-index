@@ -11,7 +11,9 @@ class ReaPack::Index
     HEADER_RULES = {
       # package-wide tags
       :version => [
-        MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE, /\A\d/],
+        MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE,
+        /\A\d/, /[1-9]/,
+      ],
 
       # version-specific tags
       :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],

@@ -64,7 +64,7 @@ Finished checks for 2 packages with 1 failure
     }
 
     wrapper ['--check'], setup: setup do
-      mkfile 'Chunky/Bacon.lua', "@version 1.0\n@provides ../background.png"
+      mkfile 'Chunky/Bacon.lua', "@version 0.1\n@provides ../background.png"
 
       capture_io { assert_equal true, @cli.run }
     end
