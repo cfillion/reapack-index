@@ -140,6 +140,10 @@ class TestScanner < MiniTest::Test
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
       assert_equal "invalid value for tag 'version'", error.message
 
+      @mh[:version] = 'v1.0'
+      error = assert_raises(ReaPack::Index::Error) { @scanner.run }
+      assert_equal "invalid value for tag 'version'", error.message
+
       @mh[:version] = true
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
       assert_equal "missing value for tag 'version'", error.message
