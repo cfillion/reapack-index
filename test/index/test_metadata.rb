@@ -10,9 +10,10 @@ class TestIndex::Metadata < MiniTest::Test
 
     assert_equal 0, index.links(:website).size
     index.eval_link :website, 'http://test.com'
-    assert_equal 1, index.links(:website).size
+    index.eval_link :website, 'http://test.com?query=string'
+    assert_equal 2, index.links(:website).size
 
-    assert_equal '1 new website link, empty index', index.changelog
+    assert_equal '2 new website links, empty index', index.changelog
 
     index.write!
   end

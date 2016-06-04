@@ -164,14 +164,19 @@ class ReaPack::Index
     @metadata.links type
   end
 
-  def eval_link(type, string)
-    if string.index('-') == 0
-      @metadata.remove_link type, string[1..-1]
+  def eval_link(type, input)
+    if input.index('-') == 0
+      @metadata.remove_link type, input[1..-1]
       log_change "removed #{type} link"
       return
     end
 
-    link = @metadata.push_link type, *string.split('=', 2)
+    separator = input.index('=')
+    if separator&.< input.index('://')
+      input = [input[0...separator], input[separator+1..-1]]
+    end
+
+    link = @metadata.push_link type, *input
 
     if link.is_new?
       log_change "new #{type} link"
