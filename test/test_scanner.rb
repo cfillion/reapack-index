@@ -6,7 +6,6 @@ class TestScanner < MiniTest::Test
       @cat = MiniTest::Mock.new
 
       @pkg = MiniTest::Mock.new
-      @pkg.expect :type, :script
       @pkg.expect :path, 'Hello/World.lua'
       @pkg.expect :path, 'Hello/World.lua'
 
@@ -14,7 +13,7 @@ class TestScanner < MiniTest::Test
       @ver.expect :name, '1.0'
 
       @mh = MiniTest::Mock.new
-      @mh.expect :[], nil, [:metapackage]
+      @mh.expect :[], true, [:metapackage]
 
       @cdetector = MiniTest::Mock.new
       @cdetector.expect :[], nil, ['Hello/World.lua']

@@ -21,13 +21,12 @@ class ReaPack::Index
       :metapackage => [MetaHeader::BOOLEAN],
     }.freeze
 
-    WITH_MAIN = [:script, :effect].freeze
+    META_TYPES = [:extension, :data].freeze
 
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
 
-      meta = @mh[:metapackage]
-      @is_main = meta.nil? ? WITH_MAIN.include?(pkg.type) : !meta
+      @mh[:metapackage] = META_TYPES.include?(pkg.type) if mh[:metapackage].nil?
 
       @cselector = @index.cdetector[pkg.path]
     end
@@ -50,7 +49,7 @@ class ReaPack::Index
           @cselector.clear
           sources = parse_provides @mh[:provides]
 
-          if @is_main && sources.none? {|src| src.file.nil? }
+          if !@mh[:metapackage] && sources.none? {|src| src.file.nil? }
             # add the package itself as a main source
             src = Source.new make_url(@pkg.path), true
             sources.unshift src
@@ -115,7 +114,7 @@ class ReaPack::Index
             line.url_template ? expanded : file
 
           if file == @pkg.path
-            src.main = @is_main if line.main.nil?
+            src.main = !@mh[:metapackage] if line.main.nil?
           else
             if line.url_template
               src.file = file
