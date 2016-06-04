@@ -171,16 +171,24 @@ class TestIndex::Scan < MiniTest::Test
     refute_match '<category', contents
   end
 
-  def test_metapackage
+  def test_metapackage_on
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = ['Category/script.lua', 'Category/test']
+    index.files = ['Category/script.lua']
 
     error = assert_raises ReaPack::Index::Error do
       index.scan index.files.first, "@version 1.0\n@metapackage"
     end
 
     assert_equal 'no files provided', error.message
+  end
+
+  def test_metapackage_off
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/extension.ext']
+
+    index.scan index.files.first, "@version 1.0\n@metapackage false"
   end
 
   def test_version_time

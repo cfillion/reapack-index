@@ -25,7 +25,10 @@ class ReaPack::Index
 
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
-      @is_main = !@mh[:metapackage] && WITH_MAIN.include?(pkg.type)
+
+      meta = @mh[:metapackage]
+      @is_main = meta.nil? ? WITH_MAIN.include?(pkg.type) : !meta
+
       @cselector = @index.cdetector[pkg.path]
     end
 
