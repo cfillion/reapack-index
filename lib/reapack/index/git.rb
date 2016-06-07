@@ -191,8 +191,8 @@ class ReaPack::Index
         @repo.lookup(@file[:oid]).content.force_encoding(Encoding::UTF_8)
     end
 
-    def header
-      @header ||= MetaHeader.new @new_content if new_content
+    def new_header
+      @new_header ||= MetaHeader.new @new_content if new_content
     end
   end
 end

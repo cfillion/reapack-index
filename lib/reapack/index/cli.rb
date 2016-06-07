@@ -109,16 +109,19 @@ private
     @index.files = commit.filelist
 
     commit.each_diff
-      .sort_by {|diff| diff.status == :deleted || diff.header[:noindex] ? 0 : 1 }
+      .select {|diff|
+        (not ignored? expand_path(diff.file)) &&
+          ReaPack::Index.type_of(diff.file)
+      }
+      .sort_by {|diff|
+        diff.status == :deleted || diff.new_header[:noindex] ? 0 : 1
+      }
       .each {|diff| process_diff diff }
   ensure
     bump_progress
   end
 
   def process_diff(diff)
-    return if ignored? expand_path(diff.file)
-    return unless ReaPack::Index.type_of diff.file
-
     log "-> indexing #{diff.status} file #{diff.file}"
 
     if diff.status == :deleted

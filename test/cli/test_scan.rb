@@ -193,8 +193,8 @@ processing [a-f0-9]{7}: third commit
     wrapper ['--ignore=Hello', '--ignore=Chunky/Bacon.lua',
              '--ignore=test2.lua'], setup: setup do
       @git.create_commit 'initial commit', [
-        mkfile('Hello/World.lua', 'konnichiwa'),
-        mkfile('Chunky/Bacon.lua', 'konnichiwa'),
+        mkfile('Hello/World.lua', '@version 1.0'),
+        mkfile('Chunky/Bacon.lua', '@version 1.0'),
         mkfile('Directory/test2.lua', '@version 1.0'),
       ]
 
