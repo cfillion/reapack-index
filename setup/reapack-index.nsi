@@ -11,7 +11,7 @@
 !define RUBYINSTALLER_URL \
   "http://dl.bintray.com/oneclick/rubyinstaller/${RUBYINSTALLER_FILE}"
 
-!define PANDOC_VERSION "1.17.0.2"
+!define PANDOC_VERSION "1.17.1-1"
 !define PANDOC_FILE "pandoc-${PANDOC_VERSION}-windows.msi"
 !define PANDOC_URL \
   "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${PANDOC_FILE}"
