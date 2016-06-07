@@ -52,7 +52,7 @@ class TestCLI::Scan < MiniTest::Test
     end
   end
 
-  def test_wd_subdirectory
+  def test_workingdir_is_subdirectory
     wrapper do
       @git.create_commit 'initial commit',
         [mkfile('cat/test1.lua', '@version 1.0')]
@@ -221,6 +221,51 @@ processing [a-f0-9]{7}: third commit
       end
 
       refute_match 'test.lua', read_index
+    end
+  end
+
+  def test_remove_before_scan
+    wrapper do
+      contents = "@version 1.0\n@provides file"
+
+      @git.create_commit 'initial commit', [
+        mkfile('cat/testz.lua', contents),
+        mkfile('cat/file'),
+      ]
+
+      File.delete mkpath('cat/testz.lua')
+      @git.create_commit 'second commit', [
+        mkpath('cat/testz.lua'),
+        mkfile('cat/testa.lua', contents),
+      ]
+
+      _, stderr = capture_io do
+        assert_equal true, @cli.run
+      end
+
+      refute_match 'conflict', stderr
+    end
+  end
+
+  def test_noindex_before_scan
+    wrapper do
+      contents = "@version 1.0\n@provides file"
+
+      @git.create_commit 'initial commit', [
+        mkfile('cat/testz.lua', contents),
+        mkfile('cat/file'),
+      ]
+
+      @git.create_commit 'second commit', [
+        mkfile('cat/testz.lua', contents .. "\n@noindex"),
+        mkfile('cat/testa.lua', contents),
+      ]
+
+      _, stderr = capture_io do
+        assert_equal true, @cli.run
+      end
+
+      refute_match 'conflict', stderr
     end
   end
 

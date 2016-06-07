@@ -182,12 +182,17 @@ class ReaPack::Index
     attr_reader :status
 
     def file
-      @file[:path].force_encoding(Encoding::UTF_8)
+      @path ||= @file[:path].force_encoding(Encoding::UTF_8)
     end
     
     def new_content
       return if status == :deleted
-      @repo.lookup(@file[:oid]).content.force_encoding(Encoding::UTF_8)
+      @new_content ||=
+        @repo.lookup(@file[:oid]).content.force_encoding(Encoding::UTF_8)
+    end
+
+    def header
+      @header ||= MetaHeader.new @new_content if new_content
     end
   end
 end

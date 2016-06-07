@@ -109,7 +109,7 @@ private
     @index.files = commit.filelist
 
     commit.each_diff
-      .sort_by {|diff| diff.status == :deleted ? 0 : 1 }
+      .sort_by {|diff| diff.status == :deleted || diff.header[:noindex] ? 0 : 1 }
       .each {|diff| process_diff diff }
   ensure
     bump_progress
