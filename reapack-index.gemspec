@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'colorize', '~> 0.7'
   spec.add_runtime_dependency 'gitable', '~> 0.3'
   spec.add_runtime_dependency 'metaheader', '~> 1.2'
-  spec.add_runtime_dependency 'nokogiri', '~> 1.6.8.rc2'
+  spec.add_runtime_dependency 'nokogiri', '~> 1.6.8'
   spec.add_runtime_dependency 'pandoc-ruby', '~> 2.0'
   spec.add_runtime_dependency 'rugged', '~> 0.24'
   spec.add_runtime_dependency 'stable_sort', '~> 1.1'
