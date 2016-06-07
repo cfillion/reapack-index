@@ -7,6 +7,7 @@ Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion
 [![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
 [![Dependency Status](https://gemnasium.com/cfillion/reapack-index.svg)](https://gemnasium.com/cfillion/reapack-index)
 [![Coverage Status](https://coveralls.io/repos/cfillion/reapack-index/badge.svg?branch=master&service=github)](https://coveralls.io/github/cfillion/reapack-index?branch=master)
+[![Donate](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_74x21.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=T3DEWBQJAV7WL&lc=CA&item_name=reapack-index%3a%20Package%20indexer%20for%20git-based%20ReaPack%20repositories&no_note=0&cn=Custom%20message&no_shipping=1&currency_code=CAD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
 ### Installation
 
