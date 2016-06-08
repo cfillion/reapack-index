@@ -128,7 +128,7 @@ private
       @index.remove diff.file
     else
       begin
-        @index.scan diff.file, diff.new_content
+        @index.scan diff.file, diff.new_header
       rescue ReaPack::Index::Error => e
         warn "#{diff.file}:\n#{indent e.message}"
       end
@@ -213,7 +213,7 @@ private
     # reiterate over the pkg list after registering every file
     pkgs.each_pair {|abs, rel|
       begin
-        @index.scan rel, File.read(abs)
+        @index.scan rel, MetaHeader.from_file(abs)
 
         if @opts[:verbose]
           $stderr.puts '%s: passed' % rel

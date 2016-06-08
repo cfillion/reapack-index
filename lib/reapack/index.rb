@@ -106,7 +106,7 @@ class ReaPack::Index
     type = self.class.type_of path
     return unless type
 
-    mh = MetaHeader.new contents
+    mh = MetaHeader.parse contents
 
     if mh[:noindex]
       remove path
