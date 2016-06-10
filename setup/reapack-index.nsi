@@ -2,7 +2,7 @@
 !include Sections.nsh
 !include StrRep.nsh
 
-!define VERSION "1.0rc3"
+!define VERSION "1.0"
 !define NAME "ReaPack Index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
