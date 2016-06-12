@@ -142,4 +142,13 @@ class TestGit < MiniTest::Test
 
     assert_equal content, @git.last_commit.each_diff.first.new_content
   end
+
+  def test_path_encoding
+    path = mkpath 'еуые'
+    Dir.mkdir path
+    path.encode! Encoding::Windows_1251
+
+    git = ReaPack::Index::Git.new path # should not throw
+    assert_equal @git.path, git.path
+  end
 end
