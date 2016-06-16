@@ -8,10 +8,17 @@ class ReaPack::Index
       end
     }
 
+    VERSION_SEGMENT_MAX = (2 ** 16) - 1
+
     HEADER_RULES = {
       # package-wide tags
       :version => [
-        MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE, /\A\d/],
+        MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE, /\A\d/,
+        proc {|v|
+          s = v.scan(/\d+/).find {|s| s.to_i > VERSION_SEGMENT_MAX }
+          'segment overflow (%d > %d)' % [s, VERSION_SEGMENT_MAX] if s
+        }
+      ],
 
       # version-specific tags
       :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],

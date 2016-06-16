@@ -150,6 +150,11 @@ class TestScanner < MiniTest::Test
       @mh[:version] = "hello\nworld"
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
       assert_equal "tag 'version' must be singleline", error.message
+
+      @mh[:version] = '1.99999'
+      error = assert_raises(ReaPack::Index::Error) { @scanner.run }
+      assert_equal "invalid value for tag 'version': segment overflow (99999 > 65535)",
+        error.message
     end
 
     def test_author
