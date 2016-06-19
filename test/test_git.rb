@@ -147,6 +147,7 @@ class TestGit < MiniTest::Test
     path = mkpath 'еуые'
     Dir.mkdir path
     path.encode! Encoding::Windows_1251
+    path.freeze
 
     git = ReaPack::Index::Git.new path # should not throw
     assert_equal @git.path, git.path

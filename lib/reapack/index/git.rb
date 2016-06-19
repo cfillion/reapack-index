@@ -1,8 +1,7 @@
 class ReaPack::Index
   class Git
     def initialize(path)
-      path.encode! Encoding::UTF_8
-      @repo = Rugged::Repository.discover path
+      @repo = Rugged::Repository.discover path.encode(Encoding::UTF_8)
     end
 
     def empty?
