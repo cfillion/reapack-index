@@ -19,6 +19,22 @@ class TestSource < MiniTest::Test
     assert_equal after.chomp, before.to_s
   end
 
+  def test_escaped_url
+    before = make_node '<version name="1.0"/>'
+    after = <<-XML
+<version name="1.0">
+  <source>http://files.cfillion.tk/hello%20world.lua</source>
+</version>
+    XML
+
+    src = ReaPack::Index::Source.new 'http://files.cfillion.tk/./hello%20world.lua'
+    assert_equal 'http://files.cfillion.tk/./hello%20world.lua', src.url
+
+    src.make_node before
+
+    assert_equal after.chomp, before.to_s
+  end
+
   def test_invalid_url
     after = '<version name="1.0"/>'
     before = make_node after
