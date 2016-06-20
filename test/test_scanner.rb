@@ -195,5 +195,15 @@ class TestScanner < MiniTest::Test
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
       assert_equal "tag 'metapackage' cannot have a value", error.message
     end
+
+    def test_description
+      @mh[:description] = true
+      error = assert_raises(ReaPack::Index::Error) { @scanner.run }
+      assert_equal "missing value for tag 'description'", error.message
+
+      @mh[:description] = "hello\nworld"
+      error = assert_raises(ReaPack::Index::Error) { @scanner.run }
+      assert_equal "tag 'description' must be singleline", error.message
+    end
   end
 end

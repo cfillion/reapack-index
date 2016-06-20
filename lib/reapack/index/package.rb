@@ -7,6 +7,7 @@ class ReaPack::Index
     @tag = 'reapack'.freeze
 
     TYPE_ATTR = 'type'.freeze
+    DESC_ATTR = 'desc'.freeze
 
     def initialize(node)
       super
@@ -35,6 +36,24 @@ class ReaPack::Index
       return if type == new_type
 
       @node[TYPE_ATTR] = new_type
+      @dirty = true
+    end
+
+    def description
+      @node[DESC_ATTR].to_s
+    end
+
+    def description=(new_desc)
+      new_desc ||= String.new
+
+      return if description == new_desc
+
+      if new_desc.empty?
+        @node.remove_attribute DESC_ATTR
+      else
+        @node[DESC_ATTR] = new_desc
+      end
+
       @dirty = true
     end
 

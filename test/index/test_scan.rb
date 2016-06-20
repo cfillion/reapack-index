@@ -204,6 +204,35 @@ class TestIndex::Scan < MiniTest::Test
       File.read(index.path)
   end
 
+  def test_description
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @description From the New World
+    IN
+
+    index.write!
+    assert_match 'desc="From the New World"', File.read(index.path)
+  end
+
+  def test_description_alias
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @reascript_name Right
+      @description Wrong
+    IN
+
+    index.write!
+    assert_match 'desc="Right"', File.read(index.path)
+  end
+
   def test_extension
     index = ReaPack::Index.new @dummy_path
     index.files = ['Extensions/reapack.ext']

@@ -10,22 +10,30 @@ class ReaPack::Index
 
     VERSION_SEGMENT_MAX = (2 ** 16) - 1
 
+    SIMPLE_TAG = [MetaHeader::VALUE, MetaHeader::SINGLELINE].freeze
+
     HEADER_RULES = {
       # package-wide tags
-      :version => [
+      version: [
         MetaHeader::REQUIRED, MetaHeader::VALUE, MetaHeader::SINGLELINE, /\A\d/,
         proc {|v|
           s = v.scan(/\d+/).find {|s| s.to_i > VERSION_SEGMENT_MAX }
           'segment overflow (%d > %d)' % [s, VERSION_SEGMENT_MAX] if s
         }
       ],
+      description: SIMPLE_TAG,
+
+      # aliases for description
+      reascript_name: SIMPLE_TAG,
+      desc: SIMPLE_TAG,
+      name: SIMPLE_TAG,
 
       # version-specific tags
-      :author => [MetaHeader::VALUE, MetaHeader::SINGLELINE],
-      :changelog => [MetaHeader::VALUE],
-      :provides => [MetaHeader::VALUE, PROVIDES_VALIDATOR],
-      :noindex => [MetaHeader::BOOLEAN],
-      :metapackage => [MetaHeader::BOOLEAN],
+      author: SIMPLE_TAG,
+      changelog: [MetaHeader::VALUE],
+      provides: [MetaHeader::VALUE, PROVIDES_VALIDATOR],
+      noindex: [MetaHeader::BOOLEAN],
+      metapackage: [MetaHeader::BOOLEAN],
     }.freeze
 
     META_TYPES = [:extension, :data].freeze
@@ -42,6 +50,9 @@ class ReaPack::Index
       if errors = @mh.validate(HEADER_RULES)
         raise Error, errors.join("\n")
       end
+
+      @pkg.description = @mh[:reascript_name] || @mh[:name] || \
+        @mh[:desc] || @mh[:description]
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend
