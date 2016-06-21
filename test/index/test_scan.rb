@@ -114,6 +114,7 @@ class TestIndex::Scan < MiniTest::Test
 
     assert_match @commit, contents
     assert_match 'New Changelog!', contents
+    assert_match '2015', contents
   end
 
   def test_edit_version_amend_unmodified

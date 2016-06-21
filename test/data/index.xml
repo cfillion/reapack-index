@@ -2,7 +2,7 @@
 <index version="1" commit="f572d396fae9206628714fb2ce00f72e94f2258f" name="Test">
   <category name="Category Name">
     <reapack name="Hello World.lua" type="script">
-      <version name="1.0" author="cfillion">
+      <version name="1.0" author="cfillion" time="2015-01-01T00:00:00Z">
         <changelog><![CDATA[Fixed a division by zero error.]]></changelog>
         <source>https://google.com/Category%20Name/Hello%20World.lua</source>
       </version>
