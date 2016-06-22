@@ -4,8 +4,8 @@ class TestPackage < MiniTest::Test
   include XMLHelper
 
   def test_change_type
-    before = make_node '<reapack name="1.0"/>'
-    after = '<reapack name="1.0" type="script"/>'
+    before = make_node '<reapack name="pkg"/>'
+    after = '<reapack name="pkg" type="script"/>'
 
     pkg = ReaPack::Index::Package.new before
     assert_nil pkg.type
@@ -18,7 +18,7 @@ class TestPackage < MiniTest::Test
   end
 
   def test_set_same_type
-    before = make_node '<reapack name="1.0" type="script"/>'
+    before = make_node '<reapack name="pkg" type="script"/>'
 
     pkg = ReaPack::Index::Package.new before
 
@@ -28,9 +28,47 @@ class TestPackage < MiniTest::Test
     refute pkg.modified?, 'package is modified'
   end
 
+  def test_set_description
+    before = make_node '<reapack name="pkg"/>'
+    after = '<reapack name="pkg" desc="hello world"/>'
+
+    pkg = ReaPack::Index::Package.new before
+    assert_empty pkg.description
+
+    pkg.description = 'hello world'
+    assert pkg.modified?, 'package is not modified'
+    assert_equal 'hello world', pkg.description
+
+    assert_equal after, before.to_s
+  end
+
+  def test_set_same_description
+    before = make_node '<reapack name="pkg" desc="hello world"/>'
+
+    pkg = ReaPack::Index::Package.new before
+
+    assert_equal 'hello world', pkg.description
+    pkg.description = pkg.description
+
+    refute pkg.modified?, 'package is modified'
+  end
+
+  def test_remove_description
+    before = make_node '<reapack name="pkg" desc="hello world"/>'
+    after = '<reapack name="pkg"/>'
+
+    pkg = ReaPack::Index::Package.new before
+    assert_equal 'hello world', pkg.description
+
+    pkg.description = nil
+    assert pkg.modified?, 'package is not modified'
+
+    assert_equal after, before.to_s
+  end
+
   def test_versions
     before = make_node <<-XML
-    <reapack name="1.0" type="script">
+    <reapack name="pkg" type="script">
       <version name="1.0" />
     </reapack>
     XML
@@ -47,7 +85,7 @@ class TestPackage < MiniTest::Test
 
   def test_get_or_create_version
     before = make_node <<-XML
-    <reapack name="1.0" type="script">
+    <reapack name="pkg" type="script">
       <version name="1.0" />
     </reapack>
     XML
