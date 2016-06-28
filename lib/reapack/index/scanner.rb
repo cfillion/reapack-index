@@ -23,17 +23,16 @@ class ReaPack::Index
       ],
       description: SIMPLE_TAG,
 
-      # aliases for description
-      reascript_name: SIMPLE_TAG,
-      desc: SIMPLE_TAG,
-      name: SIMPLE_TAG,
-
       # version-specific tags
       author: SIMPLE_TAG,
       changelog: [MetaHeader::VALUE],
       provides: [MetaHeader::VALUE, PROVIDES_VALIDATOR],
       noindex: [MetaHeader::BOOLEAN],
       metapackage: [MetaHeader::BOOLEAN],
+    }.freeze
+
+    HEADER_ALIASES = {
+      [:reascript_name, :desc, :name] => :description,
     }.freeze
 
     META_TYPES = [:extension, :data].freeze
@@ -47,12 +46,13 @@ class ReaPack::Index
     end
 
     def run
+      @mh.alias HEADER_ALIASES
+
       if errors = @mh.validate(HEADER_RULES)
         raise Error, errors.join("\n")
       end
 
-      @pkg.description = @mh[:reascript_name] || @mh[:name] || \
-        @mh[:desc] || @mh[:description]
+      @pkg.description = @mh[:description]
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend

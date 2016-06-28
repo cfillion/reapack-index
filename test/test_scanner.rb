@@ -120,6 +120,7 @@ class TestScanner < MiniTest::Test
 
     def test_validation
       mh_mock = MiniTest::Mock.new
+      mh_mock.expect :alias, nil, [Hash]
       mh_mock.expect :validate, ['first', 'second'], [Hash]
 
       @scanner.instance_variable_set :@mh, mh_mock
