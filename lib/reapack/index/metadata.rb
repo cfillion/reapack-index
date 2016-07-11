@@ -74,6 +74,18 @@ class ReaPack::Index
       @dirty = true
     end
 
+    def replace_links(type)
+      was_dirty = @dirty
+
+      old_links = hash_links Link.find_all(type, @root)
+        .each {|node| node.remove }
+
+      yield
+
+      new_links = hash_links Link.find_all(type, @root)
+      @dirty = old_links != new_links unless was_dirty
+    end
+
     def about
       cdata = nil
 
@@ -139,6 +151,10 @@ class ReaPack::Index
         "Try again after installing pandoc from <http://pandoc.org/>."
       ].join("\n")
     end
+
+    def hash_links(nodes)
+      nodes.map {|node| [node[Link::REL], node[Link::URL]] }
+    end
   end
 
   class Link
@@ -147,7 +163,17 @@ class ReaPack::Index
     URL = 'href'.freeze
 
     # the first type will be the default one
-    VALID_TYPES = [:website, :donation].freeze
+    VALID_TYPES = [:website, :screenshot, :donation].freeze
+
+    LINK_REGEX = /\A(.+?)(?:\s|=)(\w+?:\/\/.+)\Z/.freeze
+
+    def self.split(input)
+      if input =~ LINK_REGEX
+        [$1, $2]
+      else
+        [input]
+      end
+    end
 
     def self.from_node(node)
       name, url = node.text.to_s, node[URL].to_s

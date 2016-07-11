@@ -42,7 +42,6 @@ class ReaPack::Index
 
     def time=(new_time)
       return if new_time == time
-
       if new_time.nil?
         @node.remove_attribute TIME
       else
@@ -61,7 +60,7 @@ class ReaPack::Index
       yield
 
       new_sources = hash_sources children(Source::TAG)
-      @dirty = was_dirty || old_sources != new_sources
+      @dirty = old_sources != new_sources unless was_dirty
 
       raise Error, 'no files provided' if new_sources.empty?
     end
@@ -74,8 +73,8 @@ class ReaPack::Index
 
   private
     def hash_sources(nodes)
-      nodes.map {|src|
-        [src[Source::PLATFORM] || 'all', src[Source::FILE], src.content]
+      nodes.map {|node|
+        [node[Source::PLATFORM] || 'all', node[Source::FILE], node.content]
       }
     end
   end

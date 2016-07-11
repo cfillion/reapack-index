@@ -171,12 +171,7 @@ class ReaPack::Index
       return
     end
 
-    separator = input.index('=')
-    if separator&.< input.index('://')
-      input = [input[0...separator], input[separator+1..-1]]
-    end
-
-    link = @metadata.push_link type, *input
+    link = @metadata.push_link type, *Link.split(input)
 
     if link.is_new?
       log_change "new #{type} link"

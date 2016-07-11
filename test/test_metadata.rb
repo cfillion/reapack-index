@@ -58,6 +58,29 @@ class TestMetadata < MiniTest::Test
     assert_equal after.chomp, before.to_s
   end
 
+  def test_screenshot_link
+    before = make_node '<index/>'
+    after = <<-XML
+<index>
+  <metadata>
+    <link rel="screenshot">http://cfillion.tk</link>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+    assert_empty md.links(:donation)
+
+    md.push_link :screenshot, 'http://cfillion.tk'
+
+    links = md.links :screenshot
+    assert_equal 1, links.size
+    assert_equal links.first.url, links.first.name
+    assert_equal 'http://cfillion.tk', links.first.url
+
+    assert_equal after.chomp, before.to_s
+  end
+
   def test_invalid_type
     md = ReaPack::Index::Metadata.new make_node('<index/>')
 
@@ -123,6 +146,17 @@ class TestMetadata < MiniTest::Test
     assert_equal links[2].name, links[2].url
     assert_equal 'http://google.com', links[3].name
     assert_equal links[3].name, links[3].url
+  end
+
+  def test_split_link
+    assert_equal ['http://perdu.com'],
+      ReaPack::Index::Link.split('http://perdu.com')
+
+    assert_equal ['Hello World', 'http://perdu.com/a=b'],
+      ReaPack::Index::Link.split('Hello World=http://perdu.com/a=b')
+
+    assert_equal ['Hello World', 'http://perdu.com/a=b'],
+      ReaPack::Index::Link.split('Hello World http://perdu.com/a=b')
   end
 
   def test_invalid_link
@@ -243,6 +277,40 @@ class TestMetadata < MiniTest::Test
     assert_equal false, link2.is_new?
     assert_equal true, link2.modified?
 
+    assert_equal after.chomp, before.to_s
+  end
+
+  def test_replace_links
+    before = make_node <<-XML
+<index>
+  <metadata>
+    <link rel="website" href="http://cfillion.tk">A</link>
+    <link rel="donation">http://google.com</link>
+  </metadata>
+</index>
+    XML
+
+    after = <<-XML
+<index>
+  <metadata>
+    <link rel="donation">http://google.com</link>
+  </metadata>
+</index>
+    XML
+
+    md = ReaPack::Index::Metadata.new before
+    assert_equal false, md.modified?
+
+    md.replace_links :website do
+      link1 = md.push_link :website, 'A', 'http://cfillion.tk'
+    end
+
+    assert_equal false, md.modified?
+
+    md.replace_links :website do
+    end
+
+    assert_equal true, md.modified?
     assert_equal after.chomp, before.to_s
   end
 

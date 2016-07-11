@@ -23,6 +23,7 @@ class ReaPack::Index
       ],
       description: SIMPLE_TAG,
       documentation: MetaHeader::VALUE,
+      screenshot: MetaHeader::VALUE,
 
       # version-specific tags
       author: SIMPLE_TAG,
@@ -35,6 +36,7 @@ class ReaPack::Index
     HEADER_ALIASES = {
       [:reascript_name, :desc, :name] => :description,
       :instructions => :documentation,
+      :screenshots => :screenshot,
     }.freeze
 
     META_TYPES = [:extension, :data].freeze
@@ -56,6 +58,7 @@ class ReaPack::Index
 
       @pkg.description = @mh[:description]
       @pkg.metadata.about = @mh[:documentation]
+      eval_links :screenshot
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend
@@ -147,6 +150,15 @@ class ReaPack::Index
           src
         }
       }.flatten
+    end
+
+    def eval_links(type)
+      @pkg.metadata.replace_links type do
+        @mh[type].to_s.lines {|l|
+          l.chomp!
+          @pkg.metadata.push_link type, *Link.split(l)
+        }
+      end
     end
   end
 end
