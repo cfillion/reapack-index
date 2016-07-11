@@ -43,9 +43,6 @@ class ReaPack::Index
 
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
-
-      @mh[:metapackage] = META_TYPES.include?(pkg.type) if mh[:metapackage].nil?
-
       @cselector = @index.cdetector[pkg.path]
     end
 
@@ -73,7 +70,7 @@ class ReaPack::Index
           @cselector.clear
           sources = parse_provides @mh[:provides]
 
-          if !@mh[:metapackage] && sources.none? {|src| src.file.nil? }
+          if !metapackage? && sources.none? {|src| src.file.nil? }
             # add the package itself as a main source
             src = Source.new make_url(@pkg.path), true
             sources.unshift src
@@ -138,7 +135,7 @@ class ReaPack::Index
             line.url_template ? expanded : file
 
           if file == @pkg.path
-            src.main = !@mh[:metapackage] if line.main.nil?
+            src.main = !metapackage? if line.main.nil?
           else
             if line.url_template
               src.file = file
@@ -158,6 +155,14 @@ class ReaPack::Index
           l.chomp!
           @pkg.metadata.push_link type, *Link.split(l)
         }
+      end
+    end
+
+    def metapackage?
+      @metapackage ||= if @mh[:metapackage].nil?
+        META_TYPES.include? @pkg.type
+      else
+        @mh[:metapackage]
       end
     end
   end
