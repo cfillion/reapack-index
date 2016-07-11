@@ -24,6 +24,7 @@ class ReaPack::Index
       description: SIMPLE_TAG,
       about: MetaHeader::VALUE,
       screenshot: MetaHeader::VALUE,
+      donation: MetaHeader::VALUE,
 
       # version-specific tags
       author: SIMPLE_TAG,
@@ -56,6 +57,7 @@ class ReaPack::Index
       @pkg.description = @mh[:description]
       @pkg.metadata.about = @mh[:about]
       eval_links :screenshot
+      eval_links :donation
 
       @pkg.version @mh[:version] do |ver|
         next unless ver.is_new? || @index.amend

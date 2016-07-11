@@ -117,4 +117,10 @@ class TestScanner::TestValidation < MiniTest::Test
     error = assert_raises(ReaPack::Index::Error) { @scanner.run }
     assert_equal "missing value for tag 'screenshot'", error.message
   end
+
+  def test_donation
+    @mh[:donation] = true
+    error = assert_raises(ReaPack::Index::Error) { @scanner.run }
+    assert_equal "missing value for tag 'donation'", error.message
+  end
 end

@@ -135,4 +135,18 @@ class TestScanner < MiniTest::Test
       @scanner.run
     end
   end
+
+  def test_donation_links
+    @mh[:donation] = [
+      'https://www.paypal.me/cfillion',
+      'Label https://www.paypal.me/cfillion',
+    ].join "\n"
+
+    @mock.expect :push_link, nil, [:donation, 'https://www.paypal.me/cfillion']
+    @mock.expect :push_link, nil, [:donation, 'Label', 'https://www.paypal.me/cfillion']
+
+    @pkg.metadata.stub :push_link, -> (*arg) { @mock.push_link *arg } do
+      @scanner.run
+    end
+  end
 end
