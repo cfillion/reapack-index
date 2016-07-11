@@ -11,15 +11,13 @@ class ReaPack::Index
 
     def initialize(node)
       super
-      read_versions
-
       @metadata = Metadata.new node
     end
 
     attr_reader :metadata
 
     def modified?
-      super || @versions.values.any? {|ver| ver.modified? } || @metadata.modified?
+      super || versions.any? {|ver| ver.modified? } || @metadata.modified?
     end
 
     def category
@@ -62,10 +60,12 @@ class ReaPack::Index
     end
 
     def has_version?(name)
+      read_versions
       @versions.has_key? name
     end
 
     def versions
+      read_versions
       @versions.values
     end
 
@@ -85,11 +85,13 @@ class ReaPack::Index
 
   private
     def read_versions
-      @versions ||= {}
+      @versions || begin
+        @versions = {}
 
-      Version.find_all(@node).each {|ver|
-        @versions[ver.name] = ver
-      }
+        Version.find_all(@node).each {|ver|
+          @versions[ver.name] = ver
+        }
+      end
     end
   end
 end
