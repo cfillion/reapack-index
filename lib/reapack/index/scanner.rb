@@ -37,7 +37,6 @@ class ReaPack::Index
 
     HEADER_ALIASES = {
       [:reascript_name, :desc] => :description,
-      :instructions => :about,
     }.freeze
 
     META_TYPES = [:extension, :data].freeze

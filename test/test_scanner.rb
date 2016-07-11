@@ -94,8 +94,18 @@ class TestScanner < MiniTest::Test
     end
   end
 
-  def test_description_alias
+  def test_description_alias_rescript_name
     @mh[:reascript_name] = 'Right'
+    @mh[:description] = 'Wrong'
+    @mock.expect :description=, nil, ['Right']
+
+    @pkg.stub :description=, -> (arg) { @mock.description= arg } do
+      @scanner.run
+    end
+  end
+
+  def test_description_alias_desc
+    @mh[:desc] = 'Right'
     @mh[:description] = 'Wrong'
     @mock.expect :description=, nil, ['Right']
 
@@ -107,15 +117,6 @@ class TestScanner < MiniTest::Test
   def test_about
     @mh[:about] = '# Hello World'
     @mock.expect :about=, nil, ['# Hello World']
-
-    @pkg.metadata.stub :about=, -> (arg) { @mock.about= arg } do
-      @scanner.run
-    end
-  end
-
-  def test_about_alias_instructions
-    @mh[:instructions] = '# Chunky Bacon'
-    @mock.expect :about=, nil, ['# Chunky Bacon']
 
     @pkg.metadata.stub :about=, -> (arg) { @mock.about= arg } do
       @scanner.run
