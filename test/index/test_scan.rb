@@ -234,14 +234,14 @@ class TestIndex::Scan < MiniTest::Test
     assert_match 'desc="Right"', File.read(index.path)
   end
 
-  def test_documentation
+  def test_about
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
     index.files = ['Category/script.lua', 'Category/effect.jsfx']
 
     index.scan index.files.first, <<-IN
       @version 1.0
-      @documentation
+      @about
         # Hello World
     IN
 

@@ -207,10 +207,10 @@ class TestScanner < MiniTest::Test
       assert_equal "tag 'description' must be singleline", error.message
     end
 
-    def test_documentation
-      @mh[:documentation] = true
+    def test_about
+      @mh[:about] = true
       error = assert_raises(ReaPack::Index::Error) { @scanner.run }
-      assert_equal "missing value for tag 'documentation'", error.message
+      assert_equal "missing value for tag 'about'", error.message
     end
 
     def test_screenshot

@@ -22,7 +22,7 @@ class ReaPack::Index
         }
       ],
       description: SIMPLE_TAG,
-      documentation: MetaHeader::VALUE,
+      about: MetaHeader::VALUE,
       screenshot: MetaHeader::VALUE,
 
       # version-specific tags
@@ -35,7 +35,7 @@ class ReaPack::Index
 
     HEADER_ALIASES = {
       [:reascript_name, :desc, :name] => :description,
-      :instructions => :documentation,
+      :instructions => :about,
       :screenshots => :screenshot,
     }.freeze
 
@@ -57,7 +57,7 @@ class ReaPack::Index
       end
 
       @pkg.description = @mh[:description]
-      @pkg.metadata.about = @mh[:documentation]
+      @pkg.metadata.about = @mh[:about]
       eval_links :screenshot
 
       @pkg.version @mh[:version] do |ver|
