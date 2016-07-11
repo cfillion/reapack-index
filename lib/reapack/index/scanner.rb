@@ -35,7 +35,7 @@ class ReaPack::Index
     }.freeze
 
     HEADER_ALIASES = {
-      [:reascript_name, :desc, :name] => :description,
+      [:reascript_name, :desc] => :description,
       :instructions => :about,
       :screenshots => :screenshot,
     }.freeze
@@ -56,6 +56,7 @@ class ReaPack::Index
 
       @pkg.description = @mh[:description]
       @pkg.metadata.about = @mh[:about]
+
       eval_links :screenshot
       eval_links :donation
 
