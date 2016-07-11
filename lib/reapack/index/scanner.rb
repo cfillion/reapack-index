@@ -23,6 +23,7 @@ class ReaPack::Index
       ],
       description: SIMPLE_TAG,
       about: MetaHeader::VALUE,
+      website: MetaHeader::VALUE,
       screenshot: MetaHeader::VALUE,
       donation: MetaHeader::VALUE,
 
@@ -37,7 +38,6 @@ class ReaPack::Index
     HEADER_ALIASES = {
       [:reascript_name, :desc] => :description,
       :instructions => :about,
-      :screenshots => :screenshot,
     }.freeze
 
     META_TYPES = [:extension, :data].freeze
@@ -57,6 +57,7 @@ class ReaPack::Index
       @pkg.description = @mh[:description]
       @pkg.metadata.about = @mh[:about]
 
+      eval_links :website
       eval_links :screenshot
       eval_links :donation
 

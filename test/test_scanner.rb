@@ -122,6 +122,20 @@ class TestScanner < MiniTest::Test
     end
   end
 
+  def test_website_links
+    @mh[:website] = [
+      'http://cfillion.tk',
+      'Label http://cfillion.tk',
+    ].join "\n"
+
+    @mock.expect :push_link, nil, [:website, 'http://cfillion.tk']
+    @mock.expect :push_link, nil, [:website, 'Label', 'http://cfillion.tk']
+
+    @pkg.metadata.stub :push_link, -> (*arg) { @mock.push_link *arg } do
+      @scanner.run
+    end
+  end
+
   def test_screenshot_links
     @mh[:screenshot] = [
       'http://i.imgur.com/1.png',
