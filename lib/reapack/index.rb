@@ -185,15 +185,15 @@ class ReaPack::Index
     end
   end
 
-  def description
-    @metadata.description
+  def about
+    @metadata.about
   end
 
-  def description=(content)
-    old = @metadata.description
-    @metadata.description = content
+  def about=(content)
+    old = @metadata.about
+    @metadata.about = content
 
-    log_change 'modified metadata' if old != @metadata.description
+    log_change 'modified metadata' if old != @metadata.about
   end
 
   def url_template=(tpl)

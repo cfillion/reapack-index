@@ -36,7 +36,7 @@ class ReaPack::Index::CLI
     end
 
     if @opts[:dump_about]
-      print @index.description
+      print @index.about
       return true
     end
 
@@ -181,14 +181,14 @@ private
     path = @opts[:about]
 
     unless path
-      @index.description = String.new if @opts[:rmabout]
+      @index.about = String.new if @opts[:rmabout]
       return
     end
 
     log "converting #{path} into RTF..."
 
     # look for the file in the working directory, not on the repository root
-    @index.description = File.read(path)
+    @index.about = File.read(path)
   rescue Errno::ENOENT => e
     warn '--about: ' + e.message.sub(' @ rb_sysopen', '')
   rescue ReaPack::Index::Error => e

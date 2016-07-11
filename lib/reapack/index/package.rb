@@ -12,10 +12,14 @@ class ReaPack::Index
     def initialize(node)
       super
       read_versions
+
+      @metadata = Metadata.new node
     end
 
+    attr_reader :metadata
+
     def modified?
-      super || @versions.values.any? {|ver| ver.modified? }
+      super || @versions.values.any? {|ver| ver.modified? } || @metadata.modified?
     end
 
     def category

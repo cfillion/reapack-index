@@ -66,6 +66,18 @@ class TestPackage < MiniTest::Test
     assert_equal after, before.to_s
   end
 
+  def test_set_metadata
+    before = make_node '<reapack name="pkg"/>'
+
+    pkg = ReaPack::Index::Package.new before
+    refute pkg.modified?, 'package is modified'
+
+    pkg.metadata.about = 'hello world'
+    assert pkg.modified?, 'package is not modified'
+
+    assert_match /<metadata>.+<description>/m, before.to_s
+  end
+
   def test_versions
     before = make_node <<-XML
     <reapack name="pkg" type="script">

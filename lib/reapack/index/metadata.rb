@@ -9,6 +9,10 @@ class ReaPack::Index
       @root = parent.element_children.find {|node| node.name == TAG }
     end
 
+    def modified?
+      !!@dirty
+    end
+
     def links(type)
       Link.find_all(type, @root).map {|node| Link.from_node node }
         .select {|link| link.url.index('http') == 0 }
@@ -54,6 +58,8 @@ class ReaPack::Index
         node.content = url
       end
 
+      @dirty = true if link.modified?
+
       link
     end
 
@@ -64,9 +70,11 @@ class ReaPack::Index
 
       node.remove
       auto_remove
+
+      @dirty = true
     end
 
-    def description
+    def about
       cdata = nil
 
       if @root
@@ -77,18 +85,24 @@ class ReaPack::Index
       cdata ? cdata.content : String.new
     end
 
-    def description=(content)
-      return if content == description
+    def about=(content)
+      content = content.to_s
+
+      if !content.empty? && !content.start_with?("{\\rtf")
+        content = make_rtf content
+      end
+
+      return if content == self.about
 
       make_root
       desc = @root.element_children.find {|node| node.name == DESC }
+
+      @dirty = true
 
       if content.empty?
         desc.remove
         auto_remove
         return
-      elsif content.index("{\\rtf") != 0
-        content = make_rtf content
       end
 
       if desc

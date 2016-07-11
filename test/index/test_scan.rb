@@ -234,6 +234,29 @@ class TestIndex::Scan < MiniTest::Test
     assert_match 'desc="Right"', File.read(index.path)
   end
 
+  def test_documentation
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua', 'Category/effect.jsfx']
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @documentation
+        # Hello World
+    IN
+
+    index.scan index.files.last, <<-IN
+      @version 1.0
+      @instructions
+        # Chunky Bacon
+    IN
+
+    index.write!
+    contents = File.read index.path
+    assert_match 'Hello World\\par}', contents
+    assert_match 'Chunky Bacon\\par}', contents
+  end
+
   def test_extension
     index = ReaPack::Index.new @dummy_path
     index.files = ['Extensions/reapack.ext']
