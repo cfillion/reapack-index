@@ -17,6 +17,7 @@ class ReaPack::Index::CLI
 
     @index = ReaPack::Index.new expand_path(@opts[:output])
     @index.amend = @opts[:amend]
+    @index.strict = @opts[:strict]
     set_url_template
   rescue Rugged::OSError, Rugged::RepositoryError, ReaPack::Index::Error => e
     $stderr.puts e.message

@@ -8,16 +8,17 @@ class ReaPack::Index::CLI
 
   DEFAULTS = {
     check: false,
-    scan: [],
-    rebuild: false,
-    verbose: false,
-    warnings: true,
+    commit: nil,
+    ignore: [],
+    output: './index.xml',
     progress: true,
     quiet: false,
-    commit: nil,
-    output: './index.xml',
-    ignore: [],
+    rebuild: false,
+    scan: [],
+    strict: false,
     url_template: 'auto',
+    verbose: false,
+    warnings: true,
   }.freeze
 
   def read_config
@@ -80,14 +81,18 @@ class ReaPack::Index::CLI
         opts[:ignore] << expand_path(path)
       end
 
-      op.on '-U', "--url-template TEMPLATE=#{DEFAULTS[:url_template]}",
-          'Set the template for implicit download links' do |tpl|
-        opts[:url_template] = tpl.strip
-      end
-
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
         opts[:output] = file.strip
+      end
+
+      op.on '--[no-]strict', 'Enable strict validation mode' do |bool|
+        opts[:strict] = bool
+      end
+
+      op.on '-U', "--url-template TEMPLATE=#{DEFAULTS[:url_template]}",
+          'Set the template for implicit download links' do |tpl|
+        opts[:url_template] = tpl.strip
       end
 
       op.separator 'Repository metadata:'

@@ -426,4 +426,18 @@ processing [a-f0-9]{7}: third commit
   def test_no_arguments
     wrapper ['--scan'] do; end
   end
+
+  def test_strict_mode
+    wrapper do
+      refute @cli.index.strict
+    end
+
+    wrapper ['--no-strict'] do
+      refute @cli.index.strict
+    end
+
+    wrapper ['--strict'] do
+      assert @cli.index.strict
+    end
+  end
 end

@@ -34,8 +34,9 @@ Modes:
 Indexer options:
     -a, --[no-]amend                 Reindex existing versions
     -i, --ignore PATH                Don't check or index any file starting with PATH
-    -U, --url-template TEMPLATE=auto Set the template for implicit download links
     -o, --output FILE=./index.xml    Set the output filename and path for the index
+        --[no-]strict                Enable strict validation mode
+    -U, --url-template TEMPLATE=auto Set the template for implicit download links
 Repository metadata:
     -n, --name NAME                  Set the name shown in ReaPack for this repository
     -l, --link LINK                  Add or remove a website link

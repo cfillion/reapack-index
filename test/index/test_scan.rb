@@ -355,4 +355,17 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_strict_mode
+    index = ReaPack::Index.new @dummy_path
+    index.strict = true
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua']
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, "@version 1.0\n@qwerty"
+    end
+
+    assert_equal "unknown tag 'qwerty'", error.message
+  end
 end

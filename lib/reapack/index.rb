@@ -41,7 +41,7 @@ class ReaPack::Index
   FS_ROOT = File.expand_path('/').freeze
 
   attr_reader :path, :url_template, :cdetector
-  attr_accessor :amend, :commit, :files, :time
+  attr_accessor :amend, :commit, :files, :time, :strict
 
   class << self
     def is_type?(input)
@@ -107,6 +107,7 @@ class ReaPack::Index
     return unless type
 
     mh = MetaHeader.parse contents
+    mh.strict = @strict
 
     if mh[:noindex]
       remove path
