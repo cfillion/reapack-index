@@ -40,6 +40,7 @@ Indexer options:
 Repository metadata:
     -n, --name NAME                  Set the name shown in ReaPack for this repository
     -l, --link LINK                  Add or remove a website link
+        --screenshot-link LINK       Add or remove a screenshot link
         --donation-link LINK         Add or remove a donation link
         --ls-links                   Display the link list then exit
     -A, --about=FILE                 Set the about content from a file

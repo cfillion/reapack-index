@@ -26,8 +26,20 @@ class TestCLI::Metadata < MiniTest::Test
     end
   end
 
+  def test_screenshot_link
+    wrapper ['--screenshot-link', 'Link Label http://cfillion.tk'] do
+      assert_output "1 new screenshot link, empty index\n" do
+        assert_equal true, @cli.run
+      end
+
+      assert_match 'rel="screenshot" href="http://cfillion.tk">Link Label</link>',
+        read_index
+    end
+  end
+
   def test_invalid_link
     wrapper ['--link', 'shinsekai yori', '--donation-link', 'hello world',
+             '--screenshot-link', 'chunky bacon',
              '--link', 'http://cfillion.tk'] do
       stdout, stderr = capture_io do
         assert_equal true, @cli.run
@@ -36,6 +48,7 @@ class TestCLI::Metadata < MiniTest::Test
       assert_equal "1 new website link, empty index\n", stdout
       assert_match /warning: --link: invalid link 'shinsekai yori'/i, stderr
       assert_match /warning: --donation-link: invalid link 'hello world'/i, stderr
+      assert_match /warning: --screenshot-link: invalid link 'chunky bacon'/i, stderr
       assert_match 'rel="website">http://cfillion.tk</link>', read_index
     end
   end

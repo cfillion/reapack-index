@@ -106,6 +106,11 @@ class ReaPack::Index::CLI
         opts[:links] << [:website, link.strip]
       end
 
+      op.on '--screenshot-link LINK', 'Add or remove a screenshot link' do |link|
+        opts[:links] ||= Array.new
+        opts[:links] << [:screenshot, link.strip]
+      end
+
       op.on '--donation-link LINK', 'Add or remove a donation link' do |link|
         opts[:links] ||= Array.new
         opts[:links] << [:donation, link.strip]

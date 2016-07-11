@@ -146,6 +146,8 @@ private
           '--link'
         when :donation
           '--donation-link'
+        when :screenshot
+          '--screenshot-link'
         end
 
         warn "#{opt}: " + e.message
