@@ -9,34 +9,42 @@ class TestIndex < MiniTest::Test
   end
 
   def test_type_of
-    assert_equal [nil, nil, nil, :script, :script, :extension, :effect, :data],
-      [
-        'src/main.cpp', 'src/noext', 'in_root',
-        'Cat/test.lua', 'Cat/test.eel',
-        'Cat/test.ext',
-        'Cat/test.jsfx',
-        'Cat/test.data',
-      ].map {|fn| ReaPack::Index.type_of fn }
+    {
+      'src/main.cpp'   => nil,
+      'src/noext'      => nil,
+      'in_root'        => nil,
+      'Cat/test.lua'   => :script,
+      'Cat/test.eel'   => :script,
+      'Cat/test.py'    => :script,
+      'Cat/test.ext'   => :extension,
+      'Cat/test.jsfx'  => :effect,
+      'Cat/test.data'  => :data,
+    }.each {|fn, type|
+      actual = ReaPack::Index.type_of fn
+      assert_equal type, actual,
+        "%s was not of type %s, got %s instead" %
+          [fn.inspect, type.inspect, actual.inspect]
+    }
   end
 
   def test_resolve_type
-    expected = [
-      nil,
-      :script, :script, :script,
-      :effect, :effect, :effect,
-      :extension, :extension,
-      :data,
-    ]
-
-    actual = [
-      'hello',
-      :script, 'lua', 'eel',
-      'effect', :jsfx, 'jsfx',
-      'extension', 'ext',
-      'data',
-    ].map {|fn| ReaPack::Index.resolve_type fn }
-
-    assert_equal expected, actual
+    {
+      'hello'     => nil,
+      :script     => :script,
+      'lua'       => :script,
+      'eel'       => :script,
+      'effect'    => :effect,
+      :jsfx       => :effect,
+      'jsfx'      => :effect,
+      'extension' => :extension,
+      'ext'       => :extension,
+      'data'      => :data,
+    }.each {|input, type|
+      actual = ReaPack::Index.resolve_type input
+      assert_equal type, actual,
+        "%s was not of type %s, got %s instead" %
+          [input.inspect, type.inspect, actual.inspect]
+    }
   end
 
   def test_url_template

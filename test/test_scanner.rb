@@ -81,7 +81,7 @@ class TestScanner < MiniTest::Test
 
   def test_metapackage_off
     @mh[:metapackage] = false
-    @pkg.type = :extension
+    @pkg.type = ReaPack::Index::Scanner::META_TYPES.first
     @scanner.run
   end
 
