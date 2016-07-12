@@ -179,4 +179,31 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_theme
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Themes/Default_4.0 + width.theme']
+
+    index.scan index.files.first, <<-IN
+    @version 1.0
+    @provides Default_4.0_width.ReaperThemeZip http://stash.reaper.fm/27310/$path
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Themes">
+    <reapack name="Default_4.0 + width.theme" type="theme">
+      <version name="1.0">
+        <source file="Default_4.0_width.ReaperThemeZip">http://stash.reaper.fm/27310/Default_4.0_width.ReaperThemeZip</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
 end

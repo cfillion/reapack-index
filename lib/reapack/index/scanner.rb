@@ -39,7 +39,7 @@ class ReaPack::Index
       [:reascript_name, :desc] => :description,
     }.freeze
 
-    META_TYPES = [:extension, :data].freeze
+    META_TYPES = [:extension, :data, :theme].freeze
 
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index

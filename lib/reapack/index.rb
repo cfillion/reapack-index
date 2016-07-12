@@ -36,6 +36,7 @@ class ReaPack::Index
     extension: %w{ext},
     effect: %w{jsfx},
     data: %w{data},
+    theme: %w{theme},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

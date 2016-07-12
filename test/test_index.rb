@@ -19,6 +19,7 @@ class TestIndex < MiniTest::Test
       'Cat/test.ext'   => :extension,
       'Cat/test.jsfx'  => :effect,
       'Cat/test.data'  => :data,
+      'Cat/test.theme' => :theme,
     }.each {|fn, type|
       actual = ReaPack::Index.type_of fn
       assert_equal type, actual,
@@ -39,6 +40,7 @@ class TestIndex < MiniTest::Test
       'extension' => :extension,
       'ext'       => :extension,
       'data'      => :data,
+      'theme'     => :theme,
     }.each {|input, type|
       actual = ReaPack::Index.resolve_type input
       assert_equal type, actual,
