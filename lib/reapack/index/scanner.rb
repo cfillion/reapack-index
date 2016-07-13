@@ -155,8 +155,8 @@ class ReaPack::Index
     def eval_links(type)
       @pkg.metadata.replace_links type do
         @mh[type].to_s.lines {|l|
-          l.chomp!
-          @pkg.metadata.push_link type, *Link.split(l)
+          l.strip!
+          @pkg.metadata.push_link type, *Link.split(l) unless l.empty?
         }
       end
     end

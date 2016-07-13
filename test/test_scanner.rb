@@ -140,6 +140,7 @@ class TestScanner < MiniTest::Test
   def test_screenshot_links
     @mh[:screenshot] = [
       'http://i.imgur.com/1.png',
+      '',
       'Label http://i.imgur.com/2.png',
     ].join "\n"
 
