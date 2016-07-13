@@ -76,4 +76,9 @@ class TestProvides < MiniTest::Test
         end.message
       }
   end
+
+  def test_empty_line
+    assert_nil ReaPack::Index::Provides.parse(String.new)
+    assert_equal 2, ReaPack::Index::Provides.parse_each("a\n\nb").to_a.size
+  end
 end

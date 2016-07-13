@@ -14,7 +14,7 @@ class ReaPack::Index
     class << self
       def parse_each(input)
         if block_given?
-          input.to_s.lines.map {|line| yield parse(line) }
+          input.to_s.lines.map {|line| i = parse(line) and yield i }
         else
           enum_for :parse_each, input
         end
@@ -22,6 +22,8 @@ class ReaPack::Index
 
       def parse(line)
         m = line.strip.match PROVIDES_REGEX
+        return unless m
+
         options, pattern, url_tpl = m[:options], m[:file], m[:url]
 
         instance = self.new pattern, url_tpl
