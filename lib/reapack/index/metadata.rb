@@ -165,7 +165,7 @@ class ReaPack::Index
     # the first type will be the default one
     VALID_TYPES = [:website, :screenshot, :donation].freeze
 
-    LINK_REGEX = /\A(.+?)(?:\s|=)(\w+?:\/\/.+)\Z/.freeze
+    LINK_REGEX = /\A(.+?)(?:\s+|=)(\w+?:\/\/.+)\Z/.freeze
 
     def self.split(input)
       if input =~ LINK_REGEX

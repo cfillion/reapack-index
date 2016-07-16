@@ -157,6 +157,9 @@ class TestMetadata < MiniTest::Test
 
     assert_equal ['Hello World', 'http://perdu.com/a=b'],
       ReaPack::Index::Link.split('Hello World http://perdu.com/a=b')
+
+    assert_equal ['Hello World', 'http://perdu.com/a=b'],
+      ReaPack::Index::Link.split('Hello World   http://perdu.com/a=b')
   end
 
   def test_invalid_link
