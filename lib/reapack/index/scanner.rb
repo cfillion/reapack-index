@@ -21,6 +21,7 @@ class ReaPack::Index
           'segment overflow (%d > %d)' % [s, VERSION_SEGMENT_MAX] if s
         }
       ],
+      noindex: MetaHeader::BOOLEAN,
       description: SIMPLE_TAG,
       about: MetaHeader::VALUE,
       website: MetaHeader::VALUE,
@@ -31,7 +32,6 @@ class ReaPack::Index
       author: SIMPLE_TAG,
       changelog: MetaHeader::VALUE,
       provides: [MetaHeader::VALUE, PROVIDES_VALIDATOR],
-      noindex: MetaHeader::BOOLEAN,
       metapackage: MetaHeader::BOOLEAN,
     }.freeze
 
