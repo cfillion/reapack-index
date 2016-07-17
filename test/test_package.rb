@@ -95,7 +95,7 @@ class TestPackage < MiniTest::Test
     assert_equal '1.0', versions.first.name
   end
 
-  def test_get_or_create_version
+  def test_new_version
     before = make_node <<-XML
     <reapack name="pkg" type="script">
       <version name="1.0" />
@@ -118,6 +118,23 @@ class TestPackage < MiniTest::Test
     assert_equal [[ver11]], block_result
 
     assert pkg.has_version?('1.1'), 'version 1.1 not found'
+  end
+
+  def test_new_version_similar
+    before = make_node '<reapack name="pkg" type="script"/>'
+
+    pkg = ReaPack::Index::Package.new before
+    pkg.version '1.01'
+
+    error = assert_raises ReaPack::Index::Error do
+      pkg.version '1.1'
+    end
+    assert_equal 'version 1.1 is a duplicate of version 1.01', error.message
+
+    error = assert_raises ReaPack::Index::Error do
+      pkg.version '1//1'
+    end
+    assert_equal 'version 1//1 is a duplicate of version 1.01', error.message
   end
 
   def test_category_and_path

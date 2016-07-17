@@ -73,6 +73,17 @@ class ReaPack::Index
       if has_version? name
         ver = @versions[name]
       else
+        @versions.each_key {|other|
+          normalized = [other.dup, name.dup].each {|ver|
+            ver.gsub! /(?<![\d\w])0+/, ''
+            ver.gsub! /[^\d\w]+/, '.'
+          }
+
+          if normalized.uniq.size < 2
+            raise Error, "version #{name} is a duplicate of version #{other}"
+          end
+        }
+
         ver = @versions[name] = Version.create name, @node
       end
 
