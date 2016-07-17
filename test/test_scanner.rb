@@ -124,7 +124,7 @@ class TestScanner < MiniTest::Test
   end
 
   def test_website_links
-    @mh[:website] = [
+    @mh[:links] = [
       'http://cfillion.tk',
       'Label http://cfillion.tk',
     ].join "\n"

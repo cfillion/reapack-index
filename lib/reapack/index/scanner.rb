@@ -21,22 +21,24 @@ class ReaPack::Index
           'segment overflow (%d > %d)' % [s, VERSION_SEGMENT_MAX] if s
         }
       ],
-      noindex: MetaHeader::BOOLEAN,
-      description: SIMPLE_TAG,
       about: MetaHeader::VALUE,
-      website: MetaHeader::VALUE,
-      screenshot: MetaHeader::VALUE,
+      description: SIMPLE_TAG,
       donation: MetaHeader::VALUE,
+      link: MetaHeader::VALUE,
+      noindex: MetaHeader::BOOLEAN,
+      screenshot: MetaHeader::VALUE,
 
       # version-specific tags
       author: SIMPLE_TAG,
       changelog: MetaHeader::VALUE,
-      provides: [MetaHeader::VALUE, PROVIDES_VALIDATOR],
       metapackage: MetaHeader::BOOLEAN,
+      provides: [MetaHeader::VALUE, PROVIDES_VALIDATOR],
     }.freeze
 
     HEADER_ALIASES = {
       [:reascript_name, :desc] => :description,
+      :links => :link,
+      :screenshots => :screenshot,
     }.freeze
 
     META_TYPES = [:extension, :data, :theme].freeze
@@ -56,7 +58,7 @@ class ReaPack::Index
       @pkg.description = @mh[:description]
       @pkg.metadata.about = @mh[:about]
 
-      eval_links :website
+      eval_links :website, tag: :link
       eval_links :screenshot
       eval_links :donation
 
@@ -152,11 +154,13 @@ class ReaPack::Index
       }.flatten
     end
 
-    def eval_links(type)
+    def eval_links(type, tag: nil)
+      tag ||= type
+
       @pkg.metadata.replace_links type do
-        @mh[type].to_s.lines {|l|
-          l.strip!
-          @pkg.metadata.push_link type, *Link.split(l) unless l.empty?
+        @mh[tag].to_s.lines {|line|
+          line.strip!
+          @pkg.metadata.push_link type, *Link.split(line) unless line.empty?
         }
       end
     end
