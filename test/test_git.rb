@@ -162,4 +162,11 @@ class TestGit < MiniTest::Test
     git = ReaPack::Index::Git.new path # should not throw
     assert_equal @git.path, git.path
   end
+
+  def test_inspect_commit
+    c = @git.create_commit 'message', []
+    assert_match c.class.name, c.inspect
+    assert_match c.id, c.inspect
+    assert_match c.message, c.inspect
+  end
 end
