@@ -38,6 +38,12 @@ class ReaPack::Index
       Commit.new c, @repo if c
     end
 
+    def last_commit_for(file)
+      commits.reverse_each.find {|c|
+        c.each_diff.any? {|d| d.file == file }
+      }
+    end
+
     def guess_url_template
       remote = @repo.remotes['origin']
       return unless remote
@@ -146,6 +152,10 @@ class ReaPack::Index
 
     def ==(o)
       id == o.id
+    end
+
+    def inspect
+      "#<#{self.class} #{id} #{message}>"
     end
 
   private

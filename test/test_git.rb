@@ -129,6 +129,16 @@ class TestGit < MiniTest::Test
     }
   end
 
+  def test_last_commit_for_file
+    c1 = @git.create_commit 'first commit', [mkfile('hello/world')]
+    c2 = @git.create_commit 'second commit', [mkfile('hello/world', 'modified')]
+    c3 = @git.create_commit 'third commit', [mkfile('chunky/bacon')]
+
+    assert_equal c2, @git.last_commit_for('hello/world')
+    assert_equal c3, @git.last_commit_for('chunky/bacon')
+    assert_nil @git.last_commit_for('foo/bar')
+  end
+
   def test_multibyte_filename
     filename = "\342\200\224.lua"
 

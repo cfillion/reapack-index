@@ -337,6 +337,29 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
+  def test_scan_last_commit_of_file
+    options = [ '--scan', 'cat/test1.lua']
+
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1')]
+
+      @git.create_commit 'second commit',
+        [mkfile('cat/test1.lua', '@version 2')]
+
+      @git.create_commit 'third commit',
+        [mkfile('cat/test2.lua', '@version 3')]
+    }
+
+    wrapper options, setup: setup do
+      capture_io { assert_equal true, @cli.run }
+
+      refute_match 'version name="1"', read_index, 'The initial commit was scanned'
+      assert_match 'version name="2"', read_index
+      refute_match 'test2.lua', read_index, 'The third commit was scanned'
+    end
+  end
+
   def test_reset
     options = ['--scan']
 
@@ -376,7 +399,7 @@ processing [a-f0-9]{7}: third commit
       wrapper ['--scan', hash] do
         @git.create_commit 'initial commit', [mkfile('README.md')]
 
-        assert_output nil, /--scan: bad revision: #{Regexp.escape hash}/i do
+        assert_output nil, /--scan: bad file or revision: '#{Regexp.escape hash}'/i do
           assert_equal false, @cli.run
         end
       end

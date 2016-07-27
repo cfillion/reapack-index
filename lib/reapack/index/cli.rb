@@ -87,8 +87,8 @@ private
       @index.auto_bump_commit = false
 
       @opts[:scan].map {|hash|
-        @git.get_commit hash or begin
-          $stderr.puts '--scan: bad revision: %s' % @opts[:scan]
+        @git.last_commit_for(hash) or @git.get_commit(hash) or begin
+          $stderr.puts "--scan: bad file or revision: '%s'" % @opts[:scan]
           @exit = false
           nil
         end

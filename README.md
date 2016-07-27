@@ -29,7 +29,7 @@ reapack-index [options] [path-to-your-repository]
 ```
 Modes:
     -c, --check                      Test every package including uncommited changes and exit
-    -s, --scan [COMMIT]              Scan new commits (default) or specific commits
+    -s, --scan [FILE|COMMIT]         Scan new commits (default), a file or a commit
         --rebuild                    Clear the index and rescan the whole git history
 Indexer options:
     -a, --[no-]amend                 Reindex existing versions
