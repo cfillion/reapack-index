@@ -84,6 +84,8 @@ private
     elsif @opts[:scan].empty?
       @git.commits_since @index.last_commit
     else
+      @index.auto_bump_commit = false
+
       @opts[:scan].map {|hash|
         @git.get_commit hash or begin
           $stderr.puts '--scan: bad revision: %s' % @opts[:scan]

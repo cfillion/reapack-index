@@ -92,6 +92,26 @@ class TestIndex::Scan < MiniTest::Test
     refute_match '<category', contents
   end
 
+  def test_auto_bump_commit_enabled
+    index = ReaPack::Index.new @real_path
+    index.commit = @commit
+
+    assert_equal true, index.auto_bump_commit
+    refute_equal @commit, index.last_commit
+
+    index.scan 'Category Name/Hello World.lua', '@version 1.0'
+    assert_equal @commit, index.last_commit
+  end
+
+  def test_auto_bump_commit_disabled
+    index = ReaPack::Index.new @real_path
+    index.commit = @commit
+    index.auto_bump_commit = false
+
+    index.scan 'Category Name/Hello World.lua', '@version 1.0'
+    refute_equal @commit, index.last_commit
+  end
+
   def test_strict_mode
     index = ReaPack::Index.new @dummy_path
     index.strict = true

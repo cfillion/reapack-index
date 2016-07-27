@@ -175,6 +175,7 @@ class TestIndex < MiniTest::Test
     index.write @dummy_path
     contents = File.read @dummy_path
 
+    assert_equal @commit, index.last_commit
     assert_match @commit, contents
     refute_match '<category', contents
   end

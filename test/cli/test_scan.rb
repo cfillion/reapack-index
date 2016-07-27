@@ -316,6 +316,24 @@ processing [a-f0-9]{7}: third commit
       refute_match 'test1.lua', read_index, 'The initial commit was scanned'
       assert_match 'test2.lua', read_index
       assert_match 'test3.lua', read_index
+      assert_match @git.last_commit.id, read_index
+    end
+  end
+
+  def test_manual_disable_commit_bump
+    options = ['--scan', nil]
+
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 2.0')]
+      options[1] = @git.last_commit.id
+    }
+
+    wrapper options, setup: setup do
+      capture_io { assert_equal true, @cli.run }
+
+      assert_equal false, @cli.index.auto_bump_commit
+      refute_match %Q[commit="#{options[1]}"], read_index
     end
   end
 

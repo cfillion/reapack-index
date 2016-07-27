@@ -43,6 +43,7 @@ class ReaPack::Index
 
   attr_reader :path, :url_template, :cdetector
   attr_accessor :amend, :commit, :files, :time, :strict
+  attr_accessor :auto_bump_commit
 
   class << self
     def is_type?(input)
@@ -73,6 +74,7 @@ class ReaPack::Index
     @changed_nodes = []
     @files = []
     @path = path
+    @auto_bump_commit = true
 
     @cdetector = ConflictDetector.new
 
@@ -146,7 +148,7 @@ class ReaPack::Index
       end
     }
 
-    bump_commit
+    bump_commit if @auto_bump_commit
   end
 
   def remove(path)
@@ -158,7 +160,7 @@ class ReaPack::Index
     pkg.remove
     cat.remove if cat.empty?
 
-    bump_commit
+    bump_commit if @auto_bump_commit
     log_change 'removed package'
   end
 
