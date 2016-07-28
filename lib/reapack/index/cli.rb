@@ -87,7 +87,11 @@ private
       @index.auto_bump_commit = false
 
       @opts[:scan].map {|hash|
-        @git.last_commit_for(hash) or @git.get_commit(hash) or begin
+        if c = @git.last_commit_for(hash)
+          [c, hash]
+        elsif c = @git.get_commit(hash)
+          c
+        else
           $stderr.puts "--scan: bad file or revision: '%s'" % @opts[:scan]
           @exit = false
           nil
@@ -97,12 +101,12 @@ private
 
     unless commits.empty?
       progress_wrapper commits.size do
-        commits.each {|commit| process_commit commit }
+        commits.each {|args| process_commit *args }
       end
     end
   end
 
-  def process_commit(commit)
+  def process_commit(commit, file = nil)
     if @opts[:verbose]
       log 'processing %s: %s' % [commit.short_id, commit.summary]
     end
@@ -113,7 +117,8 @@ private
 
     commit.each_diff
       .select {|diff|
-        (not ignored? expand_path(diff.file)) &&
+        (file.nil? || diff.file == file) &&
+          (not ignored? expand_path(diff.file)) &&
           ReaPack::Index.type_of(diff.file)
       }
       .sort_by {|diff|

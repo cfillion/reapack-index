@@ -337,18 +337,20 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
-  def test_scan_last_commit_of_file
+  def test_scan_file
     options = [ '--scan', 'cat/test1.lua']
 
     setup = proc {
       @git.create_commit 'initial commit',
         [mkfile('cat/test1.lua', '@version 1')]
 
-      @git.create_commit 'second commit',
-        [mkfile('cat/test1.lua', '@version 2')]
+      @git.create_commit 'second commit', [
+        mkfile('cat/test1.lua', '@version 2'),
+        mkfile('cat/test2.lua', '@version 2.2'),
+      ]
 
       @git.create_commit 'third commit',
-        [mkfile('cat/test2.lua', '@version 3')]
+        [mkfile('cat/test3.lua', '@version 3')]
     }
 
     wrapper options, setup: setup do
@@ -356,7 +358,8 @@ processing [a-f0-9]{7}: third commit
 
       refute_match 'version name="1"', read_index, 'The initial commit was scanned'
       assert_match 'version name="2"', read_index
-      refute_match 'test2.lua', read_index, 'The third commit was scanned'
+      refute_match 'test2.lua', read_index, 'test2.lua was indexed'
+      refute_match 'test3.lua', read_index, 'The third commit was scanned'
     end
   end
 
