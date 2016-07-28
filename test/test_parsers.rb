@@ -23,13 +23,34 @@ class TestParsers < MiniTest::Test
  Test\x97
     IN
 
-    changelog = <<-LOG
-+ Line 3
-+ Line 4
-    LOG
+    assert_equal '1.1', mh[:version]
+    assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
+  end
+
+  def test_wordpress_no_date
+    mh = MetaHeader.new <<-IN
+/**
+ * Version: 1.1
+ */
+
+/**
+ * Changelog:
+ * v1.2
+\t+ Line 1
+\t+ Line 2
+ * v1.1
+\t+ Line 3
+\t+ Line 4
+ * v1.0
+\t+ Line 5
+\t+ Line 6
+ */
+
+ Test\x97
+    IN
 
     assert_equal '1.1', mh[:version]
-    assert_equal changelog.chomp, mh[:changelog]
+    assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
   end
 
   def test_wordpress_noprefix
@@ -55,12 +76,7 @@ v1.0 (2012-01-01)
  Test\x97
     IN
 
-    changelog = <<-LOG
-+ Line 3
-+ Line 4
-    LOG
-
     assert_equal '1.1', mh[:version]
-    assert_equal changelog.chomp, mh[:changelog]
+    assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
   end
 end
