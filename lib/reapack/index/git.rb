@@ -13,7 +13,7 @@ class ReaPack::Index
     end
 
     def commits
-      commits_since nil
+      @commits ||= commits_since nil
     end
 
     def commits_since(sha)
@@ -93,6 +93,7 @@ class ReaPack::Index
 
       # force-reload the repository
       @repo = Rugged::Repository.discover path
+      @commits = nil
 
       get_commit c
     end
@@ -151,7 +152,7 @@ class ReaPack::Index
     end
 
     def ==(o)
-      id == o.id
+      o && id == o.id
     end
 
     def inspect
