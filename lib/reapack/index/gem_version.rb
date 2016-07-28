@@ -1,5 +1,5 @@
 module ReaPack
   class Index
-    VERSION = '1.1beta2'
+    VERSION = '1.1beta3'
   end
 end
