@@ -83,7 +83,7 @@ class ReaPack::Index
         end
       }
 
-      c = Rugged::Commit.create @repo, \
+      hash = Rugged::Commit.create @repo, \
         tree: new_index.write_tree(@repo),
         message: message,
         parents: [target].compact,
@@ -93,9 +93,10 @@ class ReaPack::Index
 
       # force-reload the repository
       @repo = Rugged::Repository.discover path
-      @commits = nil
 
-      get_commit c
+      commit = get_commit hash
+      @commits << commit if @commits
+      commit
     end
 
   private
