@@ -116,8 +116,8 @@ class ReaPack::Index
       @parent = commit.parents.first
     end
 
-    def each_diff
-      return enum_for :each_diff unless block_given?
+    def each_diff(&block)
+      return @diffs.each &block if @diffs
 
       if @parent
         diff = @parent.diff id
@@ -125,7 +125,8 @@ class ReaPack::Index
         diff = @commit.diff
       end
 
-      diff.each_delta {|delta| yield Git::Diff.new(delta, @parent.nil?, @repo) }
+      @diffs ||= diff.each_delta.map {|delta| Git::Diff.new(delta, @parent.nil?, @repo) }
+      @diffs.each &block
     end
 
     def id
