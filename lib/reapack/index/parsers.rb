@@ -8,6 +8,7 @@ class WordpressChangelog < MetaHeader::Parser
   VERSION = /\A[\s\*]*v([\d\.]+)(?:\s+(.+))?\Z/.freeze
 
   def parse(input)
+    input = input.read
     input.encode! Encoding::UTF_8, invalid: :replace
 
     ver, changes = header[:version], header[:changelog]
