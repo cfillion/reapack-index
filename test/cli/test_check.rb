@@ -66,7 +66,7 @@ Finished checks for 2 packages with 1 failure
     wrapper ['--check'], setup: setup do
       mkfile 'Chunky/Bacon.lua', "@version 1.0\n@provides ../background.png"
 
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
     end
   end
 
@@ -112,9 +112,7 @@ Finished checks for 1 package with 0 failures
       mkfile 'Directory/test/1.lua', 'konnichiwa'
       mkfile 'Directory/test2.lua', '@version 1.0'
 
-      assert_output nil, expected do
-        @cli.run
-      end
+      assert_output(nil, expected) { @cli.run }
     end
   end
 
@@ -148,9 +146,7 @@ Finished checks for 1 package with 0 failures
 
   def test_unset_name_warning
     wrapper ['--check'] do
-      assert_output nil, /index is unnamed/i do
-        @cli.run
-      end
+      assert_output(nil, /index is unnamed/i) { @cli.run }
     end
   end
 
@@ -187,7 +183,7 @@ Finished checks for 2 packages with 1 failure
       wrapper ['--check'], setup: setup do
         mkfile 'test.lua', '@version 1.0'
 
-        assert_equal true, @cli.run
+        @cli.run
       end
     end
 

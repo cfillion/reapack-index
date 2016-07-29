@@ -2,18 +2,13 @@ class ReaPack::Index::CLI
   attr_reader :index
 
   def initialize(argv = [])
-    @opts = parse_options(argv)
-    path = argv.last || Dir.pwd
+    @opts = parse_options argv
 
-    return unless @exit.nil?
-
-    @git = ReaPack::Index::Git.new path
+    @git = ReaPack::Index::Git.new argv.first || Dir.pwd
     log "found git repository in #{@git.path}"
 
     @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
-
     @opts = DEFAULTS.merge @opts
-    return unless @exit.nil?
 
     log Hash[@opts.sort].inspect
 
@@ -23,12 +18,10 @@ class ReaPack::Index::CLI
     set_url_template
   rescue Rugged::OSError, Rugged::RepositoryError, ReaPack::Index::Error => e
     $stderr.puts e.message
-    @exit = false
+    throw :stop, false
   end
 
   def run
-    return @exit unless @exit.nil?
-
     if @opts[:check]
       return do_check
     end
@@ -47,7 +40,7 @@ class ReaPack::Index::CLI
 
     unless @index.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
-      return success_code
+      return
     end
 
     # changelog will be cleared by Index#write!
@@ -56,15 +49,10 @@ class ReaPack::Index::CLI
 
     @index.write!
     commit changelog
-
-    success_code
+    true
   end
 
 private
-  def success_code
-    @exit.nil? ? true : @exit
-  end
-
   def set_url_template
     tpl = @opts[:url_template]
     is_custom = tpl != DEFAULTS[:url_template]
@@ -95,8 +83,7 @@ private
           c
         else
           $stderr.puts "--scan: bad file or revision: '%s'" % @opts[:scan]
-          @exit = false
-          nil
+          throw :stop, false
         end
       }.compact
     end

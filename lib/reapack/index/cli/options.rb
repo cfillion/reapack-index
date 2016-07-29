@@ -171,14 +171,12 @@ class ReaPack::Index::CLI
 
       op.on_tail '-v', '--version', 'Display version information' do
         puts op.ver
-        @exit = true
-        return opts
+        throw :stop, true
       end
 
       op.on_tail '-h', '--help', 'Prints this help' do
         puts op
-        @exit = true
-        return opts
+        throw :stop, true
       end
     end.parse! args
 
@@ -186,7 +184,6 @@ class ReaPack::Index::CLI
   rescue OptionParser::ParseError => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"
     $stderr.puts "Try '#{PROGRAM_NAME} --help' for more information."
-    @exit = false
-    opts
+    throw :stop, false
   end
 end

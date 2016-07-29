@@ -5,22 +5,19 @@ class TestCLI < MiniTest::Test
 
   def test_help
     assert_output /--help/, '' do
-      i = ReaPack::Index::CLI.new ['--help']
-      assert_equal true, i.run # does nothing
+      assert_throws(:stop, true) { ReaPack::Index::CLI.new ['--help'] }
     end
   end
 
   def test_version
     assert_output /#{Regexp.escape ReaPack::Index::VERSION.to_s}/, '' do
-      i = ReaPack::Index::CLI.new ['--version']
-      assert_equal true, i.run # does nothing
+      assert_throws(:stop, true) { ReaPack::Index::CLI.new ['--version'] }
     end
   end
 
   def test_help_version
     stdout, _ = capture_io do
-      i = ReaPack::Index::CLI.new ['--help', '--version']
-      assert_equal true, i.run # does nothing
+      assert_throws(:stop, true) { ReaPack::Index::CLI.new ['--help', '--version'] }
     end
 
     refute_match ReaPack::Index::VERSION.to_s, stdout
@@ -28,22 +25,19 @@ class TestCLI < MiniTest::Test
 
   def test_invalid_option
     assert_output '', /reapack-index: invalid option: --hello-world/i do
-      i = ReaPack::Index::CLI.new ['--hello-world']
-      assert_equal false, i.run
+      assert_throws(:stop, false) { ReaPack::Index::CLI.new ['--hello-world'] }
     end
   end
 
   def test_ambiguous_option
     assert_output '', /reapack-index: ambiguous option: --c/i do
-      i = ReaPack::Index::CLI.new ['--c']
-      assert_equal false, i.run
+      assert_throws(:stop, false) { ReaPack::Index::CLI.new ['--c'] }
     end
   end
 
   def test_missing_argument
     assert_output nil, /missing argument/ do
-      i = ReaPack::Index::CLI.new ['--output']
-      assert_equal false, i.run # does nothing
+      assert_throws(:stop, false) { ReaPack::Index::CLI.new ['--output'] }
     end
   end
 
@@ -96,10 +90,12 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config
-    assert_output /--help/, '' do
-      wrapper [], setup: proc {
-        mkfile '.reapack-index.conf', '--help'
-      }
+    catch :stop do
+      assert_output /--help/, '' do
+        wrapper [], setup: proc {
+          mkfile '.reapack-index.conf', '--help'
+        }
+      end
     end
   end
 
@@ -124,7 +120,7 @@ class TestCLI < MiniTest::Test
           mkfile('cat/test.lua', 'no version tag in this script!')
         ]
 
-        assert_equal true, @cli.run
+        @cli.run
       end
     end
 
@@ -140,7 +136,7 @@ class TestCLI < MiniTest::Test
       Dir.chdir File.join(@git.path, 'Category')
 
       assert_output /--help/ do
-        ReaPack::Index::CLI.new
+        catch :stop do ReaPack::Index::CLI.new end
       end
     end
   end
@@ -168,21 +164,18 @@ class TestCLI < MiniTest::Test
     end
 
     assert_output '', no_such_file do
-      i = ReaPack::Index::CLI.new ['/hello/world']
-      assert_equal false, i.run
+      assert_throws(:stop, false) { ReaPack::Index::CLI.new ['/hello/world'] }
     end
 
     assert_output '', /could not find repository/i do
-      i = ReaPack::Index::CLI.new ['/']
-      assert_equal false, i.run
+      assert_throws(:stop, false) { ReaPack::Index::CLI.new ['/'] }
     end
   end
 
   def test_invalid_index
     assert_output '', /\A'.+index\.xml' is not a ReaPack index file\Z/ do
       setup = proc { mkfile 'index.xml', "\0" }
-      wrapper [], setup: setup do
-      end
+      assert_throws(:stop, false) { wrapper [], setup: setup do end }
     end
   end
 
@@ -192,7 +185,7 @@ class TestCLI < MiniTest::Test
         [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       assert_equal "empty index\n", stdout
@@ -225,9 +218,7 @@ class TestCLI < MiniTest::Test
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
       # must output a new line before 'warning:'
-      assert_output nil, /\nwarning:/i do
-        assert_equal true, @cli.run
-      end
+      assert_output(nil, /\nwarning:/i) { @cli.run }
     end
   end
 
@@ -236,9 +227,7 @@ class TestCLI < MiniTest::Test
       @git.create_commit 'initial commit',
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output '', '' do
-        assert_equal true, @cli.run
-      end
+      assert_output('', '') { @cli.run }
     end
   end
 

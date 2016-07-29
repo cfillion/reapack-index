@@ -34,9 +34,7 @@ class TestCLI::Scan < MiniTest::Test
         mkfile('Category/Sub/test2.lua', '@version 1.0'),
       ]
 
-      assert_output "2 new categories, 2 new packages, 2 new versions\n" do
-        assert_equal true, @cli.run
-      end
+      assert_output("2 new categories, 2 new packages, 2 new versions\n") { @cli.run }
 
       assert_equal @git.last_commit.id, @cli.index.commit
       assert_equal @git.last_commit.time, @cli.index.time
@@ -47,7 +45,7 @@ class TestCLI::Scan < MiniTest::Test
   def test_empty_branch
     wrapper do
       assert_output nil, /the current branch does not contains any commit/i do
-        assert_equal true, @cli.run
+        @cli.run
       end
     end
   end
@@ -60,10 +58,7 @@ class TestCLI::Scan < MiniTest::Test
       Dir.mkdir mkpath('test')
       Dir.chdir mkpath('test')
 
-      assert_output /1 new package/ do
-        assert_equal true, @cli.run
-      end
-
+      assert_output(/1 new package/) { @cli.run }
       assert_match 'test1.lua', read_index
     end
   end
@@ -85,7 +80,7 @@ class TestCLI::Scan < MiniTest::Test
         File.delete mkpath('cat/test.lua')
         @git.create_commit 'third commit', [mkpath('cat/test.lua')]
 
-        assert_equal true, @cli.run
+        @cli.run
       end
     end
 
@@ -108,7 +103,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'initial commit', [mkfile('README.md', '# Hello World')]
 
       stdout, stderr = capture_io do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       assert_equal "empty index\n", stdout
@@ -122,7 +117,7 @@ processing [a-f0-9]{7}: third commit
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
       assert_output nil, /warning: cat\/test\.lua:\n\x20\x20missing tag/i do
-        assert_equal true, @cli.run
+        @cli.run
       end
     end
   end
@@ -133,7 +128,7 @@ processing [a-f0-9]{7}: third commit
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
       _, stderr = capture_io do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       refute_match /warning/i, stderr
@@ -145,9 +140,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'initial commit',
         [mkfile('cat/test.lua', 'no version tag in this script!')]
 
-      assert_output nil, /warning/i do
-        assert_equal true, @cli.run
-      end
+      assert_output(nil, /warning/i) { @cli.run }
     end
   end
 
@@ -166,9 +159,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'second commit',
         [mkfile('cat/test2.lua', '@version 1.0')]
 
-      assert_output nil, '' do
-        assert_equal true, @cli.run
-      end
+      assert_output(nil, '') { @cli.run }
 
       refute_match 'test1.lua', read_index
       assert_match 'test2.lua', read_index
@@ -177,7 +168,7 @@ processing [a-f0-9]{7}: third commit
 
   def test_amend
     wrapper ['--amend'] do
-      assert_equal true, @cli.index.amend
+      @cli.index.amend
     end
   end
 
@@ -199,7 +190,7 @@ processing [a-f0-9]{7}: third commit
       ]
 
       assert_output "1 new category, 1 new package, 1 new version\n" do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       refute_match 'Hello/World.lua', read_index
@@ -216,10 +207,7 @@ processing [a-f0-9]{7}: third commit
       File.delete mkpath('cat/test.lua')
       @git.create_commit 'second commit', [mkpath('cat/test.lua')]
 
-      assert_output /1 removed package/i do
-        assert_equal true, @cli.run
-      end
-
+      assert_output(/1 removed package/i) { @cli.run }
       refute_match 'test.lua', read_index
     end
   end
@@ -240,7 +228,7 @@ processing [a-f0-9]{7}: third commit
       ]
 
       _, stderr = capture_io do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       refute_match 'conflict', stderr
@@ -262,7 +250,7 @@ processing [a-f0-9]{7}: third commit
       ]
 
       _, stderr = capture_io do
-        assert_equal true, @cli.run
+        @cli.run
       end
 
       refute_match 'conflict', stderr
@@ -286,7 +274,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
 
       refute_match 'test1.lua', read_index, 'The initial commit was scanned'
       assert_match 'test2.lua', read_index
@@ -311,7 +299,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
 
       refute_match 'test1.lua', read_index, 'The initial commit was scanned'
       assert_match 'test2.lua', read_index
@@ -330,7 +318,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
 
       assert_equal false, @cli.index.auto_bump_commit
       refute_match %Q[commit="#{options[1]}"], read_index
@@ -354,7 +342,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
 
       refute_match 'version name="1"', read_index, 'The initial commit was scanned'
       assert_match 'version name="2"', read_index
@@ -378,7 +366,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
       assert_match 'test1.lua', read_index
     end
   end
@@ -393,7 +381,7 @@ processing [a-f0-9]{7}: third commit
     }
 
     wrapper options, setup: setup do
-      capture_io { assert_equal true, @cli.run }
+      capture_io { @cli.run }
     end
   end
 
@@ -403,7 +391,7 @@ processing [a-f0-9]{7}: third commit
         @git.create_commit 'initial commit', [mkfile('README.md')]
 
         assert_output nil, /--scan: bad file or revision: '#{Regexp.escape hash}'/i do
-          assert_equal false, @cli.run
+          assert_throws(:stop, false) { @cli.run }
         end
       end
     }
@@ -428,9 +416,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'second commit',
         [mkfile('cat/test2.lua', '@version 1.0')]
 
-      assert_output nil, '' do
-        assert_equal true, @cli.run
-      end
+      assert_output(nil, '') { @cli.run }
 
       contents = read_index
       assert_match 'test1.lua', contents
@@ -457,9 +443,7 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'second commit',
         [mkfile('cat/test2.lua', '@version 1.0')]
 
-      assert_output nil, '' do
-        assert_equal true, @cli.run
-      end
+      assert_output(nil, '') { @cli.run }
 
       contents = read_index
       refute_match 'test1.lua', contents
