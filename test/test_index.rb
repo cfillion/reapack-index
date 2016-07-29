@@ -253,7 +253,7 @@ class TestIndex < MiniTest::Test
     assert_match /bee.+zebra/m, File.read(index.path)
   end
 
-  def test_dont_sort_versions
+  def test_do_not_sort_versions
     original = <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1">
@@ -271,6 +271,31 @@ class TestIndex < MiniTest::Test
     index.write!
 
     assert_equal original, File.read(index.path)
+  end
+
+  def test_sort_package_tags
+    original = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Other">
+    <reapack name="test.lua">
+      <version name="z"/>
+      <metadata>
+        <link/>
+        <description/>
+      </metadata>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    File.write @dummy_path, original
+    index = ReaPack::Index.new @dummy_path
+    index.write!
+
+    contents = File.read index.path
+    assert_match /metadata.+version/m, contents
+    assert_match /description.+link/m, contents
   end
 
   def test_dont_mess_with_link_ordering

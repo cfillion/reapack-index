@@ -298,10 +298,15 @@ private
 
   def sort(node)
     node.element_children.map {|n| sort n }
-    return if node.name == Package.tag
 
     sorted = node.element_children
-      .stable_sort_by {|n| n[:name].to_s.downcase }
+      .stable_sort_by {|n|
+        if n.name == Version.tag
+          '' # don't sort version tags by name attribute value
+        else
+          n[:name].to_s.downcase
+        end
+      }
       .stable_sort_by {|n| n.name.downcase }
 
     sorted.each {|n| node << n }
