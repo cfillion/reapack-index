@@ -8,6 +8,8 @@ class ReaPack::Index::CLI
     return unless @exit.nil?
 
     @git = ReaPack::Index::Git.new path
+    log "found git repository in #{@git.path}"
+
     @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
 
     @opts = DEFAULTS.merge @opts
