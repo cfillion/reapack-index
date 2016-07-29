@@ -72,7 +72,7 @@ class ReaPack::Index::CLI
 
       op.separator 'Indexer options:'
 
-      op.on '-a', '--[no-]amend', 'Reindex existing versions' do |bool|
+      op.on '-a', '--[no-]amend', 'Update existing versions' do |bool|
         opts[:amend] = bool
       end
 

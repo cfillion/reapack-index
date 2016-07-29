@@ -32,7 +32,7 @@ Modes:
     -s, --scan [FILE|COMMIT]         Scan new commits (default), a file or a commit
         --rebuild                    Clear the index and rescan the whole git history
 Indexer options:
-    -a, --[no-]amend                 Reindex existing versions
+    -a, --[no-]amend                 Update existing versions
     -i, --ignore PATH                Don't check or index any file starting with PATH
     -o, --output FILE=./index.xml    Set the output filename and path for the index
         --[no-]strict                Enable strict validation mode
