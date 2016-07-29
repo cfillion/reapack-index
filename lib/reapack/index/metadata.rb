@@ -148,7 +148,7 @@ class ReaPack::Index
       raise Error, [
         "RTF conversion failed because the pandoc executable " \
           "cannot be found in your PATH.",
-        "Try again after installing pandoc from <http://pandoc.org/>."
+        "Try again after installing pandoc <http://pandoc.org/>."
       ].join("\n")
     end
 
