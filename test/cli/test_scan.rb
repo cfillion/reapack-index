@@ -397,6 +397,19 @@ processing [a-f0-9]{7}: third commit
     }
   end
 
+  def test_report_right_invalid_hash
+    wrapper ['--scan', 'README.md', '--scan', INVALID_HASHES.first] do
+      @git.create_commit 'initial commit', [mkfile('README.md')]
+
+      _, stderr = capture_io do
+        assert_throws(:stop, false) { @cli.run }
+      end
+      
+      refute_match 'README.md', stderr
+      assert_match INVALID_HASHES.first, stderr
+    end
+  end
+
   def test_rebuild
     setup = proc {
       @git.create_commit 'initial commit',

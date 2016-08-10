@@ -82,7 +82,7 @@ private
         elsif c = @git.get_commit(hash)
           c
         else
-          $stderr.puts "--scan: bad file or revision: '%s'" % @opts[:scan]
+          $stderr.puts "--scan: bad file or revision: '%s'" % hash
           throw :stop, false
         end
       }.compact
