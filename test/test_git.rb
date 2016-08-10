@@ -164,9 +164,10 @@ class TestGit < MiniTest::Test
   end
 
   def test_inspect_commit
-    c = @git.create_commit 'message', []
+    c = @git.create_commit "summary\n\nlong message", []
     assert_match c.class.name, c.inspect
     assert_match c.id, c.inspect
-    assert_match c.message, c.inspect
+    assert_match c.summary, c.inspect
+    refute_match c.message, c.inspect
   end
 end

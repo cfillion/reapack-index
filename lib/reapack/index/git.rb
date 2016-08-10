@@ -158,7 +158,7 @@ class ReaPack::Index
     end
 
     def inspect
-      "#<#{self.class} #{id} #{message}>"
+      "#<#{self.class} #{id} #{summary}>"
     end
 
   private
