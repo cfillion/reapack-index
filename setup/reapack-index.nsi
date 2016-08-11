@@ -162,10 +162,9 @@ Function .onInit
   nsExec::ExecToStack '"pandoc" --version'
   Pop $0
 
-  StrCmp $0 "error" 0 +5 ; failed to launch pandoc
+  StrCmp $0 "error" 0 +4 ; failed to launch pandoc
     SectionGetFlags ${InstallPandoc} $1
     IntOp $1 $1 | ${SF_SELECTED}
-    IntOp $1 $1 | ${SF_RO}
     SectionSetFlags ${InstallPandoc} $1
 
   SectionGetFlags ${InstallMain} $1
