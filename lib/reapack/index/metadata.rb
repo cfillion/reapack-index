@@ -143,7 +143,7 @@ class ReaPack::Index
     end
 
     def make_rtf(content)
-      PandocRuby.new(content).to_rtf :standalone
+      PandocRuby.new(content).to_rtf :standalone, f: :commonmark
     rescue Errno::ENOENT
       raise Error, [
         "RTF conversion failed because the pandoc executable " \

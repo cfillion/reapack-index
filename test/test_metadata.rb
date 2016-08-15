@@ -482,6 +482,23 @@ class TestMetadata < MiniTest::Test
     assert_equal false, md.modified?
   end
 
+  def test_about_markdown_blank_before_header
+    before = make_node '<index/>'
+    md = ReaPack::Index::Metadata.new before
+    md.about = "First Line\n# Header\n* List"
+
+    refute_match 'Firstn Line # Header * List', before.to_s
+    assert_match "\\bullet", before.to_s
+  end
+
+  def test_about_markdown_no_4_space_rule
+    before = make_node '<index/>'
+    md = ReaPack::Index::Metadata.new before
+    md.about = "- a\n- b\n  - c\n- d"
+
+    assert_match "\\endash", before.to_s # nested list (c)
+  end
+
   def test_pandoc_not_found
     old_path = ENV['PATH']
     ENV['PATH'] = String.new
