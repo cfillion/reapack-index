@@ -38,7 +38,7 @@ class ReaPack::Index
     HEADER_ALIASES = {
       [:reascript_name, :jsfx_name, :theme_name,
         :extension_name, :desc] => :description,
-      :links => :link,
+      [:links, :website] => :link,
       :screenshots => :screenshot,
     }.freeze
 
