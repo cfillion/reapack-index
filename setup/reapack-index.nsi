@@ -1,3 +1,5 @@
+Unicode true
+
 !include MUI2.nsh
 !include Sections.nsh
 !include StrRep.nsh
@@ -74,7 +76,7 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2016  Christian Fillion"
 !macro RELOAD_PATH
   ; reload the path to use the one freshly set by the ruby installer
   ReadRegStr $R1 HKCU "Environment" "Path"
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("Path", R1).r2'
+  System::Call 'Kernel32::SetEnvironmentVariable(t, t) i("Path", R1).r2'
 !macroend
 
 Section /o "Ruby for Windows" InstallRuby
