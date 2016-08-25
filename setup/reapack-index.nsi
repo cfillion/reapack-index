@@ -5,7 +5,7 @@ Unicode true
 !include StrRep.nsh
 
 !define VERSION "1.1beta3"
-!define NAME "ReaPack Index ${VERSION}"
+!define NAME "reapack-index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
 !define RUBY_VERSION "2.3.1"
@@ -127,7 +127,7 @@ Section /o "Pandoc" InstallPandoc
   !insertmacro EXEC_GUI '"msiexec" /i $R0 /passive' ${PANDOC_FILE}
 SectionEnd
 
-Section "ReaPack Index" InstallMain
+Section "reapack-index" InstallMain
   SectionIn RO
 
   DetailPrint "Installing reapack-index... (this can take a while)"
@@ -185,5 +185,5 @@ FunctionEnd
     "Install Pandoc to enable automatic conversion from various document formats into RTF."
 
   !insertmacro MUI_DESCRIPTION_TEXT ${InstallMain} \
-    "Install ReaPack's Package Indexer v${VERSION} on your computer."
+    "Install Package indexer for git-based ReaPack repositories v${VERSION} on your computer."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
