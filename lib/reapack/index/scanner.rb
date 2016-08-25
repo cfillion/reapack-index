@@ -129,7 +129,15 @@ class ReaPack::Index
           raise Error, "file not found '#{line.file_pattern}'" if files.empty?
         else
           # use the relative path for external urls
-          files = [line.file_pattern]
+          if line.file_pattern.start_with? '/'
+            prefix = []
+            dirs = File.split(@pkg.category).size - 1
+            dirs.times { prefix << '..' }
+
+            files = [File.join(*prefix, line.file_pattern)]
+          else
+            files = [line.file_pattern]
+          end
         end
 
         files.map {|file|

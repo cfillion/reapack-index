@@ -87,19 +87,6 @@ class TestIndex::Provides < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
-  def test_invalid_options
-    index = ReaPack::Index.new @dummy_path
-    index.url_template = 'http://host/$path'
-
-    error = assert_raises ReaPack::Index::Error do
-      index.scan 'cat/test.lua', <<-IN
-        @version 1.0
-        @provides
-          [hello] test.png
-      IN
-    end
-  end
-
   def test_custom_url
     index = ReaPack::Index.new @dummy_path
     index.files = ['Category/script.lua']
@@ -108,11 +95,14 @@ class TestIndex::Provides < MiniTest::Test
       @version 1.0
       @provides
         script.lua http://google.com/download/$commit/$version/$path
+        /root http://google.com/download/$commit/$version/$path
     IN
 
     index.write!
-    assert_match 'http://google.com/download/master/1.0/Category/script.lua',
-      File.read(index.path)
+
+    xml = File.read index.path
+    assert_match 'http://google.com/download/master/1.0/Category/script.lua', xml
+    assert_match 'file="../root"', xml
   end
 
   def test_empty_tag
