@@ -10,7 +10,8 @@ class ReaPack::Index
     end
 
     def empty?
-      @repo.empty?
+      # head_unborn = orphan branch – FIXME: add test for this case
+      @repo.empty? || @repo.head_unborn?
     end
 
     def path
