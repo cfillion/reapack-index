@@ -2,6 +2,11 @@ class ReaPack::Index
   class Git
     def initialize(path)
       @repo = Rugged::Repository.discover path.encode(Encoding::UTF_8)
+
+      if @repo.bare?
+        raise ReaPack::Index::Error,
+          'reapack-index cannot be run in a repository without a work tree'
+      end
     end
 
     def empty?
@@ -9,7 +14,7 @@ class ReaPack::Index
     end
 
     def path
-      File.expand_path @repo.workdir
+      @path ||= File.expand_path @repo.workdir
     end
 
     def commits
@@ -58,7 +63,7 @@ class ReaPack::Index
     end
 
     def relative_path(path)
-      root = Pathname.new @repo.workdir
+      root = Pathname.new self.path
       file = Pathname.new path
 
       file.relative_path_from(root).to_s

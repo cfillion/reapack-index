@@ -170,4 +170,11 @@ class TestGit < MiniTest::Test
     assert_match c.summary, c.inspect
     refute_match c.message, c.inspect
   end
+
+  def test_bare_repo
+    path = Dir.mktmpdir 'test-repository'
+
+    repo = Rugged::Repository.init_at path, true
+    assert_raises(ReaPack::Index::Error) { ReaPack::Index::Git.new path }
+  end
 end
