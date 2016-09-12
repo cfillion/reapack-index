@@ -63,11 +63,6 @@ private
   end
 
   def do_scan
-    if @git.empty?
-      warn 'The current branch does not contains any commit.'
-      return
-    end
-
     commits = if @opts[:rebuild]
       @index.clear
       @git.commits

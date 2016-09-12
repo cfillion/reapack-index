@@ -42,14 +42,6 @@ class TestCLI::Scan < MiniTest::Test
     end
   end
 
-  def test_empty_branch
-    wrapper do
-      assert_output nil, /the current branch does not contains any commit/i do
-        @cli.run
-      end
-    end
-  end
-
   def test_workingdir_is_subdirectory
     wrapper do
       @git.create_commit 'initial commit',
