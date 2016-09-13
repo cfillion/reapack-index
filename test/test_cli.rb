@@ -151,6 +151,16 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_config_unmatched_quote
+    catch :stop do
+      assert_output /unmatched double quote/i, '' do
+        wrapper [], setup: proc {
+          mkfile '.reapack-index.conf', '--output "'
+        }
+      end
+    end
+  end
+
   def test_working_directory_with_options
     wrapper do
       @git.create_commit 'initial commit',

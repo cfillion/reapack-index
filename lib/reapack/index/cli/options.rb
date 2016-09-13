@@ -38,6 +38,8 @@ class ReaPack::Index::CLI
       File.foreach(path) {|line| opts << Shellwords.split(line) }
       opts
     }.flatten.compact
+  rescue ArgumentError => e
+    raise ReaPack::Index::Error, e.message
   end
 
   def parse_options(args)
