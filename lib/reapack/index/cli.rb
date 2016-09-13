@@ -7,7 +7,7 @@ class ReaPack::Index::CLI
     @git = ReaPack::Index::Git.new argv.first || Dir.pwd
     log "found git repository in #{@git.path}"
 
-    @opts = parse_options(read_config).merge @opts unless @opts[:noconfig]
+    read_config unless @opts[:noconfig]
     @opts = DEFAULTS.merge @opts
 
     log Hash[@opts.sort].inspect
@@ -316,10 +316,19 @@ private
     false
   end
 
-  def expand_path(path)
+  def expand_path(path, **options)
     # expand from the repository root or from the current directory if
     # the repository is not yet initialized
-    File.expand_path path, @git ? @git.path : Dir.pwd
+    path = File.expand_path path, options[:base] || (@git ? @git.path : Dir.pwd)
+
+    if options[:relative]
+      root = Pathname.new Dir.pwd
+      file = Pathname.new path
+
+      file.relative_path_from(root).to_s
+    else
+      path
+    end
   end
 
   def indent(input)

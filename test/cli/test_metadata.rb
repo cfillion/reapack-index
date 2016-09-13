@@ -100,6 +100,24 @@ class TestCLI::Metadata < MiniTest::Test
     end
   end
 
+  def test_about_relative_config
+    setup = proc {
+      mkfile '.reapack-index.conf', '--about=README.md'
+      mkfile 'README.md', '# Hello World'
+
+      dir = mkpath 'test'
+      FileUtils.mkdir dir
+      Dir.chdir dir
+    }
+
+    wrapper [], setup: setup do
+      _, stderr = capture_io { @cli.run }
+
+      refute_match /no such file or directory/i, stderr
+      assert_match 'Hello World', read_index
+    end
+  end
+
   def test_about_pandoc_not_found
     old_path = ENV['PATH']
 

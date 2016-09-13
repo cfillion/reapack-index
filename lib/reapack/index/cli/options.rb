@@ -23,7 +23,7 @@ class ReaPack::Index::CLI
   }.freeze
 
   def read_config
-    CONFIG_SEARCH.map {|dir|
+    CONFIG_SEARCH.each {|dir|
       dir = expand_path dir
       path = File.expand_path '.reapack-index.conf', dir
 
@@ -34,13 +34,14 @@ class ReaPack::Index::CLI
         next
       end
 
-      Shellwords.split File.read(path)
-    }.flatten.compact
+      opts = Shellwords.split File.read(path)
+      @opts = parse_options(opts, dir).merge @opts
+    }
   rescue ArgumentError => e
     raise ReaPack::Index::Error, e.message
   end
 
-  def parse_options(args)
+  def parse_options(args, basepath = nil)
     opts = Hash.new
 
     OptionParser.new do |op|
@@ -126,7 +127,7 @@ class ReaPack::Index::CLI
       end
 
       op.on '-A', '--about=FILE', 'Set the about content from a file' do |file|
-        opts[:about] = file.strip
+        opts[:about] = expand_path file.strip, base: basepath, relative: true
       end
 
       op.on '--remove-about', 'Remove the about content from the index' do
