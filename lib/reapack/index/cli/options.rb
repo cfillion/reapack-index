@@ -34,9 +34,7 @@ class ReaPack::Index::CLI
         next
       end
 
-      opts = Array.new
-      File.foreach(path) {|line| opts << Shellwords.split(line) }
-      opts
+      Shellwords.split File.read(path)
     }.flatten.compact
   rescue ArgumentError => e
     raise ReaPack::Index::Error, e.message

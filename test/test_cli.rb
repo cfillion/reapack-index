@@ -100,8 +100,8 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config
-    catch :stop do
-      assert_output /--help/, '' do
+    assert_output /--help/, '' do
+      catch :stop do
         wrapper [], setup: proc {
           mkfile '.reapack-index.conf', '--help'
         }
@@ -152,12 +152,20 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config_unmatched_quote
-    catch :stop do
-      assert_output /unmatched double quote/i, '' do
+    assert_output '', /unmatched double quote/i do
+      catch :stop do
         wrapper [], setup: proc {
           mkfile '.reapack-index.conf', '--output "'
         }
       end
+    end
+  end
+
+  def test_config_line_break
+    assert_output '', '' do
+      wrapper [], setup: proc {
+        mkfile '.reapack-index.conf', %Q{--commit-template="hello\nworld"}
+      }
     end
   end
 
