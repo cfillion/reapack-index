@@ -207,7 +207,7 @@ class TestCLI < MiniTest::Test
 
     wrapper ['--progress'], setup: setup do
       assert_output '', /nothing to do/i do
-        @cli.run
+        assert_equal true, @cli.run
       end
     end
   end

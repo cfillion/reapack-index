@@ -40,7 +40,7 @@ class ReaPack::Index::CLI
 
     unless @index.modified?
       $stderr.puts 'Nothing to do!' unless @opts[:quiet]
-      return
+      return true
     end
 
     # changelog will be cleared by Index#write!
