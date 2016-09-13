@@ -456,6 +456,21 @@ processing [a-f0-9]{7}: third commit
     end
   end
 
+  def test_no_scan
+    options = ['--no-scan']
+
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1.0')]
+    }
+
+    wrapper options, setup: setup do
+      capture_io { @cli.run }
+
+      refute_match 'test1.lua', read_index, 'The initial commit was scanned'
+    end
+  end
+
   def test_no_arguments
     wrapper ['--scan'] do; end
   end

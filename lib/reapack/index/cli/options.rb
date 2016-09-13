@@ -65,6 +65,10 @@ class ReaPack::Index::CLI
         end
       end
 
+      op.on '--no-scan', 'Do not scan for new commits' do
+        opts[:scan] = false
+      end
+
       op.on '--rebuild', 'Clear the index and rescan the whole git history' do
         opts[:check] = false
         opts[:rebuild] = true

@@ -66,6 +66,8 @@ private
     commits = if @opts[:rebuild]
       @index.clear
       @git.commits
+    elsif @opts[:scan] == false
+      []
     elsif @opts[:scan].empty?
       @git.commits_since @index.last_commit
     else
