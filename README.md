@@ -30,6 +30,7 @@ reapack-index [options] [path-to-your-repository]
 Modes:
     -c, --check                      Test every package including uncommited changes and exit
     -s, --scan [FILE|COMMIT]         Scan new commits (default), a file or a commit
+        --no-scan                    Do not scan for new commits
         --rebuild                    Clear the index and rescan the whole git history
 Indexer options:
     -a, --[no-]amend                 Update existing versions
@@ -51,6 +52,7 @@ Misc options:
     -V, --[no-]verbose               Activate diagnosis messages
     -C, --[no-]commit                Select whether to commit the modified index
         --prompt-commit              Ask at runtime whether to commit the index
+    -m, --commit-template MESSAGE    Customize the commit message. Supported placeholder: $changelog
     -W, --warnings                   Enable warnings
     -w, --no-warnings                Turn off warnings
     -q, --[no-]quiet                 Disable almost all output

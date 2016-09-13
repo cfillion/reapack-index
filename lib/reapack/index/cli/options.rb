@@ -9,6 +9,7 @@ class ReaPack::Index::CLI
   DEFAULTS = {
     check: false,
     commit: nil,
+    message: 'index: $changelog',
     ignore: [],
     output: './index.xml',
     progress: true,
@@ -152,6 +153,11 @@ class ReaPack::Index::CLI
 
       op.on '--prompt-commit', 'Ask at runtime whether to commit the index' do
         opts[:commit] = nil
+      end
+
+      op.on '-m', "--commit-template MESSAGE",
+        'Customize the commit message. Supported placeholder: $changelog' do |msg|
+        opts[:message] = msg
       end
 
       op.on '-W', '--warnings', 'Enable warnings' do

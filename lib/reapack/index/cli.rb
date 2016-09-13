@@ -253,7 +253,8 @@ private
       prompt 'Commit the new index?'
     end
 
-    @git.create_commit "index: #{changelog}", [@index.path]
+    message = @opts[:message].gsub '$changelog', changelog
+    @git.create_commit message, [@index.path]
     $stderr.puts 'commit created'
   end
 

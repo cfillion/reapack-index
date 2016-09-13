@@ -89,6 +89,16 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_custom_commit_message
+    wrapper ['--commit', '--commit-template', 'a $changelog b $changelog c'] do
+      assert_output("empty index\n", /commit created\n/) { @cli.run }
+
+      commit = @git.last_commit
+      assert_equal 'a empty index b empty index c', commit.message
+      assert_equal ['index.xml'], commit.each_diff.map {|d| d.file }
+    end
+  end
+
   def test_config
     catch :stop do
       assert_output /--help/, '' do
