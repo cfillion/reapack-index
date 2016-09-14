@@ -18,6 +18,7 @@ class TestGit < MiniTest::Test
 
   def test_relative_path
     assert_equal 'test', @git.relative_path(File.join(@git.path, 'test'))
+    assert_match 'test', @git.relative_path('test')
   end
 
   def test_guess_url_template

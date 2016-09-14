@@ -61,7 +61,7 @@ class ReaPack::Index::CLI
         opts[:scan] ||= []
 
         if commit
-          opts[:scan] << commit.strip
+          opts[:scan] << expand_path(commit.strip, base: basepath, relative: true)
         else
           opts[:scan].clear
         end
@@ -84,7 +84,7 @@ class ReaPack::Index::CLI
 
       op.on '-i', '--ignore PATH', "Don't check or index any file starting with PATH" do |path|
         opts[:ignore] ||= []
-        opts[:ignore] << expand_path(path)
+        opts[:ignore] << expand_path(path, base: basepath)
       end
 
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",

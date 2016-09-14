@@ -321,6 +321,8 @@ processing [a-f0-9]{7}: third commit
     options = [ '--scan', 'cat/test1.lua']
 
     setup = proc {
+      Dir.chdir @git.path
+
       @git.create_commit 'initial commit',
         [mkfile('cat/test1.lua', '@version 1')]
 
@@ -390,7 +392,9 @@ processing [a-f0-9]{7}: third commit
   end
 
   def test_report_right_invalid_hash
-    wrapper ['--scan', 'README.md', '--scan', INVALID_HASHES.first] do
+    setup = proc { Dir.chdir @git.path }
+
+    wrapper ['--scan', 'README.md', '--scan', INVALID_HASHES.first], setup: setup do
       @git.create_commit 'initial commit', [mkfile('README.md')]
 
       _, stderr = capture_io do

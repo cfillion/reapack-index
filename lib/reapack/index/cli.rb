@@ -74,7 +74,7 @@ private
       @index.auto_bump_commit = false
 
       @opts[:scan].map {|hash|
-        if c = @git.last_commit_for(hash)
+        if c = @git.last_commit_for(@git.relative_path hash)
           [c, hash]
         elsif c = @git.get_commit(hash)
           c

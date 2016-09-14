@@ -65,7 +65,7 @@ class ReaPack::Index
 
     def relative_path(path)
       root = Pathname.new self.path
-      file = Pathname.new path
+      file = Pathname.new File.expand_path(path)
 
       file.relative_path_from(root).to_s
     end
