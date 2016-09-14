@@ -11,7 +11,7 @@ class ReaPack::Index::CLI
     commit: nil,
     message: 'index: $changelog',
     ignore: [],
-    output: './index.xml',
+    output: 'index.xml',
     progress: true,
     quiet: false,
     rebuild: false,
@@ -89,7 +89,7 @@ class ReaPack::Index::CLI
 
       op.on '-o', "--output FILE=#{DEFAULTS[:output]}",
           'Set the output filename and path for the index' do |file|
-        opts[:output] = file.strip
+        opts[:output] = expand_path(file.strip, base: basepath, relative: true)
       end
 
       op.on '--[no-]strict', 'Enable strict validation mode' do |bool|

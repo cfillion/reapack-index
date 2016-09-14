@@ -8,11 +8,16 @@ class ReaPack::Index::CLI
     log "found git repository in #{@git.path}"
 
     read_config unless @opts[:noconfig]
+
+    unless @opts[:output]
+      @opts[:output] = expand_path DEFAULTS[:output], relative: true
+    end
+
     @opts = DEFAULTS.merge @opts
 
     log Hash[@opts.sort].inspect
 
-    @index = ReaPack::Index.new expand_path(@opts[:output])
+    @index = ReaPack::Index.new File.expand_path(@opts[:output])
     @index.amend = @opts[:amend]
     @index.strict = @opts[:strict]
     set_url_template

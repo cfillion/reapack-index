@@ -42,7 +42,8 @@ class TestCLI < MiniTest::Test
   end
 
   def test_output
-    wrapper ['-o output.xml'] do
+    setup = proc { Dir.chdir @git.path }
+    wrapper ['-o output.xml'], setup: setup do
       assert_equal mkpath('output.xml'), @cli.index.path
     end
   end
