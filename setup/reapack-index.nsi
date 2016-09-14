@@ -4,7 +4,7 @@ Unicode true
 !include Sections.nsh
 !include StrRep.nsh
 
-!define VERSION "1.1rc1"
+!define VERSION "1.1rc2"
 !define NAME "reapack-index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
