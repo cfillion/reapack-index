@@ -38,8 +38,14 @@ class ReaPack::Index
             instance.platform = opt.to_sym
           elsif type = ReaPack::Index.resolve_type(opt)
             instance.type = type
-          elsif opt =~ /\A(no)?main\Z/
-            instance.main = !$1
+          elsif opt =~ /\A(nomain)|main(?:=(.+))?\Z/
+            if $1 # nomain
+              instance.main = false
+            elsif $2 # explicit sections
+              instance.main = $2.split(',').reject(&:empty?).map {|s| s.to_sym }
+            else # implicit sections
+              instance.main = true
+            end
           else
             raise Error, "unknown option '#{user_opt}'"
           end

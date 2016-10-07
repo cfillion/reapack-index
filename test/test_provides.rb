@@ -56,12 +56,13 @@ class TestProvides < MiniTest::Test
   end
 
   def test_main
-    assert_equal [true, false, nil, false],
+    assert_equal [true, false, nil, false, [:main, :midi_editor, :abc]],
       [
         '[main] file',
         '[nomain] file',
         'file',
         '[main nomain] file',
+        '[main=main,midi_editor,,abc] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).main? }
   end
 

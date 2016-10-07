@@ -297,6 +297,7 @@ class TestIndex::Provides < MiniTest::Test
       'Category/script.lua',
       'Category/a.dat',
       'Category/b.dat',
+      'Category/c.dat',
     ]
 
     index.scan index.files.first, <<-IN
@@ -305,6 +306,7 @@ class TestIndex::Provides < MiniTest::Test
         [main] a.dat
         [nomain] .
         [nomain] b.dat
+        [main=midi_editor] c.dat
     IN
 
     expected = <<-XML
@@ -316,6 +318,7 @@ class TestIndex::Provides < MiniTest::Test
         <source main="main" file="a.dat">http://host/Category/a.dat</source>
         <source>http://host/Category/script.lua</source>
         <source file="b.dat">http://host/Category/b.dat</source>
+        <source main="midi_editor" file="c.dat">http://host/Category/c.dat</source>
       </version>
     </reapack>
   </category>
