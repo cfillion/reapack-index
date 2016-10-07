@@ -65,7 +65,7 @@ class ReaPack::Index
     def sections=(new_sections)
       new_sections.each {|s|
         unless SECTIONS.include? s
-          raise Error, "invalid section '#{s}'"
+          raise Error, "invalid Action List section '#{s}'"
         end
       }
 
