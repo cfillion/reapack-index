@@ -40,7 +40,7 @@ class TestProvides < MiniTest::Test
         '[win64] file',
         '[Darwin]file',
         ' [ darwin32 ] file',
-        '[win32, darwin64] file',
+        '[win32 darwin64] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).platform }
   end
 
@@ -48,9 +48,9 @@ class TestProvides < MiniTest::Test
     assert_equal [:script, :data, nil, nil],
       vals = [
         '[script] file',
-        '[windows,Data] file',
+        '[windows Data] file',
         '[windows] file',
-        '[,windows,,] file',
+        '[ windows  ] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).type }
 
   end
@@ -61,7 +61,7 @@ class TestProvides < MiniTest::Test
         '[main] file',
         '[nomain] file',
         'file',
-        '[main, nomain] file',
+        '[main nomain] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).main? }
   end
 
@@ -69,7 +69,7 @@ class TestProvides < MiniTest::Test
     assert_equal ["unknown option 'HeLlO'", "unknown option 'Test'"],
       [
         '[HeLlO] file',
-        '[, Test] file',
+        '[  Test] file',
       ].map {|l|
         assert_raises ReaPack::Index::Error do
           ReaPack::Index::Provides.parse l

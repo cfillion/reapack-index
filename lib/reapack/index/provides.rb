@@ -28,7 +28,7 @@ class ReaPack::Index
 
         instance = self.new pattern, url_tpl
 
-        options and options.split(',').each {|user_opt|
+        options and options.split("\x20").each {|user_opt|
           user_opt.strip!
           next if user_opt.empty?
 
