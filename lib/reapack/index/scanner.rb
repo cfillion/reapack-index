@@ -78,7 +78,8 @@ class ReaPack::Index
 
           if !metapackage? && sources.none? {|src| src.file.nil? }
             # add the package itself as a main source
-            src = Source.new make_url(@pkg.path), true
+            src = Source.new make_url(@pkg.path)
+            src.detect_sections @pkg
             sources.unshift src
 
             @cselector.push @pkg.type, src.platform, @pkg.path
@@ -141,15 +142,22 @@ class ReaPack::Index
         end
 
         files.map {|file|
-          src = Source.new make_url(file, line.url_template), line.main?
+          src = Source.new make_url(file, line.url_template)
           src.platform = line.platform
           src.type = line.type
+
+          case line.main?
+          when true
+            src.detect_sections @pkg
+          when Array
+            src.sections = line.main?
+          end
 
           @cselector.push src.type || @pkg.type, src.platform,
             line.url_template ? expanded : file
 
           if file == @pkg.path
-            src.main = !metapackage? if line.main.nil?
+            src.detect_sections @pkg if line.main.nil? && !metapackage?
           else
             if line.url_template
               src.file = file

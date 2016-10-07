@@ -28,7 +28,7 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source main="true">http://host/Category/script.lua?Category/script.lua</source>
+        <source main="main">http://host/Category/script.lua?Category/script.lua</source>
         <source platform="windows" file="../Resources/unicode.dat">http://host/Resources/unicode.dat?Category/script.lua</source>
         <source file="test.png">http://host/Category/test.png?Category/script.lua</source>
       </version>
@@ -75,8 +75,8 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source main="true" platform="darwin">http://host/Category/script.lua</source>
-        <source main="true" platform="win64">http://host/Category/script.lua</source>
+        <source main="main" platform="darwin">http://host/Category/script.lua</source>
+        <source main="main" platform="win64">http://host/Category/script.lua</source>
       </version>
     </reapack>
   </category>
@@ -142,7 +142,7 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source main="true">http://host/Category/script.lua</source>
+        <source main="main">http://host/Category/script.lua</source>
         <source platform="windows" file="Data/a.dat">http://host/Category/Data/a.dat</source>
         <source platform="windows" file="Data/b.dat">http://host/Category/Data/b.dat</source>
         <source file="test.txt">http://host/Category/test.txt</source>
@@ -313,7 +313,7 @@ class TestIndex::Provides < MiniTest::Test
   <category name="Category">
     <reapack name="script.lua" type="script">
       <version name="1.0">
-        <source main="true" file="a.dat">http://host/Category/a.dat</source>
+        <source main="main" file="a.dat">http://host/Category/a.dat</source>
         <source>http://host/Category/script.lua</source>
         <source file="b.dat">http://host/Category/b.dat</source>
       </version>
@@ -341,6 +341,6 @@ class TestIndex::Provides < MiniTest::Test
     IN
 
     index.write!
-    assert_match 'main="true"', File.read(index.path)
+    assert_match 'main="main"', File.read(index.path)
   end
 end

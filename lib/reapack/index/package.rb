@@ -8,6 +8,8 @@ class ReaPack::Index
 
     TYPE_ATTR = 'type'.freeze
     DESC_ATTR = 'desc'.freeze
+    DIR_SEPARATOR = Regexp.union(
+      *[File::SEPARATOR, File::ALT_SEPARATOR].compact).freeze
 
     def initialize(node)
       super
@@ -22,6 +24,10 @@ class ReaPack::Index
 
     def category
       @node.parent[NAME_ATTR]
+    end
+
+    def topdir
+      category&.split(DIR_SEPARATOR)&.first
     end
 
     def path

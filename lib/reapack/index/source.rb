@@ -12,23 +12,24 @@ class ReaPack::Index
       darwin: :all, darwin32: :darwin, darwin64: :darwin,
     }.freeze
 
+    SECTIONS = [
+      :main, :midi_editor
+    ].freeze
+
     class << self
       def is_platform?(input)
         PLATFORMS.has_key? input&.to_sym
       end
     end
 
-    def initialize(url, main = false)
+    def initialize(url)
       @url = url
-      @main = main
+      @sections = []
       @platform = :all
     end
 
-    attr_reader :platform, :type
+    attr_reader :platform, :type, :sections
     attr_accessor :file, :url
-    attr_writer :main
-
-    def main?; @main; end
 
     def platform=(new_platform)
       new_platform ||= :all
@@ -50,9 +51,30 @@ class ReaPack::Index
       @type = new_type.to_sym
     end
 
+    def detect_sections(pkg)
+      @sections = []
+
+      if (@type || pkg.type) == :script
+        topdir = pkg.topdir.downcase
+        @sections << (topdir == 'midi editor' ? :midi_editor : :main)
+      end
+
+      @sections.freeze # force going through sections=() for validation
+    end
+
+    def sections=(new_sections)
+      new_sections.each {|s|
+        unless SECTIONS.include? s
+          raise Error, "invalid section '#{s}'"
+        end
+      }
+
+      @sections = new_sections.sort {|s| SECTIONS.index s }.freeze
+    end
+
     def make_node(parent)
       @node = Nokogiri::XML::Node.new TAG, parent.document
-      @node[MAIN] = true if @main
+      @node[MAIN] = @sections.join "\x20" unless @sections.empty?
       @node[PLATFORM] = @platform if @platform != :all
       @node[TYPE] = @type if @type
       @node[FILE] = @file if @file

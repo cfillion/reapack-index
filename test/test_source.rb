@@ -135,20 +135,58 @@ class TestSource < MiniTest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source main="true">http://host/</source>
+  <source main="main midi_editor">http://host/</source>
 </version>
     XML
 
-    assert_equal true, ReaPack::Index::Source.new('http://host/', true).main?
-
     src = ReaPack::Index::Source.new 'http://host/'
-    assert_equal false, src.main?
-    src.main = true
-    assert_equal true, src.main?
+    assert_empty src.sections
+    src.sections = [:midi_editor, :main]
+    assert_equal [:main, :midi_editor], src.sections
+
+    assert_raises ReaPack::Index::Error do
+      src.sections = [:abc]
+    end
 
     src.make_node before
 
     assert_equal after.chomp, before.to_s
+  end
+
+  def test_auto_main_pkg_type
+    pkg = MiniTest::Mock.new
+    pkg.expect :type, :script
+    pkg.expect :topdir, 'Category'
+
+    src = ReaPack::Index::Source.new 'http://host/'
+    src.detect_sections pkg
+    assert_equal [:main], src.sections
+
+    pkg.verify
+  end
+
+  def test_auto_main_type_override
+    pkg = MiniTest::Mock.new
+    pkg.expect :topdir, 'Category'
+
+    src = ReaPack::Index::Source.new 'http://host/'
+    src.type = :script
+    src.detect_sections pkg
+    assert_equal [:main], src.sections
+
+    pkg.verify
+  end
+
+  def test_auto_main_midi_editor
+    pkg = MiniTest::Mock.new
+    pkg.expect :type, :script
+    pkg.expect :topdir, 'MIDI Editor'
+
+    src = ReaPack::Index::Source.new 'http://host/'
+    src.detect_sections pkg
+    assert_equal [:midi_editor], src.sections
+
+    pkg.verify
   end
 
   def test_is_platform

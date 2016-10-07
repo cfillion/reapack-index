@@ -141,11 +141,13 @@ class TestPackage < MiniTest::Test
     pkg1 = ReaPack::Index::Package.new make_node('<reapack/>')
     assert_nil pkg1.category
     assert_nil pkg1.path
+    assert_nil pkg1.topdir
 
     pkg2 = ReaPack::Index::Package.create 'test',
       make_node('<category name="Hello/World"/>')
 
     assert_equal 'Hello/World', pkg2.category
     assert_equal 'Hello/World/test', pkg2.path
+    assert_equal 'Hello', pkg2.topdir
   end
 end
