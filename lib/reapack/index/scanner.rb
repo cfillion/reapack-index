@@ -157,7 +157,13 @@ class ReaPack::Index
             line.url_template ? expanded : file
 
           if file == @pkg.path
-            src.detect_sections @pkg if line.main.nil? && !metapackage?
+            if metapackage?
+              # the current file will be added as a source even if
+              # @metapackage is enabled
+            elsif line.main.nil?
+              # the current file is registered by default (if it's a script)
+              src.detect_sections @pkg
+            end
           else
             if line.url_template
               src.file = file
