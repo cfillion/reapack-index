@@ -158,10 +158,10 @@ class ReaPack::Index
 
           if file == @pkg.path
             if metapackage?
-              # the current file will be added as a source even if
-              # @metapackage is enabled
+              # the current file is still added as a source even if @metapackage
+              # is enabled but won't be added to the Action List unless specified
             elsif line.main.nil?
-              # the current file is registered by default (if it's a script)
+              # not a metapackage? then the current file is registered by default
               src.detect_sections @pkg
             end
           else

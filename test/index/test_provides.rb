@@ -332,11 +332,7 @@ class TestIndex::Provides < MiniTest::Test
   def test_main_self
     index = ReaPack::Index.new @dummy_path
     index.url_template = 'http://host/$path'
-    index.files = [
-      'Category/script.lua',
-      'Category/a.dat',
-      'Category/b.dat',
-    ]
+    index.files = ['Category/script.lua']
 
     index.scan index.files.first, <<-IN
       @version 1.0
@@ -345,5 +341,23 @@ class TestIndex::Provides < MiniTest::Test
 
     index.write!
     assert_match 'main="main"', File.read(index.path)
+  end
+
+  def test_metapackage_override
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Category/script.lua']
+
+    index.scan index.files.first, <<-IN
+      @metapackage
+      @version 1.0
+      @provides .
+    IN
+
+    index.write!
+    contents = File.read index.path
+
+    refute_match 'main="main"', contents
+    assert_match '<source>http://host/Category/script.lua</source>', contents
   end
 end
