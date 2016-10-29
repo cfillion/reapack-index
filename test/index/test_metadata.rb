@@ -95,10 +95,7 @@ class TestIndex::Metadata < MiniTest::Test
     index.name = 'Hello World'
     assert_equal '1 modified metadata, empty index', index.changelog
 
-    error = assert_raises ReaPack::Index::Error do index.name = '.'; end
-    assert_raises ReaPack::Index::Error do index.name = 'hello/world'; end
-    assert_equal "invalid name '.'", error.message
-
+    assert_raises ReaPack::Index::Error do index.name = '.'; end
     assert_equal 'Hello World', index.name
 
     expected = <<-XML
@@ -108,5 +105,45 @@ class TestIndex::Metadata < MiniTest::Test
 
     index.write!
     assert_equal expected, File.read(index.path)
+  end
+
+  def test_name_valid
+    index = ReaPack::Index.new @dummy_path
+
+    [
+      '1234',
+      'hello world',
+      'hello_world',
+      'Новая папка',
+      'Hello ~World~',
+      'Repository #1',
+    ].each {|name| index.name = name }
+  end
+
+  def test_name_invalid
+    index = ReaPack::Index.new @dummy_path
+
+    [
+      '',
+      'ab/cd',
+      'ab\\cd',
+      '..',
+      '.',
+      '....',
+      '.hidden',
+      'trailing.',
+      '   leading',
+      'trailing   ',
+      "ctrl\0chars",
+
+      # Windows device names...
+      "CLOCK$",
+      "COM1",
+      "LPT2",
+      "lpt1",
+    ].each {|name|
+      error = assert_raises(ReaPack::Index::Error, name) do index.name = name end
+      assert_equal "invalid name '#{name}'", error.message
+    }
   end
 end

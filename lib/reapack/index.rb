@@ -41,6 +41,9 @@ class ReaPack::Index
 
   FS_ROOT = File.expand_path('/').freeze
 
+  NAME_REGEX = /\A[^*\\:<>?\/|"[:cntrl:]]{4,24}\Z/.freeze
+  NAME_INVALID = /\A(:?[\.\x20].+|.+[\.\x20]|CLOCK\$|COM\d|LPT\d)\Z/i.freeze
+
   attr_reader :path, :url_template, :cdetector
   attr_accessor :amend, :commit, :files, :time, :strict
   attr_accessor :auto_bump_commit
@@ -223,7 +226,7 @@ class ReaPack::Index
   end
 
   def name=(newName)
-    if !/\A[^~#%&*{}\\:<>?\/+|"]+\Z/.match(newName) || /\A\.+\Z/.match(newName)
+    if !NAME_REGEX.match(newName) || NAME_INVALID.match(newName)
       raise Error, "invalid name '#{newName}'"
     end
 
