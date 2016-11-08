@@ -149,15 +149,16 @@ class TestGit < MiniTest::Test
     c5 = @git.create_commit 'fifth commit',
       [mkfile('helloworld/a'), mkfile('hello-world')]
 
-    assert_equal({'hello/world' => c2, 'hello/sub/world' => c4},
+    assert_equal({c2 => ['hello/world'], c4 => ['hello/sub/world']},
       @git.last_commits_for('hello'))
-    assert_equal({'chunky/bacon' => c3}, @git.last_commits_for('chunky'))
-    assert_equal({'hello/sub/world' => c4}, @git.last_commits_for('hello/sub'))
+    assert_equal({c3 => ['chunky/bacon']}, @git.last_commits_for('chunky'))
+    assert_equal({c4 => ['hello/sub/world']}, @git.last_commits_for('hello/sub'))
     assert_empty @git.last_commits_for('foobar')
 
-    assert_equal({'hello/world' => c2}, @git.last_commits_for('hello/world'))
-    assert_equal({'chunky/bacon' => c3, 'hello-world' => c5,
-      'hello/sub/world' => c4, 'hello/world' => c2, 'helloworld/a' => c5}, @git.last_commits_for(''))
+    assert_equal({c2 => ['hello/world']}, @git.last_commits_for('hello/world'))
+    assert_equal({c3 => ['chunky/bacon'], c5 => ['hello-world', 'helloworld/a'],
+                  c4 => ['hello/sub/world'], c2 => ['hello/world']},
+      @git.last_commits_for(''))
   end
 
   def test_multibyte_filename

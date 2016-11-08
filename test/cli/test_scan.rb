@@ -327,20 +327,24 @@ processing [a-f0-9]{7}: third commit
       @git.create_commit 'second commit', [
         mkfile('cat/test1.lua', '@version 2'),
         mkfile('cat/test2.lua', '@version 2.2'),
+        mkfile('cat/test3.lua', '@version 3'),
       ]
 
       @git.create_commit 'third commit',
-        [mkfile('cat/test3.lua', '@version 3')]
+        [mkfile('cat/test4.lua', '@version 4')]
     }
 
-    wrapper ['--scan', 'cat/test1.lua'], setup: setup do
-      capture_io { @cli.run }
+    wrapper ['--progress', '--scan', 'cat/test1.lua', '--scan', 'cat/test2.lua'],
+        setup: setup do
+      stdin, stderr = capture_io { @cli.run }
 
       contents = read_index
       refute_match 'version name="1"', contents, 'The initial commit was scanned'
       assert_match 'version name="2"', contents
-      refute_match 'test2.lua', contents, 'test2.lua was indexed'
+      assert_match 'test2.lua', contents, 'test2.lua was indexed'
       refute_match 'test3.lua', contents, 'The third commit was scanned'
+
+      assert_match /Indexing commit \d+ of 1/, stderr # not 3 commits!
     end
   end
 
@@ -354,20 +358,22 @@ processing [a-f0-9]{7}: third commit
         [mkfile('dir1/test1.lua', '@version 1')]
 
       @git.create_commit 'second commit', [
-        mkfile('dir1/test1.lua', '@version 2'),
-        mkfile('dir2/test2.lua', '@version 2.2'),
+        mkfile('dir1/test2.lua', '@version 2'),
         mkfile('dir1/sub/test3.lua', '@version 3'),
+        mkfile('dir2/test4.lua', '@version 4'),
       ]
     }
 
-    wrapper ['--scan', 'dir1'], setup: setup do
-      capture_io { @cli.run }
+    wrapper ['--progress', '--scan', 'dir1'], setup: setup do
+      stdout, stderr = capture_io { @cli.run }
 
       contents = read_index
-      refute_match 'version name="1"', contents, 'The initial commit was scanned'
-      assert_match 'version name="2"', contents
+      assert_match 'test1.lua', contents
+      assert_match 'test2.lua', contents
       assert_match 'test3.lua', contents
-      refute_match 'test2.lua', contents, 'test2.lua was indexed'
+      refute_match 'test4.lua', contents, 'test4.lua was indexed'
+
+      assert_match /Indexing commit \d+ of 2/, stderr # not 3 commits!
     end
   end
 
@@ -418,6 +424,26 @@ processing [a-f0-9]{7}: third commit
       contents = read_index
       assert_match 'test1.lua', contents
       assert_match 'test2.lua', contents
+    end
+  end
+
+  def test_scan_stick_to_full_commit
+    options = ['--scan', nil, '--scan', 'cat/test1.lua']
+
+    setup = proc {
+      Dir.chdir @git.path
+
+      @git.create_commit 'initial commit',
+        [mkfile('cat/test1.lua', '@version 1'),
+         mkfile('cat/test2.lua', '@version 2')]
+
+      options[1] = @git.last_commit.id
+    }
+
+    wrapper options, setup: setup do
+      capture_io { @cli.run }
+
+      assert_match 'test2.lua', read_index
     end
   end
 

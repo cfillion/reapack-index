@@ -78,17 +78,23 @@ private
     else
       @index.auto_bump_commit = false
 
+      # call process_commit only once per commit instead of once per --scan argument
+      commits = Hash.new
       @opts[:scan].map {|hash|
-        files = @git.last_commits_for(@git.relative_path hash)
+        files = @git.last_commits_for @git.relative_path(hash)
         if !files.empty?
-          files.map {|f, c| [c, f] }.compact
+          files.each {|commit, files|
+            commits[commit] = Array.new unless commits.has_key? commit # keep nil
+            commits[commit].concat files unless commits[commit].nil?
+          }
         elsif c = @git.get_commit(hash)
-          c
+          commits[c] = nil
         else
           $stderr.puts "--scan: bad file or revision: '%s'" % hash
           throw :stop, false
         end
-      }.compact.flatten 1
+      }
+      commits.to_a
     end
 
     unless commits.empty?
@@ -98,7 +104,7 @@ private
     end
   end
 
-  def process_commit(commit, file = nil)
+  def process_commit(commit, files = nil)
     if @opts[:verbose]
       log 'processing %s: %s' % [commit.short_id, commit.summary]
     end
@@ -109,7 +115,7 @@ private
 
     commit.each_diff
       .select {|diff|
-        (file.nil? || diff.file == file) &&
+        (files.nil? || files.include?(diff.file)) &&
           (not ignored? expand_path(diff.file)) &&
           ReaPack::Index.is_package?(diff.file)
       }

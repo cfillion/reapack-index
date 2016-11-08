@@ -52,10 +52,16 @@ class ReaPack::Index
 
     def last_commits_for(pattern)
       dir = pattern.empty? ? '' : pattern + '/'
-      Hash[last_commit.filelist.map {|file|
+      out = Hash.new
+      last_commit.filelist.each {|file|
         path = File.split(file).first + '/'
-        [file, last_commit_for(file)] if path.start_with?(dir) || file == pattern
-      }.compact]
+        next unless path.start_with?(dir) || file == pattern
+
+        commit = last_commit_for(file)
+        out[commit] ||= Array.new
+        out[commit] << file
+      }
+      out
     end
 
     def guess_url_template
@@ -170,6 +176,12 @@ class ReaPack::Index
 
     def ==(o)
       o && id == o.id
+    end
+
+    alias :eql? :==
+
+    def hash
+      id.hash
     end
 
     def inspect
