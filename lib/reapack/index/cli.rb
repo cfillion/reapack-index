@@ -79,15 +79,16 @@ private
       @index.auto_bump_commit = false
 
       @opts[:scan].map {|hash|
-        if c = @git.last_commit_for(@git.relative_path hash)
-          [c, hash]
+        files = @git.last_commits_for(@git.relative_path hash)
+        if !files.empty?
+          files.map {|f, c| [c, f] }
         elsif c = @git.get_commit(hash)
           c
         else
           $stderr.puts "--scan: bad file or revision: '%s'" % hash
           throw :stop, false
         end
-      }.compact
+      }.compact.flatten 1
     end
 
     unless commits.empty?
@@ -110,7 +111,7 @@ private
       .select {|diff|
         (file.nil? || diff.file == file) &&
           (not ignored? expand_path(diff.file)) &&
-          ReaPack::Index.type_of(diff.file)
+          ReaPack::Index.is_package?(diff.file)
       }
       .sort_by {|diff|
         diff.status == :deleted || diff.new_header[:noindex] ? 0 : 1

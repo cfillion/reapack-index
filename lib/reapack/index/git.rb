@@ -50,6 +50,21 @@ class ReaPack::Index
       }
     end
 
+    def last_commits_for(pattern)
+      dir = pattern + '/'
+      Hash[last_commit.filelist.map {|file|
+        path = File.split(file).first + '/'
+        [file, last_commit_for(file)] if path.start_with?(dir) || file == pattern
+      }.compact]
+    end
+    def ls(dir = '')
+      dir = dir + '/'
+      last_commit.filelist.map {|file|
+        path = File.split(file).first + '/'
+        file if path.start_with? dir
+      }.compact.sort
+    end
+
     def guess_url_template
       remote = @repo.remotes['origin']
       return unless remote

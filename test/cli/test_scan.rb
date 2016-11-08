@@ -318,8 +318,6 @@ processing [a-f0-9]{7}: third commit
   end
 
   def test_scan_file
-    options = [ '--scan', 'cat/test1.lua']
-
     setup = proc {
       Dir.chdir @git.path
 
@@ -335,13 +333,73 @@ processing [a-f0-9]{7}: third commit
         [mkfile('cat/test3.lua', '@version 3')]
     }
 
+    wrapper ['--scan', 'cat/test1.lua'], setup: setup do
+      capture_io { @cli.run }
+
+      contents = read_index
+      refute_match 'version name="1"', contents, 'The initial commit was scanned'
+      assert_match 'version name="2"', contents
+      refute_match 'test2.lua', contents, 'test2.lua was indexed'
+      refute_match 'test3.lua', contents, 'The third commit was scanned'
+    end
+  end
+
+  def test_scan_directory
+    setup = proc {
+      Dir.chdir @git.path
+
+      mkfile('dir1/uncommited.lua')
+
+      @git.create_commit 'initial commit',
+        [mkfile('dir1/test1.lua', '@version 1')]
+
+      @git.create_commit 'second commit', [
+        mkfile('dir1/test1.lua', '@version 2'),
+        mkfile('dir2/test2.lua', '@version 2.2'),
+        mkfile('dir1/sub/test3.lua', '@version 3'),
+      ]
+    }
+
+    wrapper ['--scan', 'dir1'], setup: setup do
+      capture_io { @cli.run }
+
+      contents = read_index
+      refute_match 'version name="1"', contents, 'The initial commit was scanned'
+      assert_match 'version name="2"', contents
+      assert_match 'test3.lua', contents
+      refute_match 'test2.lua', contents, 'test2.lua was indexed'
+    end
+  end
+
+  def test_scan_directory_uncommited
+    setup = proc {
+      Dir.chdir @git.path
+
+      mkfile('dir/uncommited.lua')
+    }
+
+    wrapper ['--scan', 'dir'], setup: setup do
+      @git.create_commit 'initial commit', [mkfile('README.md')]
+
+      assert_output nil, /--scan: bad file or revision: 'dir'/i do
+        assert_throws(:stop, false) { @cli.run }
+      end
+    end
+  end
+
+  def test_scan_directory_absolute
+    options = ['--scan', nil]
+
+    setup = proc {
+      @git.create_commit 'initial commit',
+        [mkfile('dir/test.lua', '@version 1')]
+      options[1] = mkpath('dir')
+    }
+
     wrapper options, setup: setup do
       capture_io { @cli.run }
 
-      refute_match 'version name="1"', read_index, 'The initial commit was scanned'
-      assert_match 'version name="2"', read_index
-      refute_match 'test2.lua', read_index, 'test2.lua was indexed'
-      refute_match 'test3.lua', read_index, 'The third commit was scanned'
+      assert 'test.lua', read_index
     end
   end
 

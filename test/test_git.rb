@@ -140,6 +140,23 @@ class TestGit < MiniTest::Test
     assert_nil @git.last_commit_for('foo/bar')
   end
 
+  def test_last_commits_for_directory
+    c1 = @git.create_commit 'first commit', [mkfile('hello/world')]
+    c2 = @git.create_commit 'second commit', [mkfile('hello/world', 'modified')]
+    c3 = @git.create_commit 'third commit', [mkfile('chunky/bacon')]
+    c4 = @git.create_commit 'fourth commit', [mkfile('hello/sub/world')]
+    c5 = @git.create_commit 'fifth commit',
+      [mkfile('helloworld/a'), mkfile('hello-world')]
+
+    assert_equal({'hello/world' => c2, 'hello/sub/world' => c4},
+      @git.last_commits_for('hello'))
+    assert_equal({'chunky/bacon' => c3}, @git.last_commits_for('chunky'))
+    assert_equal({'hello/sub/world' => c4}, @git.last_commits_for('hello/sub'))
+    assert_empty @git.last_commits_for('foobar')
+
+    assert_equal({'hello/world' => c2}, @git.last_commits_for('hello/world'))
+  end
+
   def test_multibyte_filename
     filename = "\342\200\224.lua"
 
