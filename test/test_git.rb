@@ -19,6 +19,7 @@ class TestGit < MiniTest::Test
   def test_relative_path
     assert_equal 'test', @git.relative_path(File.join(@git.path, 'test'))
     assert_match 'test', @git.relative_path('test')
+    assert_equal '', @git.relative_path(File.join(@git.path, '.'))
   end
 
   def test_guess_url_template
@@ -155,6 +156,8 @@ class TestGit < MiniTest::Test
     assert_empty @git.last_commits_for('foobar')
 
     assert_equal({'hello/world' => c2}, @git.last_commits_for('hello/world'))
+    assert_equal({'chunky/bacon' => c3, 'hello-world' => c5,
+      'hello/sub/world' => c4, 'hello/world' => c2, 'helloworld/a' => c5}, @git.last_commits_for(''))
   end
 
   def test_multibyte_filename

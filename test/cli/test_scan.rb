@@ -399,7 +399,25 @@ processing [a-f0-9]{7}: third commit
     wrapper options, setup: setup do
       capture_io { @cli.run }
 
-      assert 'test.lua', read_index
+      assert_match 'test.lua', read_index
+    end
+  end
+
+  def test_scan_directory_root
+    setup = proc {
+      Dir.chdir @git.path
+
+      @git.create_commit 'initial commit',
+        [mkfile('dir1/test1.lua', '@version 1'),
+         mkfile('dir2/test2.lua', '@version 2')]
+    }
+
+    wrapper ['--scan', '.'], setup: setup do
+      capture_io { @cli.run }
+
+      contents = read_index
+      assert_match 'test1.lua', contents
+      assert_match 'test2.lua', contents
     end
   end
 

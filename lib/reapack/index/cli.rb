@@ -81,7 +81,7 @@ private
       @opts[:scan].map {|hash|
         files = @git.last_commits_for(@git.relative_path hash)
         if !files.empty?
-          files.map {|f, c| [c, f] }
+          files.map {|f, c| [c, f] }.compact
         elsif c = @git.get_commit(hash)
           c
         else

@@ -51,18 +51,11 @@ class ReaPack::Index
     end
 
     def last_commits_for(pattern)
-      dir = pattern + '/'
+      dir = pattern.empty? ? '' : pattern + '/'
       Hash[last_commit.filelist.map {|file|
         path = File.split(file).first + '/'
         [file, last_commit_for(file)] if path.start_with?(dir) || file == pattern
       }.compact]
-    end
-    def ls(dir = '')
-      dir = dir + '/'
-      last_commit.filelist.map {|file|
-        path = File.split(file).first + '/'
-        file if path.start_with? dir
-      }.compact.sort
     end
 
     def guess_url_template
@@ -82,7 +75,8 @@ class ReaPack::Index
       root = Pathname.new self.path
       file = Pathname.new File.expand_path(path)
 
-      file.relative_path_from(root).to_s
+      rel = file.relative_path_from(root).to_s
+      rel == '.' ? '' : rel
     end
 
     def create_commit(message, files)
