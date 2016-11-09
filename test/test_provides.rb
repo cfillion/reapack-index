@@ -72,7 +72,7 @@ class TestProvides < MiniTest::Test
     assert_equal 'dst.txt', l1.target
     assert_nil l1.url_template
 
-    l2 = ReaPack::Index::Provides.parse 'src.txt >dst.txt http://test.com'
+    l2 = ReaPack::Index::Provides.parse 'src.txt>dst.txt http://test.com'
     assert_equal 'src.txt', l2.file_pattern
     assert_equal 'dst.txt http://test.com', l2.target
     assert_nil l2.url_template
