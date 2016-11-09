@@ -360,4 +360,29 @@ class TestIndex::Provides < MiniTest::Test
     refute_match 'main="main"', contents
     assert_match '<source>http://host/Category/script.lua</source>', contents
   end
+
+  def test_rename_target
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['Category/source.lua', 'Category/source.png']
+    index.url_template = 'http://host/$path'
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides
+        source.lua > target.lua
+        source.png > target.png
+    IN
+
+    index.write!
+
+    xml = File.read index.path
+
+    assert_match 'file="target.lua"', xml
+    assert_match 'file="target.png"', xml
+    refute_match 'file="source.png"', xml
+
+    assert_equal 1,
+      xml.scan(/#{Regexp.quote('http://host/Category/source.lua')}/).count
+    assert_match 'http://host/Category/source.png', xml
+  end
 end

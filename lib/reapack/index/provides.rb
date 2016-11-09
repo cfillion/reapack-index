@@ -1,11 +1,15 @@
 class ReaPack::Index
-  Provides = Struct.new :file_pattern, :url_template, :platform, :type, :main do
+  Provides = Struct.new :file_pattern, :url_template, :target, :platform, :type, :main do
     PROVIDES_REGEX = /
       \A
-      ( \[ \s* (?<options> .+? ) \s* \] )?
+      (?: \[ \s* (?<options> .+? ) \s* \] )?
       \s*
-      (?<file> .+?)
-      ( \s+ (?<url> (?:file|https?):\/\/.+ ) )?
+      (?<pattern>.+?)
+      (?:
+        \s*>\s*(?<target>.+?)
+      |
+        \s+ (?<url_tpl>(?:file|https?):\/\/.+)
+      )?
       \z
     /x.freeze
 
@@ -24,11 +28,9 @@ class ReaPack::Index
         m = line.strip.match PROVIDES_REGEX
         return unless m
 
-        options, pattern, url_tpl = m[:options], m[:file], m[:url]
+        instance = self.new m[:pattern], m[:url_tpl], m[:target]
 
-        instance = self.new pattern, url_tpl
-
-        options and options.split("\x20").each {|user_opt|
+        m[:options]&.split("\x20")&.each {|user_opt|
           user_opt.strip!
           next if user_opt.empty?
 

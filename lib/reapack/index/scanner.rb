@@ -47,6 +47,7 @@ class ReaPack::Index
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index
       @cselector = @index.cdetector[pkg.path]
+      @self_overriden = false
     end
 
     def run
@@ -76,7 +77,7 @@ class ReaPack::Index
           @cselector.clear
           sources = parse_provides @mh[:provides]
 
-          if !metapackage? && sources.none? {|src| src.file.nil? }
+          unless metapackage? || @self_overriden
             # add the package itself as a main source
             src = Source.new make_url(@pkg.path)
             src.detect_sections @pkg
@@ -142,6 +143,8 @@ class ReaPack::Index
         end
 
         files.map {|file|
+          target = line.target || file
+
           src = Source.new make_url(file, line.url_template)
           src.platform = line.platform
           src.type = line.type
@@ -154,7 +157,7 @@ class ReaPack::Index
           end
 
           @cselector.push src.type || @pkg.type, src.platform,
-            line.url_template ? expanded : file
+            line.url_template ? expanded : target
 
           if file == @pkg.path
             if metapackage?
@@ -164,9 +167,14 @@ class ReaPack::Index
               # not a metapackage? then the current file is registered by default
               src.detect_sections @pkg
             end
+
+            src.file = target if line.target
+            @self_overriden = true
           else
             if line.url_template
               src.file = file
+            elsif line.target
+              src.file = target
             else
               src.file = Pathname.new(file).relative_path_from(pathdir).to_s
             end
