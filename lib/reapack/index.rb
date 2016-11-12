@@ -37,6 +37,7 @@ class ReaPack::Index
     effect: %w{jsfx},
     data: %w{data},
     theme: %w{theme},
+    langpack: %w{ReaperLangPack},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

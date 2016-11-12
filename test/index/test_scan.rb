@@ -226,4 +226,30 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_langpack
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Translations/French.ReaperLangPack']
+
+    index.scan index.files.first, <<-IN
+    @version 1.0
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Translations">
+    <reapack name="French.ReaperLangPack" type="langpack">
+      <version name="1.0">
+        <source>http://host/Translations/French.ReaperLangPack</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
 end
