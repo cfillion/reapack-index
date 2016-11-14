@@ -385,4 +385,22 @@ class TestIndex::Provides < MiniTest::Test
       xml.scan(/#{Regexp.quote('http://host/Category/source.lua')}/).count
     assert_match 'http://host/Category/source.png', xml
   end
+
+  def test_rename_target_no_wrong_conflict
+    index = ReaPack::Index.new @dummy_path
+
+    # target.lua is not in the same directory
+    index.files = ['Category/s1.lua', 'target.lua', 'Category/s2.lua']
+    index.url_template = 'http://host/$path'
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides . > target.lua
+    IN
+
+    index.scan index.files.last, <<-IN
+      @version 1.0
+      @provides ../target.lua
+    IN
+  end
 end

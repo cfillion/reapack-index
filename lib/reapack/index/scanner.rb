@@ -143,7 +143,12 @@ class ReaPack::Index
         end
 
         files.map {|file|
-          target = line.target || file
+          if line.target
+            target = line.target
+            expanded = ReaPack::Index.expand line.target, @pkg.category
+          else
+            target = file
+          end
 
           src = Source.new make_url(file, line.url_template)
           src.platform = line.platform
@@ -157,7 +162,7 @@ class ReaPack::Index
           end
 
           @cselector.push src.type || @pkg.type, src.platform,
-            line.url_template ? expanded : target
+            line.url_template || line.target ? expanded : target
 
           if file == @pkg.path
             if metapackage?
