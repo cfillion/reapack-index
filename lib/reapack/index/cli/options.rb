@@ -56,7 +56,7 @@ class ReaPack::Index::CLI
         opts[:check] = true
       end
 
-      op.on '-s', '--scan [FILE|COMMIT]', 'Scan new commits (default), a file or a commit' do |commit|
+      op.on '-s', '--scan [PATH|COMMIT]', 'Scan new commits (default), a path or a specific commit' do |commit|
         opts[:check] = opts[:rebuild] = false
         opts[:scan] ||= []
 
