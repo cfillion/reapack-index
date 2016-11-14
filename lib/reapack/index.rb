@@ -37,7 +37,7 @@ class ReaPack::Index
     effect: %w{jsfx},
     data: %w{data},
     theme: %w{theme},
-    langpack: %w{ReaperLangPack},
+    langpack: %w{reaperlangpack},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze
@@ -57,10 +57,11 @@ class ReaPack::Index
     def type_of(path)
       # don't treat files in the root directory as packages
       # because they don't have a category
-      return if File.dirname(path) == '.'
 
-      ext = File.extname(path)[1..-1]
-      PKG_TYPES.find {|_, v| v.include? ext }&.first if ext
+      if File.dirname(path) != '.' && (ext = File.extname(path)[1..-1])
+        ext.downcase!
+        PKG_TYPES.find {|_, v| v.include? ext }&.first
+      end
     end
 
     alias :is_package? :type_of

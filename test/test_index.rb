@@ -20,6 +20,7 @@ class TestIndex < MiniTest::Test
       'Cat/test.jsfx'  => :effect,
       'Cat/test.data'  => :data,
       'Cat/test.theme' => :theme,
+      'Cat/test.reaperlangpack' => :langpack,
       'Cat/test.ReaperLangPack' => :langpack,
     }.each {|fn, type|
       actual = ReaPack::Index.type_of fn
