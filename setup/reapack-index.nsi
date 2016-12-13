@@ -8,7 +8,7 @@ Unicode true
 !define NAME "reapack-index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
-!define RUBY_VERSION "2.3.1"
+!define RUBY_VERSION "2.3.3"
 !define RUBYINSTALLER_FILE "rubyinstaller-${RUBY_VERSION}.exe"
 !define RUBYINSTALLER_URL \
   "http://dl.bintray.com/oneclick/rubyinstaller/${RUBYINSTALLER_FILE}"
