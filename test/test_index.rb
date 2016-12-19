@@ -25,6 +25,7 @@ class TestIndex < MiniTest::Test
       'Cat/test.theme' => :theme,
       'Cat/test.reaperlangpack' => :langpack,
       'Cat/test.ReaperLangPack' => :langpack,
+      'Cat/test.www'   => :webinterface,
     }.each {|fn, type|
       actual = ReaPack::Index.type_of fn
       assert_equal type, actual,
@@ -37,17 +38,19 @@ class TestIndex < MiniTest::Test
     assert_nil ReaPack::Index.resolve_type('hello')
 
     {
-      :script     => :script,
-      'lua'       => :script,
-      'eel'       => :script,
-      'effect'    => :effect,
-      :jsfx       => :effect,
-      'jsfx'      => :effect,
-      'extension' => :extension,
-      'ext'       => :extension,
-      'data'      => :data,
-      'theme'     => :theme,
-      'langpack'  => :langpack,
+      :script        => :script,
+      'lua'          => :script,
+      'eel'          => :script,
+      'effect'       => :effect,
+      :jsfx          => :effect,
+      'jsfx'         => :effect,
+      'extension'    => :extension,
+      'ext'          => :extension,
+      'data'         => :data,
+      'theme'        => :theme,
+      'langpack'     => :langpack,
+      'www'          => :webinterface,
+      'webinterface' => :webinterface,
     }.each {|input, type|
       actual = ReaPack::Index.resolve_type input
       assert_equal type, actual,

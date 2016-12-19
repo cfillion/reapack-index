@@ -38,6 +38,7 @@ class ReaPack::Index
     data: %w{data},
     theme: %w{theme},
     langpack: %w{reaperlangpack},
+    webinterface: %w{www},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

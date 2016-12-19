@@ -37,12 +37,13 @@ class ReaPack::Index
 
     HEADER_ALIASES = {
       [:reascript_name, :jsfx_name, :theme_name,
-        :extension_name, :langpack_name, :desc, :name] => :description,
+        :extension_name, :langpack_name, :webinterface_name,
+        :desc, :name] => :description,
       [:links, :website] => :link,
       :screenshots => :screenshot,
     }.freeze
 
-    META_TYPES = [:extension, :data, :theme].freeze
+    META_TYPES = [:extension, :data, :theme, :webinterface].freeze
 
     def initialize(cat, pkg, mh, index)
       @cat, @pkg, @mh, @index = cat, pkg, mh, index

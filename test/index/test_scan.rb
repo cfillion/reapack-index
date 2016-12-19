@@ -252,4 +252,31 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_webinterface
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Web Interfaces/Test.www']
+
+    index.scan index.files.first, <<-IN
+    @version 1.0
+    @provides test.html http://host/test.html
+    IN
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Web Interfaces">
+    <reapack name="Test.www" type="webinterface">
+      <version name="1.0">
+        <source file="test.html">http://host/test.html</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
 end
