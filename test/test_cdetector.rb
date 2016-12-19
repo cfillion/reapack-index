@@ -162,7 +162,7 @@ class TestConflictDetector < MiniTest::Test
     cd['test'].clear
     cd['test'].push :grp, :all, 'file'
 
-    assert_equal nil, cd.resolve(:grp, 'test')
+     assert_nil cd.resolve(:grp, 'test')
   end
 
   def test_clone
@@ -185,7 +185,7 @@ class TestConflictDetector < MiniTest::Test
     cd.clear
     cd['test'].push :grp, :all, 'file'
 
-    assert_equal nil, cd.resolve(:grp, 'test')
+    assert_nil cd.resolve(:grp, 'test')
   end
 
   def test_load_xml

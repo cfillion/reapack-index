@@ -9,10 +9,13 @@ class TestIndex < MiniTest::Test
   end
 
   def test_type_of
+    [
+      'src/main.cpp',
+      'src/noext',
+      'in_root',
+    ].each {|fn| assert_nil ReaPack::Index.type_of(fn) }
+
     {
-      'src/main.cpp'   => nil,
-      'src/noext'      => nil,
-      'in_root'        => nil,
       'Cat/test.lua'   => :script,
       'Cat/test.eel'   => :script,
       'Cat/test.py'    => :script,
@@ -31,8 +34,9 @@ class TestIndex < MiniTest::Test
   end
 
   def test_resolve_type
+    assert_nil ReaPack::Index.resolve_type('hello')
+
     {
-      'hello'     => nil,
       :script     => :script,
       'lua'       => :script,
       'eel'       => :script,
