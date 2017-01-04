@@ -81,7 +81,7 @@ class ReaPack::Index
       else
         @versions.each_key {|other|
           normalized = [other.dup, name.dup].each {|ver|
-            ver.gsub! /(?<![\d\w])0+/, ''
+            ver.gsub! /(?<![\d\w])0+(?=\d)/, ''
             ver.gsub! /[^\d\w]+/, '.'
           }
 
