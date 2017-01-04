@@ -80,9 +80,10 @@ class ReaPack::Index
         ver = @versions[name]
       else
         @versions.each_key {|other|
-          normalized = [other.dup, name.dup].each {|ver|
-            ver.gsub! /(?<![\d\w])0+(?=\d)/, ''
-            ver.gsub! /[^\d\w]+/, '.'
+          normalized = [other, name].map {|ver|
+            ver.scan(/(\d+)|([a-zA-Z]+)/).map {|match|
+              match.first ? match.first.to_i : match.last
+            }.join '.'
           }
 
           if normalized.uniq.size < 2

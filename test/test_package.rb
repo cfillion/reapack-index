@@ -141,6 +141,14 @@ class TestPackage < MiniTest::Test
       pkg.version '1.000.1'
     end
     assert_equal 'version 1.000.1 is a duplicate of version 1.0.1', error.message
+
+    pkg.version '01pre1'
+    error = assert_raises ReaPack::Index::Error do
+      pkg.version '1.pre01'
+    end
+    assert_equal 'version 1.pre01 is a duplicate of version 01pre1', error.message
+
+    pkg.version '1PRE1' # not the same as 01pre1
   end
 
   def test_category_and_path
