@@ -55,7 +55,7 @@ class ReaPack::Index
       @sections = []
 
       if (@type || pkg.type) == :script
-        @sections << \
+        @sections <<
           case pkg.topdir.downcase
           when 'midi editor'
             :midi_editor

@@ -103,7 +103,7 @@ class ReaPack::Index
         end
       }
 
-      hash = Rugged::Commit.create @repo, \
+      hash = Rugged::Commit.create @repo,
         tree: new_index.write_tree(@repo),
         message: message,
         parents: [target].compact,
