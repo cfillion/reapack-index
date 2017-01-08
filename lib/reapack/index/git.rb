@@ -27,9 +27,8 @@ class ReaPack::Index
 
       walker = Rugged::Walker.new @repo
       walker.sorting Rugged::SORT_TOPO | Rugged::SORT_REVERSE
-      walker.push @repo.head.target_id
-
       walker.hide sha if fetch_commit sha
+      walker.push @repo.head.target_id
 
       walker.map {|c| Commit.new c, @repo }
     end
