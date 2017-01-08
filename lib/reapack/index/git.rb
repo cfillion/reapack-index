@@ -163,7 +163,7 @@ class ReaPack::Index
     end
 
     def summary
-      message.lines.first.chomp
+      @commit.summary
     end
 
     def time

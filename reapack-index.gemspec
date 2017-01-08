@@ -32,6 +32,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'metaheader', '~> 1.3'
   spec.add_runtime_dependency 'nokogiri', '~> 1.7'
   spec.add_runtime_dependency 'pandoc-ruby', '~> 2.0'
-  spec.add_runtime_dependency 'rugged', '~> 0.24'
+  spec.add_runtime_dependency 'rugged', '~> 0.25'
   spec.add_runtime_dependency 'stable_sort', '~> 1.1'
 end

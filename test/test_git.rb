@@ -75,8 +75,8 @@ class TestGit < MiniTest::Test
   end
 
   def test_commit_info
-    commit = @git.create_commit "initial commit\ndescription", [mkfile('file')]
-    assert_equal "initial commit\ndescription", commit.message
+    commit = @git.create_commit "initial commit\n\ndescription", [mkfile('file')]
+    assert_equal "initial commit\n\ndescription", commit.message
     assert_equal 'initial commit', commit.summary
 
     assert commit.id.start_with?(commit.short_id)
