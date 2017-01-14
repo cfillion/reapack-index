@@ -1,4 +1,4 @@
-coverage/
-doc/
-pkg/
-Gemfile.lock
+/coverage/
+/doc/
+/pkg/
+/Gemfile.lock
