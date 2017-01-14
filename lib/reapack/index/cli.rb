@@ -345,7 +345,7 @@ private
 
   def indent(input)
     output = String.new
-    input.lines {|l| output += "\x20\x20#{l}" }
+    input.each_line {|l| output += "\x20\x20#{l}" }
     output
   end
 end

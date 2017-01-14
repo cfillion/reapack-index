@@ -195,7 +195,7 @@ class ReaPack::Index
       tag ||= type
 
       @pkg.metadata.replace_links type do
-        @mh[tag].to_s.lines {|line|
+        @mh[tag].to_s.each_line {|line|
           line.strip!
           @pkg.metadata.push_link type, *Link.split(line) unless line.empty?
         }
