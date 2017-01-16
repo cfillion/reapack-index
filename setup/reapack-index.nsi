@@ -4,7 +4,7 @@ Unicode true
 !include Sections.nsh
 !include StrRep.nsh
 
-!define VERSION "1.1rc6"
+!define VERSION "1.1"
 !define NAME "reapack-index ${VERSION}"
 !define LONG_VERSION "0.1.0.0"
 
@@ -18,10 +18,10 @@ Unicode true
 !define PANDOC_URL \
   "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/${PANDOC_FILE}"
 
-!define RUGGED_VERSION "0.24.0"
+!define RUGGED_VERSION "0.25.1"
 !define RUGGED_FILE "rugged-${RUGGED_VERSION}-%PLATFORM%.gem"
 !define RUGGED_URL \
-  "https://github.com/cfillion/reapack-index/releases/download/v1.0beta4/${RUGGED_FILE}"
+  "https://github.com/cfillion/reapack-index/releases/download/v1.1/${RUGGED_FILE}"
 
 Name "${NAME}"
 OutFile "reapack-index-${VERSION}.exe"
@@ -35,7 +35,7 @@ VIAddVersionKey "ProductName" "${NAME}"
 VIAddVersionKey "ProductVersion" "${LONG_VERSION}"
 VIAddVersionKey "FileDescription" "${NAME} Setup"
 VIAddVersionKey "FileVersion" "${LONG_VERSION}"
-VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2016  Christian Fillion"
+VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2017  Christian Fillion"
 
 !define ABORT_MSG "Installation aborted."
 
