@@ -75,8 +75,9 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2015-2017  Christian Fillion"
 
 !macro RELOAD_PATH
   ; reload the path to use the one freshly set by the ruby installer
-  ReadRegStr $R1 HKCU "Environment" "Path"
-  System::Call 'Kernel32::SetEnvironmentVariable(t, t) i("Path", R1).r2'
+  ReadRegStr $R1 HKCU "Environment" "PATH"
+  StrCmp $R1 "" +2
+    System::Call 'Kernel32::SetEnvironmentVariable(t, t) i("PATH", R1).r2'
 !macroend
 
 Section /o "Ruby for Windows" InstallRuby
@@ -99,7 +100,7 @@ Section /o "Ruby for Windows" InstallRuby
       "reapack-index installer" "$EXEPATH"
     Reboot
 
-    DetailPrint "Relaunch reapack-index installer after rebooting your computer."
+    DetailPrint "Relaunch this installer after rebooting your computer."
     Abort
 SectionEnd
 
