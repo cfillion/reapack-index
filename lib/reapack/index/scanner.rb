@@ -40,6 +40,7 @@ class ReaPack::Index
         :extension_name, :langpack_name, :webinterface_name,
         :desc, :name] => :description,
       [:links, :website] => :link,
+      :donate => :donation,
       :screenshots => :screenshot,
     }.freeze
 
