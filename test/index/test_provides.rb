@@ -363,7 +363,9 @@ class TestIndex::Provides < MiniTest::Test
 
   def test_rename_target
     index = ReaPack::Index.new @dummy_path
-    index.files = ['Category/source.lua', 'Category/source.png']
+    index.files = ['Category/source.lua', 'Category/source.png',
+                   'Category/source1.jpg', 'Category/source2.jpg',
+                   'Category/sub/source.txt']
     index.url_template = 'http://host/$path'
 
     index.scan index.files.first, <<-IN
@@ -371,6 +373,8 @@ class TestIndex::Provides < MiniTest::Test
       @provides
         source.lua > target.lua
         source.png > target.png
+        source*.jpg > target_dir/
+        sub/source.txt > .
     IN
 
     index.write!
@@ -379,11 +383,31 @@ class TestIndex::Provides < MiniTest::Test
 
     assert_match 'file="target.lua"', xml
     assert_match 'file="target.png"', xml
+    assert_match 'file="target_dir/source1.jpg"', xml
+    assert_match 'file="target_dir/source2.jpg"', xml
+    assert_match 'file="source.txt"', xml
     refute_match 'file="source.png"', xml
 
     assert_equal 1,
       xml.scan(/#{Regexp.quote('http://host/Category/source.lua')}/).count
     assert_match 'http://host/Category/source.png', xml
+  end
+
+  def test_rename_target_conflict
+    index = ReaPack::Index.new @dummy_path
+
+    # target.lua is not in the same directory
+    index.files = ['Category/target.lua', 'Category/sub/target.lua']
+    index.url_template = 'http://host/$path'
+
+    error = assert_raises ReaPack::Index::Error do
+      index.scan index.files.first, <<-IN
+        @version 1.0
+        @provides . > target.lua
+        @provides sub/target.lua > ./
+      IN
+    end
+    assert_equal "duplicate file 'Category/target.lua'", error.message
   end
 
   def test_rename_target_no_wrong_conflict

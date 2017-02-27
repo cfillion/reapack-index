@@ -146,8 +146,15 @@ class ReaPack::Index
 
         files.map {|file|
           if line.target
-            target = line.target
-            expanded = ReaPack::Index.expand line.target, @pkg.category
+            if line.target =~ /[\/\\\.]+\z/
+              new_dir = ReaPack::Index.expand line.target, ''
+              base_file = File.basename file
+              target = new_dir.empty? ? base_file : File.join(new_dir, base_file)
+            else
+              target = line.target
+            end
+
+            expanded = ReaPack::Index.expand target, @pkg.category
           else
             target = file
           end
