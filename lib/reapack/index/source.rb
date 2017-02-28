@@ -10,6 +10,7 @@ class ReaPack::Index
       all: nil,
       windows: :all, win32: :windows, win64: :windows,
       darwin: :all, darwin32: :darwin, darwin64: :darwin,
+      linux: :all, linux64: :linux,
     }.freeze
 
     SECTIONS = [
