@@ -191,6 +191,10 @@ class ReaPack::Index::CLI
       end
     end.parse! args
 
+    if basepath && !args.empty?
+      raise OptionParser::InvalidOption, "#{args.first}"
+    end
+
     opts
   rescue OptionParser::ParseError => e
     $stderr.puts "#{PROGRAM_NAME}: #{e.message}"

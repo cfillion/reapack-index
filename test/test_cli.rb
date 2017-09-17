@@ -170,6 +170,16 @@ class TestCLI < MiniTest::Test
     end
   end
 
+  def test_config_garbage
+    assert_output '', /invalid option: not$/ do
+      catch :stop do
+        wrapper [], setup: proc {
+          mkfile '.reapack-index.conf', "not an option"
+        }
+      end
+    end
+  end
+
   def test_working_directory_with_options
     wrapper do
       @git.create_commit 'initial commit',
