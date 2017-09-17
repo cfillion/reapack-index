@@ -39,6 +39,10 @@ class ReaPack::Index
     theme: %w{theme},
     langpack: %w{reaperlangpack},
     webinterface: %w{www},
+    projecttpl: %w{rpp},
+    tracktpl: %w{rtracktemplate},
+    midinotenames: %w{txt},
+    autoitem: %w{reaperautoitem},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

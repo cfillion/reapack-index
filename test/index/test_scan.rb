@@ -279,4 +279,100 @@ class TestIndex::Scan < MiniTest::Test
     index.write!
     assert_equal expected, File.read(index.path)
   end
+
+  def test_projecttpl
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Cat/test.RPP']
+
+    index.scan index.files.first, '@version 1.0'
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Cat">
+    <reapack name="test.RPP" type="projecttpl">
+      <version name="1.0">
+        <source>http://host/Cat/test.RPP</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_tracktpl
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Cat/test.RTrackTemplate']
+
+    index.scan index.files.first, '@version 1.0'
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Cat">
+    <reapack name="test.RTrackTemplate" type="tracktpl">
+      <version name="1.0">
+        <source>http://host/Cat/test.RTrackTemplate</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_midinotenames
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Cat/test.txt']
+
+    index.scan index.files.first, '@version 1.0'
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Cat">
+    <reapack name="test.txt" type="midinotenames">
+      <version name="1.0">
+        <source>http://host/Cat/test.txt</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
+
+  def test_autoitem
+    index = ReaPack::Index.new @dummy_path
+    index.url_template = 'http://host/$path'
+    index.files = ['Cat/test.ReaperAutoItem']
+
+    index.scan index.files.first, '@version 1.0'
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Cat">
+    <reapack name="test.ReaperAutoItem" type="autoitem">
+      <version name="1.0">
+        <source>http://host/Cat/test.ReaperAutoItem</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    index.write!
+    assert_equal expected, File.read(index.path)
+  end
 end

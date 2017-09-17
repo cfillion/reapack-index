@@ -16,16 +16,20 @@ class TestIndex < MiniTest::Test
     ].each {|fn| assert_nil ReaPack::Index.type_of(fn) }
 
     {
-      'Cat/test.lua'   => :script,
-      'Cat/test.eel'   => :script,
-      'Cat/test.py'    => :script,
-      'Cat/test.ext'   => :extension,
-      'Cat/test.jsfx'  => :effect,
-      'Cat/test.data'  => :data,
-      'Cat/test.theme' => :theme,
-      'Cat/test.reaperlangpack' => :langpack,
-      'Cat/test.ReaperLangPack' => :langpack,
-      'Cat/test.www'   => :webinterface,
+      'Cat/test.lua'             => :script,
+      'Cat/test.eel'             => :script,
+      'Cat/test.py'              => :script,
+      'Cat/test.ext'             => :extension,
+      'Cat/test.jsfx'            => :effect,
+      'Cat/test.data'            => :data,
+      'Cat/test.theme'           => :theme,
+      'Cat/test.reaperlangpack'  => :langpack,
+      'Cat/test.ReaperLangPack'  => :langpack,
+      'Cat/test.www'             => :webinterface,
+      'Cat/test.RPP'             => :projecttpl,
+      'Cat/test.RTrackTemplate'  => :tracktpl,
+      'Cate/test.txt'            => :midinotenames,
+      'Cate/test.ReaperAutoItem' => :autoitem,
     }.each {|fn, type|
       actual = ReaPack::Index.type_of fn
       assert_equal type, actual,
