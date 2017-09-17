@@ -43,8 +43,8 @@ class ReaPack::Index
 
   FS_ROOT = File.expand_path('/').freeze
 
-  NAME_REGEX = /\A[^*\\:<>?\/|"[:cntrl:]]{4,24}\Z/.freeze
-  NAME_INVALID = /\A(:?[\.\x20].+|.+[\.\x20]|CLOCK\$|COM\d|LPT\d)\Z/i.freeze
+  NAME_REGEX = /\A[^*\\:<>?\/|"[:cntrl:]]+\Z/.freeze
+  NAME_INVALID = /\A(:?[\.\x20].*|.+[\.\x20]|CLOCK\$|COM\d|LPT\d)\Z/i.freeze
 
   attr_reader :path, :url_template, :cdetector
   attr_accessor :amend, :commit, :files, :time, :strict
