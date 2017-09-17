@@ -14,7 +14,8 @@ class ReaPack::Index
     }.freeze
 
     SECTIONS = [
-      :main, :midi_editor
+      :main, :midi_editor, :midi_inlineeditor, :midi_eventlisteditor,
+      :mediaexplorer
     ].freeze
 
     class << self
@@ -60,6 +61,12 @@ class ReaPack::Index
           case pkg.topdir.downcase
           when 'midi editor'
             :midi_editor
+          when 'midi inline editor'
+            :midi_inlineeditor
+          when 'midi event list editor'
+            :midi_eventlisteditor
+          when 'media explorer'
+            :mediaexplorer
           else
             :main
           end
