@@ -37,6 +37,10 @@ class TestGit < MiniTest::Test
     assert_match "https://github.com/User/Repo/raw/$commit/$path",
       @git.guess_url_template
 
+    @repo.remotes.set_url 'origin', 'https://github.com/User/Repo/'
+    assert_match "https://github.com/User/Repo/raw/$commit/$path",
+      @git.guess_url_template
+
     @repo.remotes.set_url 'origin', 'scp://weird/url'
     assert_nil @git.guess_url_template
   end

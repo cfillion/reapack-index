@@ -68,9 +68,10 @@ class ReaPack::Index
       return unless remote
 
       uri = Gitable::URI.parse remote.url
-      return unless uri.path =~ /\A\/?(?<user>[^\/]+)\/(?<repo>[^\/]+)(\.git)?\Z/
+      return unless uri.path =~ /\A\/?(?<user>[^\/]+)\/(?<repo>[^\/]+)(\.git|\/)?\Z/
 
       tpl = uri.to_web_uri
+      tpl.path.chomp! '/'
       tpl.path += '/raw/$commit/$path'
 
       tpl.to_s
