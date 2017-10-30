@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'bundler', '~> 1.10'
   spec.add_development_dependency 'coveralls', '~> 0.8'
   spec.add_development_dependency 'minitest', '~> 5.8'
-  spec.add_development_dependency 'rake', '~> 11.0'
+  spec.add_development_dependency 'rake', '~> 12.0'
   spec.add_development_dependency 'simplecov', '~> 0.11'
 
   spec.add_runtime_dependency 'addressable', '~> 2.4'
