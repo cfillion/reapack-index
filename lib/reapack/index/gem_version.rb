@@ -1,6 +1,5 @@
 module ReaPack
   class Index
-    # bump in setup/reapack-index.nsi too
-    VERSION = '1.2'
+    VERSION = '1.2.1'
   end
 end
