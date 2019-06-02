@@ -109,7 +109,7 @@ class ReaPack::Index
       end
 
       template
-        .gsub('$path', path)
+        .gsub('$path', URI::encode(path))
         .gsub('$commit', @index.commit || 'master')
         .gsub('$version', @ver.name)
         .gsub('$package', @pkg.path)

@@ -54,6 +54,36 @@ class TestIndex::Scan < MiniTest::Test
     assert_equal expected, File.read(index.path)
   end
 
+  def test_escape_path_uri
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['Category/Hello World #1.lua']
+    index.url_template = 'http://host/$path'
+
+    index.scan index.files.first, '@version 1.0'
+
+    assert_equal true, index.modified?
+    assert_equal '1 new category, 1 new package, 1 new version', index.changelog
+
+    index.write!
+
+    assert_equal false, index.modified?
+
+    expected = <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1">
+  <category name="Category">
+    <reapack name="Hello World #1.lua" type="script">
+      <version name="1.0">
+        <source main="main">http://host/Category/Hello%20World%20%231.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
+    XML
+
+    assert_equal expected, File.read(index.path)
+  end
+
   def test_package_in_root
     index = ReaPack::Index.new @dummy_path
     index.files = ['script.lua', 'Hello/World']
