@@ -71,7 +71,7 @@ class ReaPack::Index
       return unless uri.path =~ /\A\/?(?<user>[^\/]+)\/(?<repo>[^\/]+)(\.git|\/)?\Z/
 
       tpl = uri.to_web_uri
-      tpl.path.chomp! '/'
+      tpl.path = tpl.path.chomp '/'
       tpl.path += '/raw/$commit/$path'
 
       tpl.to_s
