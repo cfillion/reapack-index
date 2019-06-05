@@ -14,6 +14,7 @@ require 'rugged'
 require 'shellwords'
 require 'stable_sort'
 require 'time'
+require 'uri'
 
 require 'reapack/index/cdetector'
 require 'reapack/index/cli'
