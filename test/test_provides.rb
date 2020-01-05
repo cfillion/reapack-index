@@ -35,7 +35,7 @@ class TestProvides < MiniTest::Test
   def test_platforms
     assert_equal [:windows, :win32, :win64,
                   :darwin, :darwin32, :darwin64,
-                  :linux, :linux32, :linux64],
+                  :linux, :linux32, :linux64, :'linux-armv7l', :'linux-aarch64'],
       [
         '[windows] file',
         '[win32] file',
@@ -46,6 +46,8 @@ class TestProvides < MiniTest::Test
         '[linux] file',
         '[linux32] file',
         '[linux64] file',
+        '[linux-armv7l] file',
+        '[linux-aarch64] file',
       ].map {|l| ReaPack::Index::Provides.parse(l).platform }
   end
 

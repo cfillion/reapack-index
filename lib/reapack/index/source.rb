@@ -11,6 +11,7 @@ class ReaPack::Index
       windows: :all, win32: :windows, win64: :windows,
       darwin: :all, darwin32: :darwin, darwin64: :darwin,
       linux: :all, linux32: :linux, linux64: :linux,
+      'linux-armv7l': :linux, 'linux-aarch64': :linux
     }.freeze
 
     SECTIONS = [
