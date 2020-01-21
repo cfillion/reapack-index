@@ -182,7 +182,7 @@ class ReaPack::Index
               src.detect_sections @pkg
             end
 
-            src.file = target if line.target
+            src.file = target if line.target && expanded != file
             @self_overriden = true
           else
             if line.url_template

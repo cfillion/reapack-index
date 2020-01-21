@@ -427,4 +427,18 @@ class TestIndex::Provides < MiniTest::Test
       @provides ../target.lua
     IN
   end
+
+  def test_rename_target_same_name
+    index = ReaPack::Index.new @dummy_path
+    index.files = ['Category/script.lua']
+    index.url_template = 'http://host/$path'
+
+    index.scan index.files.first, <<-IN
+      @version 1.0
+      @provides . > script.lua
+    IN
+
+    index.write!
+    refute_match 'file=', File.read(index.path)
+  end
 end
