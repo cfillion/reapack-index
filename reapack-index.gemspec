@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.name          = 'reapack-index'
   spec.version       = ReaPack::Index::VERSION
   spec.authors       = ['cfillion']
-  spec.email         = ['reapack-index@cfillion.tk']
+  spec.email         = ['reapack-index@cfillion.ca']
   spec.summary       = 'Package indexer for git-based ReaPack repositories'
   spec.homepage      = 'https://github.com/cfillion/reapack-index'
   spec.license       = 'GPL-3.0+'
