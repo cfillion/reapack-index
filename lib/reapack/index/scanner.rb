@@ -108,11 +108,23 @@ class ReaPack::Index
         end
       end
 
-      template
-        .gsub('$path', URI::encode(path))
-        .gsub('$commit', @index.commit || 'master')
-        .gsub('$version', @ver.name)
-        .gsub('$package', @pkg.path)
+      substitutions = {
+        '$path'    => path,
+        '$commit'  => @index.commit || 'master',
+        '$version' => @ver.name,
+        '$package' => @pkg.path,
+      }
+
+      uri = Addressable::URI.parse template
+      [:host, :path, :query].each {|segment|
+        value = uri.send segment
+
+        if value
+          value.gsub! /\$\w+/, substitutions
+          uri.send "#{segment}=", value
+        end
+      }
+      uri.normalize.to_s
     end
 
     def parse_provides(provides)

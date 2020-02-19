@@ -4,8 +4,9 @@ rvm:
   - 2.4
   - 2.5
   - 2.6
+  - 2.7
 before_install:
   - gem update bundler
-  - wget https://github.com/jgm/pandoc/releases/download/2.7.2/pandoc-2.7.2-1-amd64.deb -O pandoc.deb
+  - wget https://github.com/jgm/pandoc/releases/download/2.9.2/pandoc-2.9.2-1-amd64.deb -O pandoc.deb
   - sudo dpkg -i pandoc.deb
 cache: bundler

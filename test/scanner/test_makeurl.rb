@@ -93,10 +93,10 @@ class TestScanner::TestMakeUrl < MiniTest::Test
 
   def test_repeat
     @index.expect :files, ['Category/script.lua']
-    @index.expect :url_template, '$path $path'
+    @index.expect :url_template, '$path$path'
     @index.expect :commit, 'C0FF33'
 
-    assert_equal 'Category/script.lua Category/script.lua',
+    assert_equal 'Category/script.luaCategory/script.lua',
       @scanner.make_url('Category/script.lua')
   end
 end
