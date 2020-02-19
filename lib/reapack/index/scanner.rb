@@ -52,10 +52,12 @@ class ReaPack::Index
       @self_overriden = false
     end
 
-    def run
+    def run(strict = false)
       @mh.alias HEADER_ALIASES
 
-      if errors = @mh.validate(HEADER_RULES)
+      errors = @mh.validate(HEADER_RULES, strict)
+
+      unless errors.empty?
         raise Error, errors.join("\n")
       end
 

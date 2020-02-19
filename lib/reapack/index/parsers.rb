@@ -1,4 +1,4 @@
-class WordpressChangelog < MetaHeader::Parser
+class WordpressChangelog
   CHANGELOG = /
     Changelog\s*:\n
     (.+?)\n\s*
@@ -7,11 +7,14 @@ class WordpressChangelog < MetaHeader::Parser
 
   VERSION = /\A[\s\*]*v([\d\.]+)(?:\s+(.+))?\Z/.freeze
 
+  def initialize(mh)
+    @header = mh
+  end
+
   def parse(input)
-    input = input.read
     input.encode! Encoding::UTF_8, invalid: :replace
 
-    ver, changes = header[:version], header[:changelog]
+    ver, changes = @header[:version], @header[:changelog]
     return if ver.nil? || changes || CHANGELOG.match(input).nil?
 
     $1.lines.each {|line| read line.lstrip }
@@ -19,15 +22,15 @@ class WordpressChangelog < MetaHeader::Parser
 
   def read(line)
     if line =~ VERSION
-      @current = $1 == header[:version]
+      @current = $1 == @header[:version]
     elsif @current
-      if header[:changelog]
-        header[:changelog] += "\n"
+      if @header[:changelog]
+        @header[:changelog] += "\n"
       else
-        header[:changelog] = String.new
+        @header[:changelog] = String.new
       end
 
-      header[:changelog] += line.chomp
+      @header[:changelog] += line.chomp
     end
   end
 end

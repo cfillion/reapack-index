@@ -2,7 +2,7 @@ require File.expand_path '../helper', __FILE__
 
 class TestParsers < MiniTest::Test
   def test_wordpress
-    mh = MetaHeader.new <<-IN
+    input = <<-IN
 /**
  * Version: 1.1
  */
@@ -23,12 +23,17 @@ class TestParsers < MiniTest::Test
  Test\x97
     IN
 
+    mh = MetaHeader.parse input
     assert_equal '1.1', mh[:version]
+    refute mh.has?(:changelog)
+
+    parser = WordpressChangelog.new mh
+    parser.parse input
     assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
   end
 
   def test_wordpress_no_date
-    mh = MetaHeader.new <<-IN
+    input = <<-IN
 /**
  * Version: 1.1
  */
@@ -49,12 +54,14 @@ class TestParsers < MiniTest::Test
  Test\x97
     IN
 
-    assert_equal '1.1', mh[:version]
+    mh = MetaHeader.parse input
+    parser = WordpressChangelog.new mh
+    parser.parse input
     assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
   end
 
   def test_wordpress_noprefix
-    mh = MetaHeader.new <<-IN
+    input = <<-IN
 --[[
 Version: 1.1
 --]]
@@ -76,7 +83,9 @@ v1.0 (2012-01-01)
  Test\x97
     IN
 
-    assert_equal '1.1', mh[:version]
+    mh = MetaHeader.parse input
+    parser = WordpressChangelog.new mh
+    parser.parse input
     assert_equal "+ Line 3\n+ Line 4", mh[:changelog]
   end
 end

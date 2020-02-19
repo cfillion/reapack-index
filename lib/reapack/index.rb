@@ -120,8 +120,16 @@ class ReaPack::Index
     type = self.class.type_of path
     return unless type
 
-    mh = MetaHeader.parse contents
-    mh.strict = @strict
+    mh = if contents.is_a? MetaHeader
+      contents
+    else
+      mh = MetaHeader.parse contents
+      unless mh.has? :changelog
+        wp = WordpressChangelog.new mh
+        wp.parse contents
+      end
+      mh
+    end
 
     if mh[:noindex]
       remove path
@@ -139,7 +147,7 @@ class ReaPack::Index
     scanner = Scanner.new cat, pkg, mh, self
 
     begin
-      scanner.run
+      scanner.run @strict
     rescue Error
       backups.each {|var, value| instance_variable_set var, value }
       raise

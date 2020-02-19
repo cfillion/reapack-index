@@ -6,7 +6,7 @@ class TestScanner < MiniTest::Test
   def setup
     @mock = MiniTest::Mock.new
 
-    @mh = MetaHeader.new String.new
+    @mh = MetaHeader.new
     @mh[:version] = '1.0'
 
     @doc = Nokogiri::XML <<-XML
