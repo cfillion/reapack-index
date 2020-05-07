@@ -232,7 +232,7 @@ class ReaPack::Index
     end
 
     def new_header
-      @new_header ||= MetaHeader.parse @new_content if new_content
+      @new_header ||= ReaPack::Index.parse @new_content if new_content
     end
   end
 end

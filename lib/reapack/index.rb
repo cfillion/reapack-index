@@ -77,6 +77,15 @@ class ReaPack::Index
         .find {|name, exts| input.to_sym == name || exts.include?(input.to_s) }
         &.first
     end
+
+    def parse(contents)
+      mh = MetaHeader.parse contents
+      unless mh.has? :changelog
+        wp = WordpressChangelog.new mh
+        wp.parse contents
+      end
+      mh
+    end
   end
 
   def initialize(path)
@@ -120,16 +129,7 @@ class ReaPack::Index
     type = self.class.type_of path
     return unless type
 
-    mh = if contents.is_a? MetaHeader
-      contents
-    else
-      mh = MetaHeader.parse contents
-      unless mh.has? :changelog
-        wp = WordpressChangelog.new mh
-        wp.parse contents
-      end
-      mh
-    end
+    mh = contents.is_a?(MetaHeader) ? contents : self.class.parse(contents)
 
     if mh[:noindex]
       remove path
