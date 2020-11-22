@@ -146,7 +146,7 @@ class ReaPack::Index
         diff = @commit.diff
       end
 
-      @diffs ||= diff.each_delta.map {|delta| Git::Diff.new(delta, @parent.nil?, @repo) }
+      @diffs = diff.each_delta.map {|delta| Git::Diff.new(delta, @repo) }
       @diffs.each &block
     end
 
@@ -207,16 +207,11 @@ class ReaPack::Index
   end
 
   class Git::Diff
-    def initialize(delta, is_initial, repo)
+    def initialize(delta, repo)
       @delta, @repo = delta, repo
 
-      if is_initial
-        @status = :added
-        @file = delta.old_file
-      else
-        @status = delta.status.to_sym
-        @file = delta.new_file
-      end
+      @status = delta.status.to_sym
+      @file = delta.new_file
     end
 
     attr_reader :status
@@ -224,7 +219,7 @@ class ReaPack::Index
     def file
       @path ||= @file[:path].force_encoding(Encoding::UTF_8)
     end
-    
+
     def new_content
       return if status == :deleted
       @new_content ||=
