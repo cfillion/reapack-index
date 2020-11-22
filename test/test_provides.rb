@@ -34,7 +34,7 @@ class TestProvides < MiniTest::Test
 
   def test_platforms
     assert_equal [:windows, :win32, :win64,
-                  :darwin, :darwin32, :darwin64,
+                  :darwin, :darwin32, :darwin64, :'darwin-arm64',
                   :linux, :linux32, :linux64, :'linux-armv7l', :'linux-aarch64'],
       [
         '[windows] file',
@@ -43,6 +43,7 @@ class TestProvides < MiniTest::Test
         '[Darwin]file',
         ' [ darwin32 ] file',
         '[win32 darwin64] file',
+        '[darwin-arm64] file',
         '[linux] file',
         '[linux32] file',
         '[linux64] file',
