@@ -1,0 +1,17 @@
+name: test
+on: [push, pull_request]
+jobs:
+  rake:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Fetch repository
+      uses: actions/checkout@v2
+    - name: Install Pandoc
+      run:  sudo apt-get install -yy pandoc
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: 2.7
+    - name: Run tests
+      run:  bundle exec rake

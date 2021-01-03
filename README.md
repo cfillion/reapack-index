@@ -4,8 +4,8 @@ Parent project: [https://github.com/cfillion/reapack](https://github.com/cfillio
 Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion/metaheader)
 
 [![Gem Version](https://badge.fury.io/rb/reapack-index.svg)](http://badge.fury.io/rb/reapack-index)
-[![Build Status](https://travis-ci.org/cfillion/reapack-index.svg?branch=master)](https://travis-ci.org/cfillion/reapack-index)
-[![Donate](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_74x21.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=T3DEWBQJAV7WL&lc=CA&item_name=reapack-index%3a%20Package%20indexer%20for%20git-based%20ReaPack%20repositories&no_note=0&cn=Custom%20message&no_shipping=1&currency_code=CAD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+[![Test status](https://github.com/cfillion/reapack-index/workflows/test/badge.svg)](https://github.com/cfillion/reapack-index/actions)
+[![Donate](https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_74x21.png)](https://reapack.com/donate)
 
 ### Installation
 
