@@ -153,7 +153,7 @@ class TestCLI < MiniTest::Test
   end
 
   def test_config_unmatched_quote
-    assert_output '', /unmatched double quote/i do
+    assert_output '', /unmatched (double )?quote/i do
       catch :stop do
         wrapper [], setup: proc {
           mkfile '.reapack-index.conf', '--output "'
