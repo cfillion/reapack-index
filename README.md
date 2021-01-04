@@ -9,7 +9,7 @@ Subproject: [https://github.com/cfillion/metaheader](https://github.com/cfillion
 
 ### Installation
 
-Ruby v2.3 or newer must be installed on your computer in order to install
+Ruby v2.4 or newer must be installed on your computer in order to install
 and use this software.  
 Run the following command from a command prompt (eg. cmd.exe, Terminal.app,
 XTerm) to install reapack-index:
