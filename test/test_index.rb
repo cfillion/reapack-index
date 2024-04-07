@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestIndex < MiniTest::Test
+class TestIndex < Minitest::Test
   include IndexHelper
 
   def test_is_type

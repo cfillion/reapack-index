@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestChangelog < MiniTest::Test
+class TestChangelog < Minitest::Test
   include XMLHelper
 
   def test_create

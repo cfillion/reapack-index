@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestSource < MiniTest::Test
+class TestSource < Minitest::Test
   include XMLHelper
 
   def test_escape_url
@@ -156,7 +156,7 @@ class TestSource < MiniTest::Test
   end
 
   def test_auto_main_pkg_type
-    pkg = MiniTest::Mock.new
+    pkg = Minitest::Mock.new
     pkg.expect :type, :script
     pkg.expect :topdir, 'Category'
 
@@ -168,7 +168,7 @@ class TestSource < MiniTest::Test
   end
 
   def test_auto_main_type_override
-    pkg = MiniTest::Mock.new
+    pkg = Minitest::Mock.new
     pkg.expect :topdir, 'Category'
 
     src = ReaPack::Index::Source.new 'http://host/'
@@ -180,7 +180,7 @@ class TestSource < MiniTest::Test
   end
 
   def test_auto_main_midi_editor
-    pkg = MiniTest::Mock.new
+    pkg = Minitest::Mock.new
     src = ReaPack::Index::Source.new 'http://host/'
 
     {

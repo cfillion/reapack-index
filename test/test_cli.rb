@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestCLI < MiniTest::Test
+class TestCLI < Minitest::Test
   include CLIHelper
 
   def test_help

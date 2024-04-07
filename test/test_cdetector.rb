@@ -1,4 +1,4 @@
-class TestConflictDetector < MiniTest::Test
+class TestConflictDetector < Minitest::Test
   include XMLHelper
 
   def test_unique

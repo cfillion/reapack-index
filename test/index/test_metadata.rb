@@ -1,8 +1,8 @@
 require File.expand_path '../../helper', __FILE__
 
-TestIndex ||= Class.new MiniTest::Test
+TestIndex ||= Class.new Minitest::Test
 
-class TestIndex::Metadata < MiniTest::Test
+class TestIndex::Metadata < Minitest::Test
   include IndexHelper
 
   def test_add_anonymous_link

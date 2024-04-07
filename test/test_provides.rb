@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestProvides < MiniTest::Test
+class TestProvides < Minitest::Test
   def test_parse_all
     enum = ReaPack::Index::Provides.parse_each "file1\nfile2"
     assert_equal 2, enum.to_a.size

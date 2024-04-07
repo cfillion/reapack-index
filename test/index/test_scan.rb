@@ -1,8 +1,8 @@
 require File.expand_path '../../helper', __FILE__
 
-TestIndex ||= Class.new MiniTest::Test
+TestIndex ||= Class.new Minitest::Test
 
-class TestIndex::Scan < MiniTest::Test
+class TestIndex::Scan < Minitest::Test
   include IndexHelper
 
   def test_ignore_unknown_type

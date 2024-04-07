@@ -1,8 +1,8 @@
 require File.expand_path '../../helper', __FILE__
 
-TestCLI ||= Class.new MiniTest::Test
+TestCLI ||= Class.new Minitest::Test
 
-class TestCLI::Metadata < MiniTest::Test
+class TestCLI::Metadata < Minitest::Test
   include CLIHelper
 
   def test_website_link

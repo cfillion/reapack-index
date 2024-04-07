@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestPackage < MiniTest::Test
+class TestPackage < Minitest::Test
   include XMLHelper
 
   def test_change_type

@@ -1,10 +1,10 @@
 require File.expand_path '../helper', __FILE__
 
-class TestScanner < MiniTest::Test
+class TestScanner < Minitest::Test
   include XMLHelper
 
   def setup
-    @mock = MiniTest::Mock.new
+    @mock = Minitest::Mock.new
 
     @mh = MetaHeader.new
     @mh[:version] = '1.0'
@@ -17,7 +17,7 @@ class TestScanner < MiniTest::Test
 
     @pkg = ReaPack::Index::Package.new @doc.css('reapack').first
 
-    @index = MiniTest::Mock.new
+    @index = Minitest::Mock.new
     @index.expect :cdetector, ReaPack::Index::ConflictDetector.new
     @index.expect :url_template, 'https://google.com/$path'
     @index.expect :files, ['Hello/World.lua']

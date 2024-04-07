@@ -1,24 +1,24 @@
 require File.expand_path '../../helper', __FILE__
 
-TestScanner ||= Class.new MiniTest::Test
+TestScanner ||= Class.new Minitest::Test
 
-class TestScanner::TestValidation < MiniTest::Test
+class TestScanner::TestValidation < Minitest::Test
   def setup
-    @pkg = MiniTest::Mock.new
+    @pkg = Minitest::Mock.new
     @pkg.expect :type, :script
     @pkg.expect :path, 'cat/test'
 
     @mh = MetaHeader.new
     @mh[:version] = '1.0'
 
-    @index = MiniTest::Mock.new
+    @index = Minitest::Mock.new
     @index.expect :cdetector, ReaPack::Index::ConflictDetector.new
 
     @scanner = ReaPack::Index::Scanner.new nil, @pkg, @mh, @index
   end
 
   def test_validation
-    mh_mock = MiniTest::Mock.new
+    mh_mock = Minitest::Mock.new
     mh_mock.expect :alias, nil, [Hash]
     mh_mock.expect :validate, ['first', 'second'], [Hash, false]
 

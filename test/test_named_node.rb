@@ -1,6 +1,6 @@
 require File.expand_path '../helper', __FILE__
 
-class TestNamedNode < MiniTest::Test
+class TestNamedNode < Minitest::Test
   include XMLHelper
 
   def setup

@@ -1,22 +1,22 @@
 require File.expand_path '../../helper', __FILE__
 
-TestScanner ||= Class.new MiniTest::Test
+TestScanner ||= Class.new Minitest::Test
 
-class TestScanner::TestMakeUrl < MiniTest::Test
+class TestScanner::TestMakeUrl < Minitest::Test
   def setup
-    @cat = MiniTest::Mock.new
+    @cat = Minitest::Mock.new
 
-    @pkg = MiniTest::Mock.new
+    @pkg = Minitest::Mock.new
     @pkg.expect :path, 'Hello/World.lua'
     @pkg.expect :path, 'Hello/World.lua'
 
-    @ver = MiniTest::Mock.new
+    @ver = Minitest::Mock.new
     @ver.expect :name, '1.0'
 
-    @cdetector = MiniTest::Mock.new
+    @cdetector = Minitest::Mock.new
     @cdetector.expect :[], nil, ['Hello/World.lua']
 
-    @index = MiniTest::Mock.new
+    @index = Minitest::Mock.new
     @index.expect :cdetector, @cdetector
 
     @scanner = ReaPack::Index::Scanner.new @cat, @pkg, nil, @index
