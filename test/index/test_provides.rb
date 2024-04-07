@@ -372,8 +372,9 @@ class TestIndex::Provides < Minitest::Test
       @version 1.0
       @provides
         source.lua > target.lua
-        source.png > target.png
+        source.png > ./target.png
         source*.jpg > target_dir/
+        source*.jpg > ../target_dir/
         sub/source.txt > .
     IN
 
@@ -382,10 +383,12 @@ class TestIndex::Provides < Minitest::Test
     xml = File.read index.path
 
     assert_match 'file="target.lua"', xml
-    assert_match 'file="target.png"', xml
+    assert_match 'file="./target.png"', xml
     assert_match 'file="target_dir/source1.jpg"', xml
     assert_match 'file="target_dir/source2.jpg"', xml
-    assert_match 'file="source.txt"', xml
+    assert_match 'file="../target_dir/source1.jpg"', xml
+    assert_match 'file="../target_dir/source2.jpg"', xml
+    assert_match 'file="./source.txt"', xml
     refute_match 'file="source.png"', xml
 
     assert_equal 1,
