@@ -209,7 +209,7 @@ private
     @index.clear
     failures = []
 
-    pkgs = Hash[Dir.glob("#{Regexp.quote(@git.path)}/**/*").sort.map {|abs|
+    pkgs = Hash[Find.find(@git.path).sort.map {|abs|
       rel = @git.relative_path abs
       @index.files << rel
 

@@ -189,4 +189,18 @@ Finished checks for 2 packages with 1 failure
 
     assert_match 'Finished checks for 0 packages with 0 failures', stderr
   end
+
+  def test_dotfiles
+    setup = proc { mkfile 'index.xml', '<index name="test"/>' }
+
+    _, stderr = capture_io do
+      wrapper ['--check'], setup: setup do
+        mkfile 'Foo/.gitkeep'
+        mkfile 'Chunky/Bacon.lua', "@version 1.0\n@provides ../Foo/.gitkeep"
+        @cli.run
+      end
+    end
+
+    assert_match 'Finished checks for 1 package with 0 failures', stderr
+  end
 end
