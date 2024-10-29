@@ -8,7 +8,7 @@ class ReaPack::Index
 
     PLATFORMS = {
       all: nil,
-      windows: :all, win32: :windows, win64: :windows,
+      windows: :all, win32: :windows, win64: :windows, 'windows-arm64ec': :windows,
       darwin: :all, darwin32: :darwin, darwin64: :darwin, 'darwin-arm64': :darwin,
       linux: :all, linux32: :linux, linux64: :linux,
       'linux-armv7l': :linux, 'linux-aarch64': :linux

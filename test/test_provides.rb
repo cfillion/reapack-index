@@ -33,13 +33,14 @@ class TestProvides < Minitest::Test
   end
 
   def test_platforms
-    assert_equal [:windows, :win32, :win64,
+    assert_equal [:windows, :win32, :win64, :'windows-arm64ec',
                   :darwin, :darwin32, :darwin64, :'darwin-arm64',
                   :linux, :linux32, :linux64, :'linux-armv7l', :'linux-aarch64'],
       [
         '[windows] file',
         '[win32] file',
         '[win64] file',
+        '[windows-arm64ec] file',
         '[Darwin]file',
         ' [ darwin32 ] file',
         '[win32 darwin64] file',
