@@ -341,7 +341,7 @@ class TestMetadata < Minitest::Test
 
   def test_write_about
     rtf = <<-RTF
-{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
@@ -371,7 +371,7 @@ class TestMetadata < Minitest::Test
 
   def test_write_about_rtf
     rtf = <<-RTF
-{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
@@ -401,7 +401,7 @@ class TestMetadata < Minitest::Test
     before = make_node <<-XML
 <index>
   <metadata>
-    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
@@ -415,7 +415,7 @@ class TestMetadata < Minitest::Test
     after = <<-XML
 <index>
   <metadata>
-    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
@@ -434,7 +434,7 @@ class TestMetadata < Minitest::Test
 
   def test_remove_about
     rtf = <<-RTF
-{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
@@ -466,7 +466,7 @@ class TestMetadata < Minitest::Test
     before = make_node <<-XML
 <index>
   <metadata>
-    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 Courier;}}
+    <description><![CDATA[{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 \\fswiss Helvetica;}{\\f1 \\fmodern Courier;}}
 {\\colortbl;\\red255\\green0\\blue0;\\red0\\green0\\blue255;}
 \\widowctrl\\hyphauto
 
