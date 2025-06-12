@@ -16,7 +16,7 @@ class ReaPack::Index
 
     SECTIONS = [
       :main, :midi_editor, :midi_inlineeditor, :midi_eventlisteditor,
-      :mediaexplorer
+      :mediaexplorer, :crossfade_editor,
     ].freeze
 
     class << self
@@ -68,6 +68,8 @@ class ReaPack::Index
             :midi_eventlisteditor
           when 'media explorer'
             :mediaexplorer
+          when 'crossfade editor'
+            :crossfade_editor
           else
             :main
           end

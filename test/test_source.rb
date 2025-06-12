@@ -135,15 +135,15 @@ class TestSource < Minitest::Test
     before = make_node '<version name="1.0"/>'
     after = <<-XML
 <version name="1.0">
-  <source main="main mediaexplorer midi_eventlisteditor midi_inlineeditor midi_editor">http://host/</source>
+  <source main="main crossfade_editor mediaexplorer midi_eventlisteditor midi_inlineeditor midi_editor">http://host/</source>
 </version>
     XML
 
     src = ReaPack::Index::Source.new 'http://host/'
     assert_empty src.sections
     src.sections = [:midi_editor, :main, :midi_inlineeditor,
-                    :midi_eventlisteditor, :mediaexplorer]
-    assert_equal [:main, :mediaexplorer, :midi_eventlisteditor,
+                    :midi_eventlisteditor, :mediaexplorer, :crossfade_editor]
+    assert_equal [:main, :crossfade_editor, :mediaexplorer, :midi_eventlisteditor,
                   :midi_inlineeditor, :midi_editor], src.sections
 
     assert_raises ReaPack::Index::Error do
@@ -189,6 +189,7 @@ class TestSource < Minitest::Test
       'midi inline editor' => :midi_inlineeditor,
       'midi event list editor' => :midi_eventlisteditor,
       'media explorer' => :mediaexplorer,
+      'Crossfade Editor' => :crossfade_editor,
     }.each {|dir, section|
       pkg.expect :type, :script
       pkg.expect :topdir, dir
