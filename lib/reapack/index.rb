@@ -45,6 +45,7 @@ class ReaPack::Index
     tracktpl: %w{rtracktemplate},
     midinotenames: %w{txt},
     autoitem: %w{reaperautoitem},
+    keymap: %w{reaperkeymap},
   }.freeze
 
   FS_ROOT = File.expand_path('/').freeze

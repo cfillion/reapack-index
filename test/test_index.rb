@@ -28,8 +28,9 @@ class TestIndex < Minitest::Test
       'Cat/test.www'             => :webinterface,
       'Cat/test.RPP'             => :projecttpl,
       'Cat/test.RTrackTemplate'  => :tracktpl,
-      'Cate/test.txt'            => :midinotenames,
-      'Cate/test.ReaperAutoItem' => :autoitem,
+      'Cat/test.txt'             => :midinotenames,
+      'Cat/test.ReaperAutoItem'  => :autoitem,
+      'Cat/test.ReaperKeyMap'    => :keymap,
     }.each {|fn, type|
       actual = ReaPack::Index.type_of fn
       assert_equal type, actual,
